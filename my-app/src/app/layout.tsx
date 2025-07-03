@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css"; // Ensure this is correctly imported
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: '--font-inter', // Define a CSS variable for Inter font
+});
 
 export const metadata: Metadata = {
-  title: "Financial Tracker", // Updated title
-  description: "Track your financial assets and market news.", // Updated description
+  title: "Financial Insight Engine", // Updated title to reflect AI and financial focus
+  description: "AI-powered financial asset analysis and market insights.", // Updated description
 };
 
 export default function RootLayout({
@@ -15,9 +18,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      {/* Added a dark theme to the body for overall modern look */}
-      <body className={`${inter.className} bg-gray-900 text-white`}>{children}</body>
+    <html lang="en" className={inter.variable}> {/* Apply Inter font variable to html tag */}
+      {/* Body will inherit styles from globals.css, including background and text color */}
+      <body>{children}</body>
     </html>
   );
 }
