@@ -3,8 +3,60 @@
 @tailwind utilities;
 
 body {
-  /* You can add default body styles here if needed, beyond Tailwind's preflight */
-  /* For example, ensure text is anti-aliased for better readability */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #0D0D0D; /* Similar to n8n's dark background */
+  color: #E0E0E0; /* Light gray text for contrast, similar to n8n */
+}
+
+/* Define a custom font class if you want to use a specific font like n8n */
+.font-custom {
+  font-family: 'Inter', sans-serif; /* Assuming Inter is the desired font, similar to n8n. Make sure to import it in layout.tsx */
+}
+
+/* Example of how you might style links to match n8n's aesthetic */
+a {
+  color: #569CD6; /* A blue often used in sober/dark themes for links */
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Basic button styling to align with a sober theme */
+button, .button {
+  background-color: #333333; /* Darker gray for buttons */
+  color: #FFFFFF;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: 1px solid #444444; /* Subtle border */
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover, .button:hover {
+  background-color: #454545; /* Slightly lighter on hover */
+}
+
+/* Input fields styling */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+  background-color: #1A1A1A;
+  color: #E0E0E0;
+  border: 1px solid #333333;
+  padding: 10px;
+  border-radius: 5px;
+  width: 100%; /* Default to full width */
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+textarea:focus {
+  outline: none;
+  border-color: #569CD6; /* Highlight focus with the link color */
+  box-shadow: 0 0 0 2px rgba(86, 156, 214, 0.5); /* Optional: add a subtle glow */
 }
