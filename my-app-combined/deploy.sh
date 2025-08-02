@@ -22,12 +22,21 @@ git commit -m "Deploy to GitHub Pages - $(date)"
 echo "📤 Pushing to main branch..."
 git push origin main
 
-# Create gh-pages branch and push
-echo "🌿 Setting up gh-pages branch..."
-git subtree push --prefix out origin gh-pages || {
-    echo "⚠️  First time setup - creating gh-pages branch..."
-    git push origin `git subtree split --prefix out main`:gh-pages --force
-}
+# Create gh-pages branch
+echo "🌿 Creating gh-pages branch..."
+git checkout --orphan gh-pages
+git rm -rf .
+git checkout main -- out
+git add out/
+git commit -m "Deploy to GitHub Pages"
+
+# Push gh-pages branch
+echo "📤 Pushing gh-pages branch..."
+git push origin gh-pages --force
+
+# Go back to main branch
+echo "🔄 Switching back to main branch..."
+git checkout main
 
 echo "✅ Deployment completed!"
 echo "🌐 Your site should be available at: https://benjamalegni.github.io/financialfeeling/"
