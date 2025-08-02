@@ -9,5 +9,5 @@ export function cn(...inputs: ClassValue[]) {
 export function getRoute(path: string): string {
   // Always use basePath for GitHub Pages to avoid issues
   const basePath = '/financialfeeling';
-  return `${basePath}${path}`;
+  return `${path}`;
 }
