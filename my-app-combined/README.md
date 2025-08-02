@@ -191,3 +191,5 @@ Para soporte, abre un issue en GitHub o contacta al equipo de desarrollo.
 # Switch to GitHub Actions
 
 # Manual deploy trigger
+
+# Fixed repository URL - trigger deploy
