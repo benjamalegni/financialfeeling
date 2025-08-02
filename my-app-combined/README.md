@@ -200,3 +200,4 @@ Para soporte, abre un issue en GitHub o contacta al equipo de desarrollo.
 
 # Manual workflow trigger
 # Force workflow detection
+# Force GitHub to detect workflows
