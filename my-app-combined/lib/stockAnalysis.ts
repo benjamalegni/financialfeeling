@@ -20,6 +20,8 @@ export async function analyzeStocks(stocks: string[]): Promise<AnalysisResult> {
   try {
     // Try to call n8n webhook if available (cloud or local)
     const n8nUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL || 'http://localhost:5678/webhook-test/analyze-stocks';
+    console.log('Attempting to call n8n webhook:', n8nUrl);
+    
     const n8nResponse = await fetch(n8nUrl, {
       method: 'POST',
       headers: {
@@ -28,15 +30,22 @@ export async function analyzeStocks(stocks: string[]): Promise<AnalysisResult> {
       body: JSON.stringify({ stocks }),
     });
 
+    console.log('n8n response status:', n8nResponse.status);
+    
     if (n8nResponse.ok) {
       const analysisResult = await n8nResponse.json();
+      console.log('n8n analysis result:', analysisResult);
       return {
         ...analysisResult,
         timestamp: new Date().toISOString(),
       };
+    } else {
+      const errorText = await n8nResponse.text();
+      console.error('n8n webhook error:', n8nResponse.status, errorText);
+      throw new Error(`n8n webhook error: ${n8nResponse.status} - ${errorText}`);
     }
   } catch (error) {
-    console.log('n8n not available, using mock data:', error);
+    console.log('n8n not available or failed, using mock data:', error);
   }
 
   // Mock data when n8n is not available
@@ -59,7 +68,7 @@ export async function analyzeStocks(stocks: string[]): Promise<AnalysisResult> {
       }
     })),
     timestamp: new Date().toISOString(),
-    note: 'Mock data - n8n not available'
+    note: 'Mock data - n8n not available or workflow not active'
   };
 
   return mockAnalysisResult;
