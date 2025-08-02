@@ -1,0 +1,113 @@
+#!/bin/bash
+
+echo "🔧 Solucionando problema de archivos estáticos..."
+
+# Build the project
+echo "📦 Building project..."
+npm run build
+
+# Create a simple index.html that works without Next.js
+echo "📄 Creating simple index.html..."
+cat > out/index.html << 'EOF'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Feeling</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            max-width: 600px;
+            padding: 2rem;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        .button {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        .button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .feature {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Financial Feeling</h1>
+        <p>AI-powered financial analysis and trading insights</p>
+        
+        <a href="#" class="button">Get Started</a>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>🤖 AI Analysis</h3>
+                <p>Advanced AI-powered stock analysis</p>
+            </div>
+            <div class="feature">
+                <h3>📊 Real-time Data</h3>
+                <p>Live market data and insights</p>
+            </div>
+            <div class="feature">
+                <h3>💡 Smart Insights</h3>
+                <p>Intelligent trading recommendations</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+EOF
+
+# Copy to root
+echo "📁 Copying to repository root..."
+cp out/index.html ../
+
+# Go to root and commit
+cd ..
+git add index.html
+git commit -m "Add simple working index.html"
+git push origin main
+
+echo "✅ Fixed! Simple working page deployed."
+echo "🌐 URL: https://benjamalegni.github.io/financialfeeling/"
+echo ""
+echo "💡 This is a simple working version while we fix the Next.js static files issue." 
