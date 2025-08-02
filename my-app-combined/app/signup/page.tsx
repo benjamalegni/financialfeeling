@@ -10,8 +10,9 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Github, X } from 'lucide-react'
+import { getRoute } from '@/lib/utils'
 
-export default function SignupPage() {
+export default function SignUpPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -40,7 +41,7 @@ export default function SignupPage() {
       setError(error.message)
       setIsSubmitting(false)
     } else {
-      router.push('/')
+      router.push(getRoute('/'))
     }
   }
 
@@ -60,7 +61,7 @@ export default function SignupPage() {
   }
 
   const handleCancel = () => {
-    router.push('/')
+    router.push(getRoute('/'))
   }
 
   return (

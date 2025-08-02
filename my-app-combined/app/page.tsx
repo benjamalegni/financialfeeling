@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import SharedSidebar from '@/components/shared-sidebar'
+import { getRoute } from '@/lib/utils'
 
 export default function HomePage() {
   const [user, setUser] = useState<any>(null)
@@ -155,13 +156,13 @@ export default function HomePage() {
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     setUser(null)
-    router.push('/login')
+    router.push(getRoute('/login'))
   }
 
   const handleSendMessage = () => {
     if (!user) {
       // Si no está autenticado, redirigir al login
-      router.push('/login')
+      router.push(getRoute('/login'))
       return
     }
     
@@ -450,7 +451,7 @@ export default function HomePage() {
                 <Button
                   size="icon"
                   className={`text-white transition-all duration-500 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 border border-gray-600 ${getDashboardColorClasses()}`}
-                  onClick={() => router.push('/dashboard')}
+                  onClick={() => router.push(getRoute('/dashboard'))}
                 >
                   <BarChart3 className="h-4 w-4" />
                 </Button>
@@ -516,7 +517,7 @@ export default function HomePage() {
                     <div className="space-x-2">
                       <Button 
                         variant="ghost" 
-                        onClick={() => router.push('/login')}
+                        onClick={() => router.push(getRoute('/login'))}
                         className="text-gray-300 hover:text-white hover:bg-gray-800 transition-colors"
                       >
                         Login to FF
@@ -594,7 +595,7 @@ export default function HomePage() {
                                   ? 'bg-green-600 hover:bg-green-700' 
                                   : 'bg-gray-600 hover:bg-gray-700'
                               }`}
-                              onClick={user ? handleOpenAssetSelector : () => router.push('/login')}
+                              onClick={user ? handleOpenAssetSelector : () => router.push(getRoute('/login'))}
                             >
                               <Plus className="h-4 w-4" />
                             </Button>
@@ -728,7 +729,7 @@ export default function HomePage() {
                     <p className="text-gray-500 text-sm mt-2">
                       <Button
                         variant="link"
-                        onClick={() => router.push('/login')}
+                        onClick={() => router.push(getRoute('/login'))}
                         className="text-blue-400 hover:text-blue-300 p-0"
                       >
                         Sign in
@@ -866,7 +867,7 @@ export default function HomePage() {
                   </div>
                   <div className="flex justify-center">
                     <Button
-                      onClick={() => router.push('/stock-analysis')}
+                      onClick={() => router.push(getRoute('/stock-analysis'))}
                       className="bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-colors"
                     >
                       Analyze Stocks

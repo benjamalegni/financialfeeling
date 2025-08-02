@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Github, X } from 'lucide-react'
+import { getRoute } from '@/lib/utils'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -37,7 +38,7 @@ export default function LoginPage() {
       setError(error.message)
       setIsSubmitting(false)
     } else {
-      router.push('/')
+      router.push(getRoute('/'))
     }
   }
 
@@ -57,7 +58,7 @@ export default function LoginPage() {
   }
 
   const handleCancel = () => {
-    router.push('/')
+    router.push(getRoute('/'))
   }
 
   return (
