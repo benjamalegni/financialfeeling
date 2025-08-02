@@ -1,0 +1,24 @@
+name: Test Workflow
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Test Node.js
+        run: |
+          echo "Testing GitHub Actions"
+          node --version
+          npm --version
+      
+      - name: Test Build
+        run: |
+          npm ci
+          npm run build 
