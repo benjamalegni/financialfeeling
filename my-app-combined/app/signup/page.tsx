@@ -151,7 +151,7 @@ export default function SignUpPage() {
 
           <div className="text-center text-sm text-gray-400">
             Already have an account?{' '}
-            <a href="/login" className="font-medium text-blue-400 hover:text-blue-300 underline">
+            <a href={getRoute('/login')} className="font-medium text-blue-400 hover:text-blue-300 underline">
               Sign In
             </a>
           </div>

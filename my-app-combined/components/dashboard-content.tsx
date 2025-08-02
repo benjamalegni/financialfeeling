@@ -6,6 +6,7 @@ import { Home } from 'lucide-react'
 import AISentimentAnalysis from './ai-sentiment-analysis'
 import { createBrowserClient } from '@supabase/ssr'
 import { redirect } from 'next/navigation'
+import { getRoute } from '@/lib/utils'
 
 interface DashboardContentProps {
   selectedAssets: any[];
@@ -30,7 +31,7 @@ export default function DashboardContent({
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       )
       await supabase.auth.signOut()
-      window.location.href = '/login'
+      window.location.href = getRoute('/login')
     }
 
     return (
@@ -47,7 +48,7 @@ export default function DashboardContent({
   const ClearTestDataButton = () => {
     return (
       <Link
-        href="/dashboard?clear=true"
+        href={getRoute('/dashboard?clear=true')}
         className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-md shadow-md transition duration-150 ease-in-out"
       >
         Clear Test Data
@@ -92,7 +93,7 @@ export default function DashboardContent({
         <div className="flex flex-col items-center space-y-2">
           <div className="text-white text-xl font-bold">FF</div>
           <Link
-            href="/"
+            href={getRoute('/')}
             className="text-white transition-all duration-500 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 border border-gray-600 bg-gray-800 hover:bg-gray-700 p-2 rounded-lg"
           >
             <Home className="h-4 w-4" />
