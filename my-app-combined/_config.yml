@@ -1,0 +1,73 @@
+title: Financial Feeling
+description: AI-powered financial analysis and trading insights
+baseurl: "/financialfeeling"
+url: "https://benjamalegni.github.io"
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+permalink: pretty
+
+# Exclude files from processing
+exclude:
+  - node_modules
+  - .git
+  - .github
+  - package.json
+  - package-lock.json
+  - pnpm-lock.yaml
+  - tsconfig.json
+  - next.config.mjs
+  - postcss.config.mjs
+  - tailwind.config.ts
+  - deploy.sh
+  - setup-pages.sh
+  - check-status.sh
+  - fix-jekyll-issue.sh
+  - README.md
+  - .env.local
+  - .env.example
+  - .gitignore
+  - .eslintrc.json
+  - components.json
+  - lib
+  - hooks
+  - actions
+  - middleware.ts
+  - supabase_migrations
+  - animated-gradient
+  - my-app
+  - my-app-v0
+  - my-app-native
+  - my-app-combined
+  - app
+  - components
+  - public
+  - styles
+
+# Include only the built files
+include:
+  - out
+
+# Collections
+collections:
+  pages:
+    output: true
+    permalink: /:path/
+
+# Plugins
+plugins:
+  - jekyll-relative-links
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+# Theme
+theme: jekyll-theme-primer
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "default" 
