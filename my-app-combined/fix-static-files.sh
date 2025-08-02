@@ -1,3 +1,14 @@
+#!/bin/bash
+
+echo "🔧 Solucionando problema de archivos estáticos..."
+
+# Build the project
+echo "📦 Building project..."
+npm run build
+
+# Create a simple index.html that works without Next.js
+echo "📄 Creating simple index.html..."
+cat > out/index.html << 'EOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -84,3 +95,19 @@
     </div>
 </body>
 </html>
+EOF
+
+# Copy to root
+echo "📁 Copying to repository root..."
+cp out/index.html ../
+
+# Go to root and commit
+cd ..
+git add index.html
+git commit -m "Add simple working index.html"
+git push origin main
+
+echo "✅ Fixed! Simple working page deployed."
+echo "🌐 URL: https://benjamalegni.github.io/financialfeeling/"
+echo ""
+echo "💡 This is a simple working version while we fix the Next.js static files issue." 
