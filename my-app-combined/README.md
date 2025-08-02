@@ -197,3 +197,5 @@ Para soporte, abre un issue en GitHub o contacta al equipo de desarrollo.
 # 🚀 FINAL DEPLOYMENT - Financial Feeling
 
 # Switch to GitHub Actions workflow
+
+# Manual workflow trigger
