@@ -189,3 +189,5 @@ Para soporte, abre un issue en GitHub o contacta al equipo de desarrollo.
 # Testing GitHub Pages deployment
 
 # Switch to GitHub Actions
+
+# Manual deploy trigger
