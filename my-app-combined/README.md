@@ -187,3 +187,5 @@ Para soporte, abre un issue en GitHub o contacta al equipo de desarrollo.
 # Trigger GitHub Actions workflow
 
 # Testing GitHub Pages deployment
+
+# Switch to GitHub Actions
