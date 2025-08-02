@@ -11,8 +11,9 @@ const nextConfig = {
   },
   output: 'export',
   trailingSlash: true,
-  basePath: process.env.NODE_ENV === 'production' ? '/financialfeeling' : '',
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/financialfeeling/' : '',
+  // Remove basePath and assetPrefix for GitHub Pages
+  // basePath: process.env.NODE_ENV === 'production' ? '/financialfeeling' : '',
+  // assetPrefix: process.env.NODE_ENV === 'production' ? '/financialfeeling/' : '',
 }
 
 export default nextConfig
