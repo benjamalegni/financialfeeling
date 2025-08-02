@@ -195,3 +195,5 @@ Para soporte, abre un issue en GitHub o contacta al equipo de desarrollo.
 # Fixed repository URL - trigger deploy
 
 # 🚀 FINAL DEPLOYMENT - Financial Feeling
+
+# Switch to GitHub Actions workflow
