@@ -42,14 +42,20 @@ export async function analyzeStocks(stocks: string[]): Promise<AnalysisResult> {
     } else {
       const errorText = await n8nResponse.text();
       console.error('n8n webhook error:', n8nResponse.status, errorText);
-      throw new Error(`n8n webhook error: ${n8nResponse.status} - ${errorText}`);
+      
+      // If n8n is not available, use mock data immediately
+      console.log('n8n not available, using mock data');
+      return getMockAnalysisResult(stocks);
     }
   } catch (error) {
     console.log('n8n not available or failed, using mock data:', error);
+    return getMockAnalysisResult(stocks);
   }
+}
 
-  // Mock data when n8n is not available
-  const mockAnalysisResult: AnalysisResult = {
+// Separate function for mock data
+function getMockAnalysisResult(stocks: string[]): AnalysisResult {
+  return {
     stocks: stocks.map((stock: string, index: number) => ({
       symbol: stock,
       analysis: {
@@ -68,8 +74,6 @@ export async function analyzeStocks(stocks: string[]): Promise<AnalysisResult> {
       }
     })),
     timestamp: new Date().toISOString(),
-    note: 'Mock data - n8n not available or workflow not active'
+    note: 'Mock data - n8n workflow not active or not configured'
   };
-
-  return mockAnalysisResult;
 } 
