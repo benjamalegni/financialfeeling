@@ -20,6 +20,10 @@ export const config = {
   app: {
     basePath: process.env.NODE_ENV === 'production' ? '/financialfeeling' : '',
     isStaticExport: process.env.USE_STATIC_EXPORT === 'true',
+    // URL de la aplicación - detecta automáticamente el entorno
+    url: process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? 
+      window.location.origin + (window.location.pathname.startsWith('/financialfeeling') ? '/financialfeeling' : '') : 
+      'http://localhost:3000'),
   }
 }
 
