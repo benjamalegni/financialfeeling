@@ -157,10 +157,16 @@ export default function SignUpPage() {
     setError(null);
     
     try {
+      console.log('Initiating Google OAuth with redirectTo:', 'https://benjamalegni.github.io/financialfeeling/auth/callback');
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: 'https://benjamalegni.github.io/financialfeeling/auth/callback',
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         },
       })
       
@@ -176,6 +182,7 @@ export default function SignUpPage() {
         setIsSubmitting(false);
       } else {
         console.log('Google OAuth initiated successfully');
+        console.log('OAuth response:', data);
         // The user will be redirected to Google
       }
     } catch (err) {

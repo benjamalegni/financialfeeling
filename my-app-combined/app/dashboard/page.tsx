@@ -6,6 +6,7 @@ import type { Database } from '@/lib/database.types'
 import DashboardWrapper from '@/components/dashboard-wrapper'
 import DashboardContent from '@/components/dashboard-content'
 import { config } from '@/lib/config'
+import { getRoute } from '@/lib/utils'
 
 interface SelectedAsset {
   id: string;
@@ -31,7 +32,7 @@ export default function DashboardPage() {
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session) {
-        window.location.href = '/login'
+        window.location.href = getRoute('/login')
         return
       }
 

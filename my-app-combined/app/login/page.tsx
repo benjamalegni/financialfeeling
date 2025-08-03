@@ -79,10 +79,16 @@ export default function LoginPage() {
     setError(null);
     
     try {
+      console.log('Initiating Google OAuth with redirectTo:', 'https://benjamalegni.github.io/financialfeeling/auth/callback');
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: 'https://benjamalegni.github.io/financialfeeling/auth/callback',
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         },
       })
       
@@ -93,11 +99,12 @@ export default function LoginPage() {
         } else if (error.message.includes('Invalid redirect URI')) {
           setError('Configuration error: Invalid redirect URI. Please contact the administrator.');
         } else {
-          setError(`Google sign-in error: ${error.message}`);
+          setError(`Google sign-up error: ${error.message}`);
         }
         setIsSubmitting(false);
       } else {
         console.log('Google OAuth initiated successfully');
+        console.log('OAuth response:', data);
         // The user will be redirected to Google
       }
     } catch (err) {
