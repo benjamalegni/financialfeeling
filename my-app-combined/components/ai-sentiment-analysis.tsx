@@ -13,7 +13,7 @@ interface SentimentData {
   reason: string
   fundamentalScore: number
   timestamp?: string
-  financialData?: FinancialMetrics
+  financialData?: FinancialMetrics | null
 }
 
 interface AISentimentAnalysisProps {
@@ -56,9 +56,11 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
             let financialData: FinancialMetrics | undefined
             if (stock.symbol && stock.symbol.length <= 5) { // Only for stocks, not ETFs or other assets
               try {
-                financialData = await getFinancialData(stock.symbol)
+                const data = await getFinancialData(stock.symbol)
+                financialData = data || undefined
               } catch (error) {
                 console.error(`Error fetching financial data for ${stock.symbol}:`, error)
+                financialData = undefined
               }
             }
 
@@ -297,6 +299,16 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
                         <span className="text-xs text-gray-400">({getFundamentalScoreText(item.fundamentalScore)})</span>
                       </div>
                     </div>
+                    
+                    {/* Buy Opportunity Indicator */}
+                    {item.impact === 'negative' && item.fundamentalScore >= 75 && (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs text-gray-400">Buy Opportunity</span>
+                        <div className="px-2 py-1 bg-green-600 text-white text-xs font-medium rounded-full">
+                          BUY NOW
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -308,8 +320,8 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
       {/* Financial Data Modal */}
       {showFinancialModal && selectedFinancialData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-gray-800 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-semibold text-white">
                 Fundamental Data - {selectedFinancialData.symbol}
               </h3>
@@ -321,58 +333,190 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
               </button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <div className="bg-gray-700 p-3 rounded">
-                  <span className="text-sm text-gray-400">P/E Ratio</span>
-                  <div className="text-white font-semibold">{selectedFinancialData.peRatio.toFixed(2)}</div>
+            {/* Fundamental Score Section */}
+            <div className="mb-6 p-4 bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-lg border border-gray-600">
+              <h4 className="text-lg font-semibold text-white mb-3">Fundamental Score</h4>
+              <div className="flex items-center space-x-4">
+                <div className="flex-1">
+                  <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        selectedFinancialData.peRatio > 0 && selectedFinancialData.peRatio < 25 ? 'bg-green-500' :
+                        selectedFinancialData.peRatio >= 25 ? 'bg-yellow-500' : 'bg-red-500'
+                      }`}
+                      style={{ width: `${Math.min(100, Math.max(0, 
+                        (selectedFinancialData.peRatio > 0 && selectedFinancialData.peRatio < 25 ? 85 :
+                         selectedFinancialData.peRatio >= 25 ? 60 : 30)
+                      ))}%` }}
+                    ></div>
+                  </div>
                 </div>
-                <div className="bg-gray-700 p-3 rounded">
-                  <span className="text-sm text-gray-400">Forward P/E</span>
-                  <div className="text-white font-semibold">{selectedFinancialData.forwardPE.toFixed(2)}</div>
+                <span className="text-white font-semibold">
+                  {selectedFinancialData.peRatio > 0 && selectedFinancialData.peRatio < 25 ? '85%' :
+                   selectedFinancialData.peRatio >= 25 ? '60%' : '30%'}
+                </span>
+              </div>
+              <p className="text-sm text-gray-400 mt-2">
+                Based on P/E ratio, debt levels, and profitability metrics
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-white mb-3">Valuation Metrics</h4>
+                
+                <div className="bg-gray-700 p-4 rounded">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-400">P/E Ratio</span>
+                    <span className="text-white font-semibold">{selectedFinancialData.peRatio.toFixed(2)}</span>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Price-to-Earnings ratio. Good: 10-25, High: &gt;25, Low: &lt;10
+                  </p>
                 </div>
-                <div className="bg-gray-700 p-3 rounded">
-                  <span className="text-sm text-gray-400">PEG Ratio</span>
-                  <div className="text-white font-semibold">{selectedFinancialData.pegRatio.toFixed(2)}</div>
+
+                <div className="bg-gray-700 p-4 rounded">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-400">Forward P/E</span>
+                    <span className="text-white font-semibold">{selectedFinancialData.forwardPE.toFixed(2)}</span>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Future earnings estimate. Lower is generally better
+                  </p>
                 </div>
-                <div className="bg-gray-700 p-3 rounded">
-                  <span className="text-sm text-gray-400">Price to Book</span>
-                  <div className="text-white font-semibold">{selectedFinancialData.priceToBook.toFixed(2)}</div>
+
+                <div className="bg-gray-700 p-4 rounded">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-400">PEG Ratio</span>
+                    <span className="text-white font-semibold">{selectedFinancialData.pegRatio.toFixed(2)}</span>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Price/Earnings to Growth. Good: &lt;1, Fair: 1-2, High: &gt;2
+                  </p>
                 </div>
-                <div className="bg-gray-700 p-3 rounded">
-                  <span className="text-sm text-gray-400">Debt to Equity</span>
-                  <div className="text-white font-semibold">{selectedFinancialData.debtToEquity.toFixed(2)}</div>
-                </div>
-                <div className="bg-gray-700 p-3 rounded">
-                  <span className="text-sm text-gray-400">Current Ratio</span>
-                  <div className="text-white font-semibold">{selectedFinancialData.currentRatio.toFixed(2)}</div>
+
+                <div className="bg-gray-700 p-4 rounded">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-400">Price to Book</span>
+                    <span className="text-white font-semibold">{selectedFinancialData.priceToBook.toFixed(2)}</span>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Market value vs book value. Good: &lt;3, High: &gt;5
+                  </p>
                 </div>
               </div>
               
-              <div className="space-y-3">
-                <div className="bg-gray-700 p-3 rounded">
-                  <span className="text-sm text-gray-400">Return on Equity</span>
-                  <div className="text-white font-semibold">{selectedFinancialData.returnOnEquity.toFixed(2)}%</div>
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-white mb-3">Financial Health</h4>
+                
+                <div className="bg-gray-700 p-4 rounded">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-400">Debt to Equity</span>
+                    <span className="text-white font-semibold">{selectedFinancialData.debtToEquity.toFixed(2)}</span>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Debt levels. Good: &lt;0.5, Fair: 0.5-1, High: &gt;1
+                  </p>
                 </div>
-                <div className="bg-gray-700 p-3 rounded">
-                  <span className="text-sm text-gray-400">Return on Assets</span>
-                  <div className="text-white font-semibold">{selectedFinancialData.returnOnAssets.toFixed(2)}%</div>
+
+                <div className="bg-gray-700 p-4 rounded">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-400">Current Ratio</span>
+                    <span className="text-white font-semibold">{selectedFinancialData.currentRatio.toFixed(2)}</span>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Short-term liquidity. Good: &gt;1.5, Fair: 1-1.5, Low: &lt;1
+                  </p>
                 </div>
-                <div className="bg-gray-700 p-3 rounded">
-                  <span className="text-sm text-gray-400">Profit Margin</span>
-                  <div className="text-white font-semibold">{selectedFinancialData.profitMargin.toFixed(2)}%</div>
+
+                <div className="bg-gray-700 p-4 rounded">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-400">Return on Equity</span>
+                    <span className="text-white font-semibold">{selectedFinancialData.returnOnEquity.toFixed(2)}%</span>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Profitability efficiency. Good: &gt;15%, Fair: 10-15%, Low: &lt;10%
+                  </p>
                 </div>
-                <div className="bg-gray-700 p-3 rounded">
-                  <span className="text-sm text-gray-400">Operating Margin</span>
-                  <div className="text-white font-semibold">{selectedFinancialData.operatingMargin.toFixed(2)}%</div>
+
+                <div className="bg-gray-700 p-4 rounded">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-400">Profit Margin</span>
+                    <span className="text-white font-semibold">{selectedFinancialData.profitMargin.toFixed(2)}%</span>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Net profit percentage. Good: &gt;15%, Fair: 10-15%, Low: &lt;10%
+                  </p>
                 </div>
-                <div className="bg-gray-700 p-3 rounded">
-                  <span className="text-sm text-gray-400">Revenue Growth</span>
-                  <div className="text-white font-semibold">{selectedFinancialData.revenueGrowth.toFixed(2)}%</div>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-white mb-3">Growth &amp; Market</h4>
+                
+                <div className="bg-gray-700 p-4 rounded">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-400">Revenue Growth</span>
+                    <span className="text-white font-semibold">{selectedFinancialData.revenueGrowth.toFixed(2)}%</span>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Annual revenue increase. Good: &gt;10%, Fair: 5-10%, Low: &lt;5%
+                  </p>
                 </div>
-                <div className="bg-gray-700 p-3 rounded">
-                  <span className="text-sm text-gray-400">Market Cap</span>
-                  <div className="text-white font-semibold">${parseInt(selectedFinancialData.marketCap).toLocaleString()}</div>
+
+                <div className="bg-gray-700 p-4 rounded">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-400">Market Cap</span>
+                    <span className="text-white font-semibold">${parseInt(selectedFinancialData.marketCap).toLocaleString()}</span>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Total market value of the company
+                  </p>
+                </div>
+
+                <div className="bg-gray-700 p-4 rounded">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-400">Beta</span>
+                    <span className="text-white font-semibold">{selectedFinancialData.beta.toFixed(2)}</span>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Volatility vs market. &lt;1: Less volatile, &gt;1: More volatile
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="text-lg font-semibold text-white mb-3">Dividend &amp; Returns</h4>
+                
+                <div className="bg-gray-700 p-4 rounded">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-400">Dividend Yield</span>
+                    <span className="text-white font-semibold">{selectedFinancialData.dividendYield.toFixed(2)}%</span>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Annual dividend return. Good: 2-6%, High: &gt;6%, Low: &lt;2%
+                  </p>
+                </div>
+
+                <div className="bg-gray-700 p-4 rounded">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-400">Payout Ratio</span>
+                    <span className="text-white font-semibold">{selectedFinancialData.payoutRatio.toFixed(2)}%</span>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Dividend payout percentage. Good: &lt;60%, High: &gt;80%
+                  </p>
+                </div>
+
+                <div className="bg-gray-700 p-4 rounded">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm text-gray-400">Return on Assets</span>
+                    <span className="text-white font-semibold">{selectedFinancialData.returnOnAssets.toFixed(2)}%</span>
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    Asset efficiency. Good: &gt;8%, Fair: 5-8%, Low: &lt;5%
+                  </p>
                 </div>
               </div>
             </div>
