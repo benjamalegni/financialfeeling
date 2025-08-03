@@ -2,8 +2,9 @@
 
 echo "🚀 Deploying Next.js app for Jekyll (Fixed Version)..."
 
-# Set production environment
+# Set production environment and static export
 export NODE_ENV=production
+export USE_STATIC_EXPORT=true
 
 # Build the project
 echo "📦 Building project with production config..."
