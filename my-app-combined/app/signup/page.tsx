@@ -151,7 +151,7 @@ export default function SignUpPage() {
 
           <div className="text-center text-sm text-gray-400">
             Already have an account?{' '}
-            <a onClick={() => router.push(getRoute('/financialfeeling/login'))} className="font-medium text-blue-400 hover:text-blue-300 underline">
+            <a onClick={() => router.push(getRoute('/login'))} className="font-medium text-blue-400 hover:text-blue-300 underline">
               Sign In
             </a>
           </div>

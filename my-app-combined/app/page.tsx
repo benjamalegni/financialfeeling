@@ -237,6 +237,12 @@ export default function HomePage() {
     const value = e.target.value
     setMessage(value)
     
+    // Si el usuario no está autenticado y está intentando escribir, redirigir al login
+    if (!user && value.trim()) {
+      router.push(getRoute('/login'))
+      return
+    }
+    
     if (user && value.trim()) {
       const suggestions = getAutocompleteSuggestions(value)
       setAutocompleteSuggestions(suggestions)
@@ -286,11 +292,78 @@ export default function HomePage() {
     return () => document.removeEventListener('click', handleClickOutside)
   }, [])
 
-  const handleAssetSelection = (symbol: string) => {
+  const handleAssetSelection = async (symbol: string) => {
     if (selectedAssets.includes(symbol)) {
-      setSelectedAssets(selectedAssets.filter(asset => asset !== symbol))
+      // Remove asset from selection
+      const newSelectedAssets = selectedAssets.filter(asset => asset !== symbol)
+      setSelectedAssets(newSelectedAssets)
+      
+      // Remove from database if user is logged in
+      if (user) {
+        try {
+          const { error } = await supabase
+            .from('user_selected_assets')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('asset_identifier', symbol)
+
+          if (error) {
+            console.error('Error removing asset from database:', error)
+            // Revert the selection if database operation fails
+            setSelectedAssets(selectedAssets)
+            alert('Error removing asset from portfolio. Please try again.')
+            return
+          }
+
+          console.log('Asset removed from database:', symbol)
+          
+          // Update original assets to reflect the change
+          setOriginalAssets(newSelectedAssets)
+        } catch (error) {
+          console.error('Error removing asset from database:', error)
+          // Revert the selection if database operation fails
+          setSelectedAssets(selectedAssets)
+          alert('Error removing asset from portfolio. Please try again.')
+        }
+      }
     } else {
-      setSelectedAssets([...selectedAssets, symbol])
+      // Add asset to selection
+      const newSelectedAssets = [...selectedAssets, symbol]
+      setSelectedAssets(newSelectedAssets)
+      
+      // Add to database if user is logged in
+      if (user) {
+        try {
+          const asset = financialAssets.find((a: any) => a.symbol === symbol)
+          const { error } = await supabase
+            .from('user_selected_assets')
+            .upsert({
+              user_id: user.id,
+              asset_identifier: symbol,
+              asset_type: asset?.type || null,
+              asset_name: asset?.name || null,
+              selected_at: new Date().toISOString()
+            }, { onConflict: 'user_id,asset_identifier' })
+
+          if (error) {
+            console.error('Error adding asset to database:', error)
+            // Revert the selection if database operation fails
+            setSelectedAssets(selectedAssets)
+            alert('Error adding asset to portfolio. Please try again.')
+            return
+          }
+
+          console.log('Asset added to database:', symbol)
+          
+          // Update original assets to reflect the change
+          setOriginalAssets(newSelectedAssets)
+        } catch (error) {
+          console.error('Error adding asset to database:', error)
+          // Revert the selection if database operation fails
+          setSelectedAssets(selectedAssets)
+          alert('Error adding asset to portfolio. Please try again.')
+        }
+      }
     }
   }
 

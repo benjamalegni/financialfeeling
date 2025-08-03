@@ -24,21 +24,26 @@ export default function SharedSidebar({ selectedAssets = [], onAnalysisComplete 
       const data = await analyzeStocks(selectedAssets);
       console.log('Análisis completado:', data);
       
-      // Llamar al callback para actualizar el dashboard
-      if (onAnalysisComplete) {
-        onAnalysisComplete(data);
+      if (data) {
+        // Llamar al callback para actualizar el dashboard
+        if (onAnalysisComplete) {
+          onAnalysisComplete(data);
+        }
+        
+        // Mostrar resultados más detallados
+        let message = '✅ Análisis de acciones completado!\n\n';
+        if (data.stocks) {
+          data.stocks.forEach((stock: any) => {
+            message += `${stock.symbol}: ${stock.analysis.sentiment} (${stock.analysis.confidence}% confianza)\n`;
+            message += `Recomendación: ${stock.analysis.recommendation}\n\n`;
+          });
+        }
+        
+        alert(message);
+      } else {
+        // No hay datos disponibles
+        alert('❌ No hay datos de análisis disponibles en este momento. Intenta más tarde.');
       }
-      
-      // Mostrar resultados más detallados
-      let message = '✅ Análisis de acciones completado!\n\n';
-      if (data.stocks) {
-        data.stocks.forEach((stock: any) => {
-          message += `${stock.symbol}: ${stock.analysis.sentiment} (${stock.analysis.confidence}% confianza)\n`;
-          message += `Recomendación: ${stock.analysis.recommendation}\n\n`;
-        });
-      }
-      
-      alert(message);
     } catch (error) {
       console.error('Error en el análisis:', error);
       alert('❌ Error al realizar el análisis');

@@ -9,10 +9,13 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  output: 'export',
-  trailingSlash: true,
-  basePath: process.env.NODE_ENV === 'production' ? '/financialfeeling' : '',
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/financialfeeling/' : '',
+  // Solo usar export estático si estamos en producción y queremos GitHub Pages
+  ...(process.env.NODE_ENV === 'production' && process.env.USE_STATIC_EXPORT === 'true' ? {
+    output: 'export',
+    trailingSlash: true,
+    basePath: '/financialfeeling',
+    assetPrefix: '/financialfeeling/',
+  } : {}),
 }
 
 export default nextConfig
