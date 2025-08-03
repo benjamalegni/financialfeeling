@@ -8,7 +8,7 @@ export const config = {
   
   // Railway Backend
   railway: {
-    webhookUrl: process.env.NEXT_PUBLIC_RAILWAY_WEBHOOK_URL || 'https://ffaiagent-n8n-production.up.railway.app/webhook/analyze-stocks',
+    webhookUrl: process.env.NEXT_PUBLIC_RAILWAY_WEBHOOK_URL || 'https://ffaiagent-n8n-production.up.railway.app/webhook-test/analyze-stocks',
   },
   
   // Alpha Vantage API
