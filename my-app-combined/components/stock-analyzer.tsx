@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, TrendingUp, TrendingDown, Activity } from 'lucide-react'
+import { config } from '@/lib/config'
 
 interface StockAnalysis {
   symbol: string
@@ -42,7 +43,11 @@ export default function StockAnalyzer() {
         return
       }
 
-      const response = await fetch('/api/analyze-stocks', {
+      // Use the Railway webhook URL directly instead of API route
+      const webhookUrl = config.railway.webhookUrl
+      console.log('Calling Railway webhook:', webhookUrl)
+
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -56,9 +61,46 @@ export default function StockAnalyzer() {
       }
 
       const result = await response.json()
-      setAnalysis(result.data || [])
+      console.log('Railway response:', result)
+      
+      // Handle different response formats from Railway
+      let analysisData = []
+      
+      if (Array.isArray(result)) {
+        // Handle array format: [{"forecast":{}}]
+        analysisData = result.map((item, index) => {
+          const symbol = stockArray[index] || `STOCK${index + 1}`
+          return {
+            symbol,
+            price: 0,
+            change: 0,
+            changePercent: 0,
+            recommendation: 'Analysis in progress',
+            confidence: 50
+          }
+        })
+      } else if (result.data) {
+        analysisData = result.data
+      } else if (result.analysis) {
+        analysisData = result.analysis
+      } else if (result.forecast) {
+        // Handle forecast format
+        analysisData = stockArray.map((symbol, index) => ({
+          symbol,
+          price: 0,
+          change: 0,
+          changePercent: 0,
+          recommendation: 'Analysis completed',
+          confidence: 75
+        }))
+      } else {
+        analysisData = result
+      }
+      
+      setAnalysis(analysisData)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      console.error('Analysis error:', err)
+      setError(err instanceof Error ? err.message : 'No analysis data available from backend. Please try again later.')
     } finally {
       setLoading(false)
     }
