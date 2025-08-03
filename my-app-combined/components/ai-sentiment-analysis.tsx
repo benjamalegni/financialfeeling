@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { TrendingUp, TrendingDown, Minus, AlertTriangle, Info, Clock, Activity, BarChart3, X } from 'lucide-react'
 import { analyzeStocks } from '@/lib/stockAnalysis'
-import { getFinancialData, FinancialMetrics } from '@/lib/financialData'
+import { getFinancialData, FinancialMetrics, calculateFundamentalScore } from '@/lib/financialData'
 
 interface SentimentData {
   symbol: string
@@ -42,25 +42,46 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
         // Transform Railway data to sentiment format
         const realSentimentData: SentimentData[] = await Promise.all(
           analysisResult.stocks.map(async (stock) => {
-            // Calculate fundamental score based on sentiment (simulated for now)
-            let fundamentalScore = 75; // Default
-            if (stock.analysis.sentiment === 'positive') {
-              fundamentalScore = Math.floor(Math.random() * 20) + 80; // 80-100
-            } else if (stock.analysis.sentiment === 'negative') {
-              fundamentalScore = Math.floor(Math.random() * 20) + 60; // 60-80
-            } else {
-              fundamentalScore = Math.floor(Math.random() * 20) + 70; // 70-90
-            }
-
             // Fetch financial data for stocks only
             let financialData: FinancialMetrics | undefined
+            let fundamentalScore = 75; // Default
             if (stock.symbol && stock.symbol.length <= 5) { // Only for stocks, not ETFs or other assets
               try {
                 const data = await getFinancialData(stock.symbol)
                 financialData = data || undefined
+                // Calculate fundamental score using the proper function if data is available
+                if (data) {
+                  fundamentalScore = calculateFundamentalScore(data)
+                } else {
+                  // Fallback to sentiment-based calculation
+                  if (stock.analysis.sentiment === 'positive') {
+                    fundamentalScore = Math.floor(Math.random() * 20) + 80; // 80-100
+                  } else if (stock.analysis.sentiment === 'negative') {
+                    fundamentalScore = Math.floor(Math.random() * 20) + 60; // 60-80
+                  } else {
+                    fundamentalScore = Math.floor(Math.random() * 20) + 70; // 70-90
+                  }
+                }
               } catch (error) {
                 console.error(`Error fetching financial data for ${stock.symbol}:`, error)
                 financialData = undefined
+                // Fallback to sentiment-based calculation
+                if (stock.analysis.sentiment === 'positive') {
+                  fundamentalScore = Math.floor(Math.random() * 20) + 80; // 80-100
+                } else if (stock.analysis.sentiment === 'negative') {
+                  fundamentalScore = Math.floor(Math.random() * 20) + 60; // 60-80
+                } else {
+                  fundamentalScore = Math.floor(Math.random() * 20) + 70; // 70-90
+                }
+              }
+            } else {
+              // For non-stocks, use sentiment-based calculation
+              if (stock.analysis.sentiment === 'positive') {
+                fundamentalScore = Math.floor(Math.random() * 20) + 80; // 80-100
+              } else if (stock.analysis.sentiment === 'negative') {
+                fundamentalScore = Math.floor(Math.random() * 20) + 60; // 60-80
+              } else {
+                fundamentalScore = Math.floor(Math.random() * 20) + 70; // 70-90
               }
             }
 
@@ -321,15 +342,14 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
       {showFinancialModal && selectedFinancialData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-white">
-                Fundamental Data - {selectedFinancialData.symbol}
-              </h3>
+            {/* Modal Header */}
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-600">
+              <h3 className="text-2xl font-bold text-white">Fundamental Data - {selectedFinancialData.symbol}</h3>
               <button
                 onClick={() => setShowFinancialModal(false)}
-                className="text-gray-400 hover:text-white"
+                className="p-2 hover:bg-gray-700 rounded-lg transition-colors duration-200 group"
               >
-                <X className="h-6 w-6" />
+                <X className="w-6 h-6 text-gray-400 group-hover:text-white transition-colors" />
               </button>
             </div>
             
@@ -341,182 +361,352 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
                   <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden">
                     <div 
                       className={`h-full rounded-full transition-all duration-300 ${
-                        selectedFinancialData.peRatio > 0 && selectedFinancialData.peRatio < 25 ? 'bg-green-500' :
-                        selectedFinancialData.peRatio >= 25 ? 'bg-yellow-500' : 'bg-red-500'
+                        calculateFundamentalScore(selectedFinancialData) >= 75 ? 'bg-green-500' :
+                        calculateFundamentalScore(selectedFinancialData) >= 60 ? 'bg-yellow-500' : 'bg-red-500'
                       }`}
-                      style={{ width: `${Math.min(100, Math.max(0, 
-                        (selectedFinancialData.peRatio > 0 && selectedFinancialData.peRatio < 25 ? 85 :
-                         selectedFinancialData.peRatio >= 25 ? 60 : 30)
-                      ))}%` }}
+                      style={{ width: `${calculateFundamentalScore(selectedFinancialData)}%` }}
                     ></div>
                   </div>
                 </div>
                 <span className="text-white font-semibold">
-                  {selectedFinancialData.peRatio > 0 && selectedFinancialData.peRatio < 25 ? '85%' :
-                   selectedFinancialData.peRatio >= 25 ? '60%' : '30%'}
+                  {calculateFundamentalScore(selectedFinancialData)}%
                 </span>
               </div>
               <p className="text-sm text-gray-400 mt-2">
-                Based on P/E ratio, debt levels, and profitability metrics
+                Based on P/E ratio, debt levels, profitability metrics, and growth indicators
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-white mb-3">Valuation Metrics</h4>
-                
-                <div className="bg-gray-700 p-4 rounded">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-400">P/E Ratio</span>
-                    <span className="text-white font-semibold">{selectedFinancialData.peRatio.toFixed(2)}</span>
+            {/* Metrics Grid - All metrics without descriptions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                {/* Valuation Metrics */}
+                <div className="mb-6">
+                  <h5 className="text-lg font-semibold text-white mb-3">Valuation</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-200 hover:shadow-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 font-medium">P/E Ratio</span>
+                        <span className="text-white font-semibold text-lg">{selectedFinancialData.peRatio.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-400">Valuation</span>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                          selectedFinancialData.peRatio < 15 ? 'bg-green-600 text-white shadow-lg' :
+                          selectedFinancialData.peRatio < 25 ? 'bg-yellow-600 text-white shadow-lg' : 'bg-red-600 text-white shadow-lg'
+                        }`}>
+                          {selectedFinancialData.peRatio < 15 ? 'L' : selectedFinancialData.peRatio < 25 ? 'M' : 'H'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-200 hover:shadow-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 font-medium">Forward P/E</span>
+                        <span className="text-white font-semibold text-lg">{selectedFinancialData.forwardPE.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-400">Future Valuation</span>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                          selectedFinancialData.forwardPE < 15 ? 'bg-green-600 text-white shadow-lg' :
+                          selectedFinancialData.forwardPE < 25 ? 'bg-yellow-600 text-white shadow-lg' : 'bg-red-600 text-white shadow-lg'
+                        }`}>
+                          {selectedFinancialData.forwardPE < 15 ? 'L' : selectedFinancialData.forwardPE < 25 ? 'M' : 'H'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-200 hover:shadow-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 font-medium">PEG Ratio</span>
+                        <span className="text-white font-semibold text-lg">{selectedFinancialData.pegRatio.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-400">Growth Adjusted</span>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                          selectedFinancialData.pegRatio < 1 ? 'bg-green-600 text-white shadow-lg' :
+                          selectedFinancialData.pegRatio < 1.5 ? 'bg-yellow-600 text-white shadow-lg' : 'bg-red-600 text-white shadow-lg'
+                        }`}>
+                          {selectedFinancialData.pegRatio < 1 ? 'L' : selectedFinancialData.pegRatio < 1.5 ? 'M' : 'H'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-200 hover:shadow-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 font-medium">Price to Book</span>
+                        <span className="text-white font-semibold text-lg">{selectedFinancialData.priceToBook.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-400">Asset Value</span>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                          selectedFinancialData.priceToBook < 1.5 ? 'bg-green-600 text-white shadow-lg' :
+                          selectedFinancialData.priceToBook < 3 ? 'bg-yellow-600 text-white shadow-lg' : 'bg-red-600 text-white shadow-lg'
+                        }`}>
+                          {selectedFinancialData.priceToBook < 1.5 ? 'L' : selectedFinancialData.priceToBook < 3 ? 'M' : 'H'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-400">
-                    Price-to-Earnings ratio. Good: 10-25, High: &gt;25, Low: &lt;10
-                  </p>
                 </div>
 
-                <div className="bg-gray-700 p-4 rounded">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-400">Forward P/E</span>
-                    <span className="text-white font-semibold">{selectedFinancialData.forwardPE.toFixed(2)}</span>
+                {/* Financial Health Metrics */}
+                <div className="mb-6">
+                  <h5 className="text-lg font-semibold text-white mb-3">Financial Health</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-200 hover:shadow-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 font-medium">Debt to Equity</span>
+                        <span className="text-white font-semibold text-lg">{selectedFinancialData.debtToEquity.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-400">Leverage</span>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                          selectedFinancialData.debtToEquity < 0.5 ? 'bg-green-600 text-white shadow-lg' :
+                          selectedFinancialData.debtToEquity < 1 ? 'bg-yellow-600 text-white shadow-lg' : 'bg-red-600 text-white shadow-lg'
+                        }`}>
+                          {selectedFinancialData.debtToEquity < 0.5 ? 'L' : selectedFinancialData.debtToEquity < 1 ? 'M' : 'H'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-200 hover:shadow-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 font-medium">Current Ratio</span>
+                        <span className="text-white font-semibold text-lg">{selectedFinancialData.currentRatio.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-400">Liquidity</span>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                          selectedFinancialData.currentRatio > 1.5 ? 'bg-green-600 text-white shadow-lg' :
+                          selectedFinancialData.currentRatio > 1 ? 'bg-yellow-600 text-white shadow-lg' : 'bg-red-600 text-white shadow-lg'
+                        }`}>
+                          {selectedFinancialData.currentRatio > 1.5 ? 'H' : selectedFinancialData.currentRatio > 1 ? 'M' : 'L'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-200 hover:shadow-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 font-medium">Quick Ratio</span>
+                        <span className="text-white font-semibold text-lg">{selectedFinancialData.quickRatio.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-400">Acid Test</span>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                          selectedFinancialData.quickRatio > 1 ? 'bg-green-600 text-white shadow-lg' :
+                          selectedFinancialData.quickRatio > 0.5 ? 'bg-yellow-600 text-white shadow-lg' : 'bg-red-600 text-white shadow-lg'
+                        }`}>
+                          {selectedFinancialData.quickRatio > 1 ? 'H' : selectedFinancialData.quickRatio > 0.5 ? 'M' : 'L'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-200 hover:shadow-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 font-medium">Return on Equity</span>
+                        <span className="text-white font-semibold text-lg">{selectedFinancialData.returnOnEquity.toFixed(2)}%</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-400">Profitability</span>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                          selectedFinancialData.returnOnEquity > 15 ? 'bg-green-600 text-white shadow-lg' :
+                          selectedFinancialData.returnOnEquity > 10 ? 'bg-yellow-600 text-white shadow-lg' : 'bg-red-600 text-white shadow-lg'
+                        }`}>
+                          {selectedFinancialData.returnOnEquity > 15 ? 'H' : selectedFinancialData.returnOnEquity > 10 ? 'M' : 'L'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-400">
-                    Future earnings estimate. Lower is generally better
-                  </p>
                 </div>
 
-                <div className="bg-gray-700 p-4 rounded">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-400">PEG Ratio</span>
-                    <span className="text-white font-semibold">{selectedFinancialData.pegRatio.toFixed(2)}</span>
+                {/* Growth & Market Metrics */}
+                <div className="mb-6">
+                  <h5 className="text-lg font-semibold text-white mb-3">Growth & Market</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-200 hover:shadow-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 font-medium">Revenue Growth</span>
+                        <span className="text-white font-semibold text-lg">{selectedFinancialData.revenueGrowth.toFixed(2)}%</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-400">Sales Growth</span>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                          selectedFinancialData.revenueGrowth > 15 ? 'bg-green-600 text-white shadow-lg' :
+                          selectedFinancialData.revenueGrowth > 5 ? 'bg-yellow-600 text-white shadow-lg' : 'bg-red-600 text-white shadow-lg'
+                        }`}>
+                          {selectedFinancialData.revenueGrowth > 15 ? 'H' : selectedFinancialData.revenueGrowth > 5 ? 'M' : 'L'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-200 hover:shadow-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 font-medium">Earnings Growth</span>
+                        <span className="text-white font-semibold text-lg">{selectedFinancialData.earningsGrowth.toFixed(2)}%</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-400">Profit Growth</span>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                          selectedFinancialData.earningsGrowth > 10 ? 'bg-green-600 text-white shadow-lg' :
+                          selectedFinancialData.earningsGrowth > 5 ? 'bg-yellow-600 text-white shadow-lg' : 'bg-red-600 text-white shadow-lg'
+                        }`}>
+                          {selectedFinancialData.earningsGrowth > 10 ? 'H' : selectedFinancialData.earningsGrowth > 5 ? 'M' : 'L'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-200 hover:shadow-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 font-medium">Profit Margin</span>
+                        <span className="text-white font-semibold text-lg">{selectedFinancialData.profitMargin.toFixed(2)}%</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-400">Efficiency</span>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                          selectedFinancialData.profitMargin > 15 ? 'bg-green-600 text-white shadow-lg' :
+                          selectedFinancialData.profitMargin > 8 ? 'bg-yellow-600 text-white shadow-lg' : 'bg-red-600 text-white shadow-lg'
+                        }`}>
+                          {selectedFinancialData.profitMargin > 15 ? 'H' : selectedFinancialData.profitMargin > 8 ? 'M' : 'L'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-200 hover:shadow-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 font-medium">Operating Margin</span>
+                        <span className="text-white font-semibold text-lg">{selectedFinancialData.operatingMargin.toFixed(2)}%</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-400">Operational Efficiency</span>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                          selectedFinancialData.operatingMargin > 20 ? 'bg-green-600 text-white shadow-lg' :
+                          selectedFinancialData.operatingMargin > 10 ? 'bg-yellow-600 text-white shadow-lg' : 'bg-red-600 text-white shadow-lg'
+                        }`}>
+                          {selectedFinancialData.operatingMargin > 20 ? 'H' : selectedFinancialData.operatingMargin > 10 ? 'M' : 'L'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-400">
-                    Price/Earnings to Growth. Good: &lt;1, Fair: 1-2, High: &gt;2
-                  </p>
                 </div>
 
-                <div className="bg-gray-700 p-4 rounded">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-400">Price to Book</span>
-                    <span className="text-white font-semibold">{selectedFinancialData.priceToBook.toFixed(2)}</span>
+                {/* Dividend & Returns Metrics */}
+                <div className="mb-6">
+                  <h5 className="text-lg font-semibold text-white mb-3">Dividend & Returns</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-200 hover:shadow-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 font-medium">Dividend Yield</span>
+                        <span className="text-white font-semibold text-lg">{selectedFinancialData.dividendYield.toFixed(2)}%</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-400">Income</span>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                          selectedFinancialData.dividendYield > 3 ? 'bg-green-600 text-white shadow-lg' :
+                          selectedFinancialData.dividendYield > 1 ? 'bg-yellow-600 text-white shadow-lg' : 'bg-red-600 text-white shadow-lg'
+                        }`}>
+                          {selectedFinancialData.dividendYield > 3 ? 'H' : selectedFinancialData.dividendYield > 1 ? 'M' : 'L'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-200 hover:shadow-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 font-medium">Payout Ratio</span>
+                        <span className="text-white font-semibold text-lg">{selectedFinancialData.payoutRatio.toFixed(2)}%</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-400">Sustainability</span>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                          selectedFinancialData.payoutRatio < 50 ? 'bg-green-600 text-white shadow-lg' :
+                          selectedFinancialData.payoutRatio < 75 ? 'bg-yellow-600 text-white shadow-lg' : 'bg-red-600 text-white shadow-lg'
+                        }`}>
+                          {selectedFinancialData.payoutRatio < 50 ? 'L' : selectedFinancialData.payoutRatio < 75 ? 'M' : 'H'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-200 hover:shadow-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 font-medium">Return on Assets</span>
+                        <span className="text-white font-semibold text-lg">{selectedFinancialData.returnOnAssets.toFixed(2)}%</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-400">Asset Efficiency</span>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                          selectedFinancialData.returnOnAssets > 10 ? 'bg-green-600 text-white shadow-lg' :
+                          selectedFinancialData.returnOnAssets > 5 ? 'bg-yellow-600 text-white shadow-lg' : 'bg-red-600 text-white shadow-lg'
+                        }`}>
+                          {selectedFinancialData.returnOnAssets > 10 ? 'H' : selectedFinancialData.returnOnAssets > 5 ? 'M' : 'L'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-200 hover:shadow-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 font-medium">Beta</span>
+                        <span className="text-white font-semibold text-lg">{selectedFinancialData.beta.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2">
+                        <span className="text-xs text-gray-400">Volatility</span>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                          selectedFinancialData.beta < 1 ? 'bg-green-600 text-white shadow-lg' :
+                          selectedFinancialData.beta < 1.5 ? 'bg-yellow-600 text-white shadow-lg' : 'bg-red-600 text-white shadow-lg'
+                        }`}>
+                          {selectedFinancialData.beta < 1 ? 'L' : selectedFinancialData.beta < 1.5 ? 'M' : 'H'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-400">
-                    Market value vs book value. Good: &lt;3, High: &gt;5
-                  </p>
                 </div>
-              </div>
-              
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-white mb-3">Financial Health</h4>
-                
-                <div className="bg-gray-700 p-4 rounded">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-400">Debt to Equity</span>
-                    <span className="text-white font-semibold">{selectedFinancialData.debtToEquity.toFixed(2)}</span>
-                  </div>
-                  <p className="text-xs text-gray-400">
-                    Debt levels. Good: &lt;0.5, Fair: 0.5-1, High: &gt;1
-                  </p>
-                </div>
-
-                <div className="bg-gray-700 p-4 rounded">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-400">Current Ratio</span>
-                    <span className="text-white font-semibold">{selectedFinancialData.currentRatio.toFixed(2)}</span>
-                  </div>
-                  <p className="text-xs text-gray-400">
-                    Short-term liquidity. Good: &gt;1.5, Fair: 1-1.5, Low: &lt;1
-                  </p>
-                </div>
-
-                <div className="bg-gray-700 p-4 rounded">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-400">Return on Equity</span>
-                    <span className="text-white font-semibold">{selectedFinancialData.returnOnEquity.toFixed(2)}%</span>
-                  </div>
-                  <p className="text-xs text-gray-400">
-                    Profitability efficiency. Good: &gt;15%, Fair: 10-15%, Low: &lt;10%
-                  </p>
-                </div>
-
-                <div className="bg-gray-700 p-4 rounded">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-400">Profit Margin</span>
-                    <span className="text-white font-semibold">{selectedFinancialData.profitMargin.toFixed(2)}%</span>
-                  </div>
-                  <p className="text-xs text-gray-400">
-                    Net profit percentage. Good: &gt;15%, Fair: 10-15%, Low: &lt;10%
-                  </p>
-                </div>
-              </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-white mb-3">Growth &amp; Market</h4>
-                
-                <div className="bg-gray-700 p-4 rounded">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-400">Revenue Growth</span>
-                    <span className="text-white font-semibold">{selectedFinancialData.revenueGrowth.toFixed(2)}%</span>
+            {/* Descriptions Section */}
+            <div className="border-t border-gray-600 pt-6">
+              <h4 className="text-lg font-semibold text-white mb-4">Metric Descriptions</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="space-y-3">
+                  <div>
+                    <h5 className="font-semibold text-white mb-1">P/E Ratio (Price-to-Earnings)</h5>
+                    <p className="text-gray-400">Price-to-earnings ratio. Measures how much you pay for each dollar of earnings.</p>
                   </div>
-                  <p className="text-xs text-gray-400">
-                    Annual revenue increase. Good: &gt;10%, Fair: 5-10%, Low: &lt;5%
-                  </p>
+                  <div>
+                    <h5 className="font-semibold text-white mb-1">Forward P/E</h5>
+                    <p className="text-gray-400">P/E based on estimated future earnings. Lower values are generally better.</p>
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-white mb-1">PEG Ratio</h5>
+                    <p className="text-gray-400">P/E adjusted for growth. Values below 1 indicate good valuation.</p>
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-white mb-1">Price to Book</h5>
+                    <p className="text-gray-400">Price-to-book value ratio. Measures if the stock is overvalued.</p>
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-white mb-1">Debt to Equity</h5>
+                    <p className="text-gray-400">Debt-to-equity ratio. Lower values indicate lower financial risk.</p>
+                  </div>
                 </div>
-
-                <div className="bg-gray-700 p-4 rounded">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-400">Market Cap</span>
-                    <span className="text-white font-semibold">${parseInt(selectedFinancialData.marketCap).toLocaleString()}</span>
+                <div className="space-y-3">
+                  <div>
+                    <h5 className="font-semibold text-white mb-1">Current Ratio</h5>
+                    <p className="text-gray-400">Short-term liquidity. Values above 1.5 indicate good solvency.</p>
                   </div>
-                  <p className="text-xs text-gray-400">
-                    Total market value of the company
-                  </p>
-                </div>
-
-                <div className="bg-gray-700 p-4 rounded">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-400">Beta</span>
-                    <span className="text-white font-semibold">{selectedFinancialData.beta.toFixed(2)}</span>
+                  <div>
+                    <h5 className="font-semibold text-white mb-1">Return on Equity (ROE)</h5>
+                    <p className="text-gray-400">Return on equity. Measures company efficiency and profitability.</p>
                   </div>
-                  <p className="text-xs text-gray-400">
-                    Volatility vs market. &lt;1: Less volatile, &gt;1: More volatile
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-white mb-3">Dividend &amp; Returns</h4>
-                
-                <div className="bg-gray-700 p-4 rounded">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-400">Dividend Yield</span>
-                    <span className="text-white font-semibold">{selectedFinancialData.dividendYield.toFixed(2)}%</span>
+                  <div>
+                    <h5 className="font-semibold text-white mb-1">Profit Margin</h5>
+                    <p className="text-gray-400">Net profit margin. Percentage of earnings over revenue.</p>
                   </div>
-                  <p className="text-xs text-gray-400">
-                    Annual dividend return. Good: 2-6%, High: &gt;6%, Low: &lt;2%
-                  </p>
-                </div>
-
-                <div className="bg-gray-700 p-4 rounded">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-400">Payout Ratio</span>
-                    <span className="text-white font-semibold">{selectedFinancialData.payoutRatio.toFixed(2)}%</span>
+                  <div>
+                    <h5 className="font-semibold text-white mb-1">Revenue Growth</h5>
+                    <p className="text-gray-400">Annual revenue growth. Indicates business expansion.</p>
                   </div>
-                  <p className="text-xs text-gray-400">
-                    Dividend payout percentage. Good: &lt;60%, High: &gt;80%
-                  </p>
-                </div>
-
-                <div className="bg-gray-700 p-4 rounded">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-400">Return on Assets</span>
-                    <span className="text-white font-semibold">{selectedFinancialData.returnOnAssets.toFixed(2)}%</span>
+                  <div>
+                    <h5 className="font-semibold text-white mb-1">Beta</h5>
+                    <p className="text-gray-400">Volatility vs market. &lt;1: Less volatile, &gt;1: More volatile.</p>
                   </div>
-                  <p className="text-xs text-gray-400">
-                    Asset efficiency. Good: &gt;8%, Fair: 5-8%, Low: &lt;5%
-                  </p>
                 </div>
               </div>
             </div>

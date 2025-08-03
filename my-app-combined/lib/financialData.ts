@@ -73,47 +73,56 @@ export async function getFinancialData(symbol: string): Promise<FinancialMetrics
 export function calculateFundamentalScore(metrics: FinancialMetrics): number {
   let score = 50 // Base score
 
-  // P/E Ratio analysis (lower is better, but not too low)
-  if (metrics.peRatio > 0 && metrics.peRatio < 25) {
-    score += 10
-  } else if (metrics.peRatio >= 25) {
-    score -= 5
+  // P/E Ratio analysis - more lenient for tech companies
+  if (metrics.peRatio > 0 && metrics.peRatio < 30) {
+    score += 15 // More generous for growth companies
+  } else if (metrics.peRatio >= 30 && metrics.peRatio < 50) {
+    score += 5 // Still acceptable for high-growth tech
+  } else if (metrics.peRatio >= 50) {
+    score -= 5 // Only penalize very high P/E
   }
 
-  // PEG Ratio analysis (lower is better)
-  if (metrics.pegRatio > 0 && metrics.pegRatio < 1) {
+  // PEG Ratio analysis - more lenient
+  if (metrics.pegRatio > 0 && metrics.pegRatio < 1.5) {
     score += 15
-  } else if (metrics.pegRatio >= 1 && metrics.pegRatio < 2) {
-    score += 5
-  } else if (metrics.pegRatio >= 2) {
-    score -= 10
+  } else if (metrics.pegRatio >= 1.5 && metrics.pegRatio < 2.5) {
+    score += 8 // More generous for growth companies
+  } else if (metrics.pegRatio >= 2.5) {
+    score -= 5 // Only penalize very high PEG
   }
 
-  // Debt to Equity analysis (lower is better)
-  if (metrics.debtToEquity > 0 && metrics.debtToEquity < 0.5) {
+  // Debt to Equity analysis - more lenient
+  if (metrics.debtToEquity > 0 && metrics.debtToEquity < 0.7) {
     score += 10
-  } else if (metrics.debtToEquity >= 0.5 && metrics.debtToEquity < 1) {
-    score += 5
-  } else if (metrics.debtToEquity >= 1) {
-    score -= 10
+  } else if (metrics.debtToEquity >= 0.7 && metrics.debtToEquity < 1.2) {
+    score += 5 // More acceptable
+  } else if (metrics.debtToEquity >= 1.2) {
+    score -= 5 // Only penalize very high debt
   }
 
-  // Return on Equity analysis (higher is better)
-  if (metrics.returnOnEquity > 15) {
+  // Return on Equity analysis - more lenient
+  if (metrics.returnOnEquity > 12) {
     score += 10
-  } else if (metrics.returnOnEquity > 10) {
+  } else if (metrics.returnOnEquity > 8) {
     score += 5
-  } else if (metrics.returnOnEquity < 5) {
-    score -= 5
+  } else if (metrics.returnOnEquity < 3) {
+    score -= 3 // Less harsh penalty
   }
 
-  // Profit Margin analysis (higher is better)
-  if (metrics.profitMargin > 20) {
+  // Profit Margin analysis - more lenient
+  if (metrics.profitMargin > 15) {
     score += 10
-  } else if (metrics.profitMargin > 10) {
+  } else if (metrics.profitMargin > 8) {
     score += 5
-  } else if (metrics.profitMargin < 5) {
-    score -= 5
+  } else if (metrics.profitMargin < 2) {
+    score -= 3 // Less harsh penalty
+  }
+
+  // Revenue Growth bonus for tech companies
+  if (metrics.revenueGrowth > 20) {
+    score += 10 // Bonus for high growth
+  } else if (metrics.revenueGrowth > 10) {
+    score += 5
   }
 
   // Ensure score is between 0 and 100
