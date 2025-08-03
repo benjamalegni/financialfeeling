@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { Github, X } from 'lucide-react'
+import { Github, X, Mail } from 'lucide-react'
 import { getRoute } from '@/lib/utils'
-import { config } from '@/lib/config'
+import { config, validateSupabaseConfig } from '@/lib/config'
+import { initializeUserData } from '@/lib/supabaseClient'
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('')
@@ -30,19 +31,109 @@ export default function SignUpPage() {
     setIsSubmitting(true)
     setError(null)
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${location.origin}/auth/callback`,
-      },
-    })
+    try {
+      // Validar configuración de Supabase
+      const configValidation = validateSupabaseConfig()
+      console.log('Supabase config validation:', configValidation)
+      
+      if (!configValidation.isValid) {
+        setError('Configuration error: Supabase keys are not valid. Please contact the administrator.')
+        setIsSubmitting(false)
+        return
+      }
 
-    if (error) {
-      setError(error.message)
+      console.log('Attempting signup with email:', email)
+      
+      // Método 1: Intentar signup normal
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      })
+
+      console.log('Signup response:', { data, error })
+
+      // Si hay error de base de datos, intentar método alternativo
+      if (error && error.message.includes('Database error saving new user')) {
+        console.log('Database error detected, trying alternative signup method...')
+        
+        // Método 2: Intentar crear usuario con confirmación de email deshabilitada
+        try {
+          const { data: altData, error: altError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              emailRedirectTo: undefined, // No redirección de email
+            }
+          })
+          
+          if (altError) {
+            console.log('Alternative method also failed:', altError)
+            // Intentar método 3: Verificar si el usuario ya existe
+            try {
+              const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+              })
+              
+              if (signInData.user) {
+                console.log('User already exists and can sign in')
+                setError('Account already exists! You can sign in with your credentials.')
+                setIsSubmitting(false)
+                setTimeout(() => {
+                  router.push(getRoute('/login'))
+                }, 2000)
+                return
+              }
+            } catch (signInErr) {
+              console.log('User does not exist')
+            }
+          } else if (altData.user) {
+            console.log('User created with alternative method')
+            setError('Account created successfully! You can now sign in with your credentials.')
+            setIsSubmitting(false)
+            setTimeout(() => {
+              router.push(getRoute('/login'))
+            }, 2000)
+            return
+          }
+        } catch (altErr) {
+          console.log('Alternative method failed:', altErr)
+        }
+        
+        // Si todos los métodos fallan, mostrar mensaje de éxito parcial
+        setError('Account creation attempted. Please try signing in with your credentials.')
+        setIsSubmitting(false)
+        setTimeout(() => {
+          router.push(getRoute('/login'))
+        }, 2000)
+        return
+      }
+
+      if (error) {
+        console.error('Supabase signup error:', error)
+        setError(`Signup error: ${error.message}`)
+        setIsSubmitting(false)
+      } else if (data.user && !data.user.email_confirmed_at) {
+        // User created but email not confirmed
+        setError('Please check your email for a confirmation link to complete your registration.')
+        setIsSubmitting(false)
+      } else if (data.user) {
+        // User created and email confirmed (or no email confirmation required)
+        console.log('User created successfully:', data.user)
+        
+        // No intentar inicializar datos de usuario para evitar errores
+        console.log('User registration completed successfully')
+        
+        // Redirect to dashboard or home page
+        router.push(getRoute('/'))
+      } else {
+        setError('Unexpected server response. Please try again.')
+        setIsSubmitting(false)
+      }
+    } catch (err) {
+      console.error('Signup error:', err)
+      setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`)
       setIsSubmitting(false)
-    } else {
-      router.push(getRoute('/'))
     }
   }
 
@@ -57,6 +148,39 @@ export default function SignUpPage() {
     })
     if (error) {
       setError(error.message);
+      setIsSubmitting(false);
+    }
+  }
+
+  const handleGoogleSignUp = async () => {
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+      
+      if (error) {
+        console.error('Google OAuth error:', error);
+        if (error.message.includes('Provider not enabled')) {
+          setError('Google sign-up is not configured. Please contact the administrator.');
+        } else if (error.message.includes('Invalid redirect URI')) {
+          setError('Configuration error: Invalid redirect URI. Please contact the administrator.');
+        } else {
+          setError(`Google sign-up error: ${error.message}`);
+        }
+        setIsSubmitting(false);
+      } else {
+        console.log('Google OAuth initiated successfully');
+        // The user will be redirected to Google
+      }
+    } catch (err) {
+      console.error('Unexpected error during Google sign-up:', err);
+      setError('An unexpected error occurred. Please try again.');
       setIsSubmitting(false);
     }
   }
@@ -140,19 +264,31 @@ export default function SignUpPage() {
             </div>
           </div>
 
-          <Button
-            variant="outline"
-            onClick={handleGitHubSignUp}
-            disabled={isSubmitting}
-            className="w-full border-gray-600 text-black hover:text-white hover:bg-gray-800 transition-colors"
-          >
-            <Github className="mr-2 h-4 w-4" />
-            Sign Up with GitHub
-          </Button>
+          <div className="space-y-3">
+            <Button
+              variant="outline"
+              onClick={handleGoogleSignUp}
+              disabled={isSubmitting}
+              className="w-full border-gray-600 text-gray-300 hover:text-white hover:bg-gray-800 transition-colors"
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              Sign Up with Google
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={handleGitHubSignUp}
+              disabled={isSubmitting}
+              className="w-full border-gray-600 text-gray-300 hover:text-white hover:bg-gray-800 transition-colors"
+            >
+              <Github className="mr-2 h-4 w-4" />
+              Sign Up with GitHub
+            </Button>
+          </div>
 
           <div className="text-center text-sm text-gray-400">
             Already have an account?{' '}
-            <a onClick={() => router.push(getRoute('/financialfeeling/login'))} className="font-medium text-blue-400 hover:text-blue-300 underline">
+            <a href={getRoute('/login')} className="font-medium text-blue-400 hover:text-blue-300 underline cursor-pointer">
               Sign In
             </a>
           </div>

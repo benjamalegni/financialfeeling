@@ -5,9 +5,9 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Simplified function to handle routes with correct basePath for GitHub Pages
+// Function to handle routes with correct basePath for GitHub Pages
 export function getRoute(path: string): string {
-  // Always use basePath for GitHub Pages to avoid issues
-  const basePath = '/financialfeeling';
-  return `${path}`;
+  // Use basePath for GitHub Pages in production
+  const basePath = process.env.NODE_ENV === 'production' ? '/financialfeeling' : '';
+  return `${basePath}${path}`;
 }

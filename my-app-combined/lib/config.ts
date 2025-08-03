@@ -26,4 +26,24 @@ export const config = {
 // Función helper para obtener configuración
 export function getConfig() {
   return config
+}
+
+// Función para verificar si las claves de Supabase son válidas
+export function validateSupabaseConfig() {
+  const url = config.supabase.url
+  const key = config.supabase.anonKey
+  
+  if (!url || url === 'https://yhxdyndkdhhnuginaekn.supabase.co') {
+    console.warn('Supabase URL parece ser una URL de ejemplo')
+  }
+  
+  if (!key || key.includes('Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8')) {
+    console.warn('Supabase anonKey parece ser una clave de ejemplo')
+  }
+  
+  return {
+    isValid: url && key && !url.includes('example') && !key.includes('Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8'),
+    url,
+    keyLength: key ? key.length : 0
+  }
 } 

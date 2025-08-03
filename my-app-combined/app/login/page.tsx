@@ -9,9 +9,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { Github, X } from 'lucide-react'
+import { Github, X, Mail } from 'lucide-react'
 import { getRoute } from '@/lib/utils'
-import { config } from '@/lib/config'
+import { config, validateSupabaseConfig } from '@/lib/config'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -30,16 +30,32 @@ export default function LoginPage() {
     setIsSubmitting(true)
     setError(null)
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      // Validar configuración de Supabase
+      const configValidation = validateSupabaseConfig()
+      console.log('Supabase config validation:', configValidation)
+      
+      if (!configValidation.isValid) {
+        setError('Configuration error: Supabase keys are not valid. Please contact the administrator.')
+        setIsSubmitting(false)
+        return
+      }
 
-    if (error) {
-      setError(error.message)
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        setError(error.message)
+        setIsSubmitting(false)
+      } else if (data.user) {
+        router.push(getRoute('/'))
+      }
+    } catch (err) {
+      console.error('Login error:', err)
+      setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`)
       setIsSubmitting(false)
-    } else {
-      router.push(getRoute('/'))
     }
   }
 
@@ -54,6 +70,39 @@ export default function LoginPage() {
     })
     if (error) {
       setError(error.message);
+      setIsSubmitting(false);
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    setIsSubmitting(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+      
+      if (error) {
+        console.error('Google OAuth error:', error);
+        if (error.message.includes('Provider not enabled')) {
+          setError('Google sign-in is not configured. Please contact the administrator.');
+        } else if (error.message.includes('Invalid redirect URI')) {
+          setError('Configuration error: Invalid redirect URI. Please contact the administrator.');
+        } else {
+          setError(`Google sign-in error: ${error.message}`);
+        }
+        setIsSubmitting(false);
+      } else {
+        console.log('Google OAuth initiated successfully');
+        // The user will be redirected to Google
+      }
+    } catch (err) {
+      console.error('Unexpected error during Google sign-in:', err);
+      setError('An unexpected error occurred. Please try again.');
       setIsSubmitting(false);
     }
   }
@@ -133,15 +182,27 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <Button
-            variant="outline"
-            onClick={handleGitHubSignIn}
-            disabled={isSubmitting}
-            className="w-full border-gray-600 text-black hover:text-white hover:bg-gray-800 transition-colors"
-          >
-            <Github className="mr-2 h-4 w-4" />
-            Sign In with GitHub
-          </Button>
+          <div className="space-y-3">
+            <Button
+              variant="outline"
+              onClick={handleGoogleSignIn}
+              disabled={isSubmitting}
+              className="w-full border-gray-600 text-black hover:text-white hover:bg-gray-800 transition-colors"
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              Sign In with Google
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={handleGitHubSignIn}
+              disabled={isSubmitting}
+              className="w-full border-gray-600 text-black hover:text-white hover:bg-gray-800 transition-colors"
+            >
+              <Github className="mr-2 h-4 w-4" />
+              Sign In with GitHub
+            </Button>
+          </div>
 
           <div className="text-center text-sm text-gray-400">
             Don&apos;t have an account?{' '}
