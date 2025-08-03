@@ -9,7 +9,7 @@ interface SentimentData {
   impact: 'positive' | 'negative' | 'neutral'
   news: string
   reason: string
-  confidence: number
+  fundamentalScore: number
   timestamp?: string
 }
 
@@ -52,35 +52,35 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
               reason: 'iPhone 15 Pro Max demand exceeds expectations with 23% YoY growth in services revenue',
               impact: 'positive' as const,
               horizon: 'Short-term',
-              confidence: 87
+              fundamentalScore: 85
             },
             'TSLA': {
               news: 'Tesla faces production challenges but maintains strong delivery targets',
               reason: 'Supply chain issues impact Q4 production, but demand remains robust with 1.8M deliveries expected',
               impact: 'neutral' as const,
               horizon: 'Medium-term',
-              confidence: 72
+              fundamentalScore: 72
             },
             'MSFT': {
               news: 'Microsoft Azure cloud services show exceptional growth',
               reason: 'AI integration drives 35% revenue increase in cloud segment, expanding market leadership',
               impact: 'positive' as const,
               horizon: 'Long-term',
-              confidence: 94
+              fundamentalScore: 92
             },
             'GOOGL': {
               news: 'Google faces regulatory scrutiny over search dominance',
               reason: 'Antitrust concerns may impact future revenue streams, but core business remains strong',
               impact: 'negative' as const,
               horizon: 'Medium-term',
-              confidence: 68
+              fundamentalScore: 78
             },
             'AMZN': {
               news: 'Amazon Web Services continues to dominate cloud market',
               reason: 'AWS revenue grows 28% with expanding AI and machine learning services',
               impact: 'positive' as const,
               horizon: 'Long-term',
-              confidence: 91
+              fundamentalScore: 88
             }
           }
 
@@ -89,7 +89,7 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
             reason: 'Technical indicators suggest moderate volatility with stable fundamentals',
             impact: ['positive', 'negative', 'neutral'][index % 3] as 'positive' | 'negative' | 'neutral',
             horizon: ['Short-term', 'Medium-term', 'Long-term'][index % 3],
-            confidence: 75
+            fundamentalScore: Math.floor(Math.random() * 30) + 70 // 70-100
           }
 
           const data = assetData[asset as keyof typeof assetData] || defaultData
@@ -100,7 +100,7 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
             impact: data.impact,
             news: data.news,
             reason: data.reason,
-            confidence: data.confidence,
+            fundamentalScore: data.fundamentalScore,
             timestamp: new Date().toISOString()
           }
         })
@@ -130,35 +130,35 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
             reason: 'iPhone 15 Pro Max demand exceeds expectations with 23% YoY growth in services revenue',
             impact: 'positive' as const,
             horizon: 'Short-term',
-            confidence: 87
+            fundamentalScore: 85
           },
           'TSLA': {
             news: 'Tesla faces production challenges but maintains strong delivery targets',
             reason: 'Supply chain issues impact Q4 production, but demand remains robust with 1.8M deliveries expected',
             impact: 'neutral' as const,
             horizon: 'Medium-term',
-            confidence: 72
+            fundamentalScore: 72
           },
           'MSFT': {
             news: 'Microsoft Azure cloud services show exceptional growth',
             reason: 'AI integration drives 35% revenue increase in cloud segment, expanding market leadership',
             impact: 'positive' as const,
             horizon: 'Long-term',
-            confidence: 94
+            fundamentalScore: 92
           },
           'GOOGL': {
             news: 'Google faces regulatory scrutiny over search dominance',
             reason: 'Antitrust concerns may impact future revenue streams, but core business remains strong',
             impact: 'negative' as const,
             horizon: 'Medium-term',
-            confidence: 68
+            fundamentalScore: 78
           },
           'AMZN': {
             news: 'Amazon Web Services continues to dominate cloud market',
             reason: 'AWS revenue grows 28% with expanding AI and machine learning services',
             impact: 'positive' as const,
             horizon: 'Long-term',
-            confidence: 91
+            fundamentalScore: 88
           }
         };
 
@@ -167,7 +167,7 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
           reason: 'Technical indicators suggest moderate volatility with stable fundamentals',
           impact: 'neutral' as const,
           horizon: 'Medium-term',
-          confidence: stock.analysis?.confidence || 75
+          fundamentalScore: Math.floor(Math.random() * 30) + 70
         };
 
         const data = assetData[stock.symbol as keyof typeof assetData] || defaultData;
@@ -178,7 +178,7 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
           impact: data.impact,
           news: data.news,
           reason: data.reason,
-          confidence: data.confidence,
+          fundamentalScore: data.fundamentalScore,
           timestamp: new Date().toISOString()
         };
       });
@@ -187,21 +187,14 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
     }
   }, [analysisData]);
 
-  // Removed automatic analysis - now only runs when RUN button is pressed
-  // useEffect(() => {
-  //   if (selectedAssets.length > 0) {
-  //     fetchSentimentAnalysis()
-  //   }
-  // }, [selectedAssets])
-
   const getImpactIcon = (impact: string) => {
     switch (impact) {
       case 'positive':
-        return <TrendingUp className="h-5 w-5 text-green-500" />
+        return <TrendingUp className="h-6 w-6 text-green-500" />
       case 'negative':
-        return <TrendingDown className="h-5 w-5 text-red-500" />
+        return <TrendingDown className="h-6 w-6 text-red-500" />
       default:
-        return <Minus className="h-5 w-5 text-gray-500" />
+        return <Minus className="h-6 w-6 text-yellow-500" />
     }
   }
 
@@ -212,21 +205,22 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
       case 'negative':
         return 'border-red-500 bg-red-900/10'
       default:
-        return 'border-gray-500 bg-gray-900/10'
+        return 'border-yellow-500 bg-yellow-900/10'
     }
   }
 
-  const getHorizonColor = (horizon: string) => {
-    switch (horizon) {
-      case 'Short-term':
-        return 'bg-blue-900/30 text-blue-300'
-      case 'Medium-term':
-        return 'bg-yellow-900/30 text-yellow-300'
-      case 'Long-term':
-        return 'bg-purple-900/30 text-purple-300'
-      default:
-        return 'bg-gray-900/30 text-gray-300'
-    }
+  const getFundamentalScoreColor = (score: number) => {
+    if (score >= 85) return 'bg-green-500'
+    if (score >= 75) return 'bg-yellow-500'
+    if (score >= 65) return 'bg-orange-500'
+    return 'bg-red-500'
+  }
+
+  const getFundamentalScoreText = (score: number) => {
+    if (score >= 85) return 'Excellent'
+    if (score >= 75) return 'Good'
+    if (score >= 65) return 'Fair'
+    return 'Poor'
   }
 
   if (selectedAssets.length === 0) {
@@ -265,7 +259,7 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
           ) : (
             <>
               <TrendingUp className="h-4 w-4" />
-              <span>Refresh Analysis</span>
+              <span>RUN</span>
             </>
           )}
         </button>
@@ -283,13 +277,13 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
       {isLoading ? (
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">Analyzing market sentiment...</p>
+          <p className="text-gray-400">We are analyzing the latest financial news...</p>
         </div>
       ) : sentimentData.length === 0 ? (
         <div className="text-center py-12">
           <TrendingUp className="h-12 w-12 text-blue-400 mx-auto mb-4" />
           <p className="text-gray-400 mb-4">Ready to analyze {selectedAssets.length} assets</p>
-          <p className="text-sm text-gray-500">Press the RUN button in the sidebar to start AI analysis</p>
+          <p className="text-sm text-gray-500">Press the RUN button to start AI analysis</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -304,8 +298,11 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
                     {getImpactIcon(item.impact)}
                     <h3 className="text-xl font-bold text-white">{item.symbol}</h3>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getHorizonColor(item.horizon)}`}>
-                    {item.horizon}
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    item.impact === 'positive' ? 'bg-green-900/30 text-green-300' :
+                    item.impact === 'negative' ? 'bg-red-900/30 text-red-300' : 'bg-yellow-900/30 text-yellow-300'
+                  }`}>
+                    {item.impact.charAt(0).toUpperCase() + item.impact.slice(1)} Sentiment
                   </span>
                 </div>
                 {item.timestamp && (
@@ -334,39 +331,25 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
                 </div>
               </div>
 
-                             <div className="mt-4 pt-4 border-t border-gray-700">
-                 <div className="flex items-center justify-between">
-                   <div className="flex items-center space-x-4">
-                     <div className="flex items-center space-x-2">
-                       <span className="text-xs text-gray-400">Sentiment Impact</span>
-                       <div className="flex items-center space-x-2">
-                         {getImpactIcon(item.impact)}
-                         <span className={`text-sm font-medium ${
-                           item.impact === 'positive' ? 'text-green-400' :
-                           item.impact === 'negative' ? 'text-red-400' : 'text-gray-400'
-                         }`}>
-                           {item.impact.charAt(0).toUpperCase() + item.impact.slice(1)}
-                         </span>
-                       </div>
-                     </div>
-                     <div className="flex items-center space-x-2">
-                       <span className="text-xs text-gray-400">AI Confidence</span>
-                       <div className="flex items-center space-x-1">
-                         <div className="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
-                           <div 
-                             className={`h-full rounded-full transition-all duration-300 ${
-                               item.confidence >= 80 ? 'bg-green-500' :
-                               item.confidence >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                             }`}
-                             style={{ width: `${item.confidence}%` }}
-                           ></div>
-                         </div>
-                         <span className="text-xs font-medium text-gray-300">{item.confidence}%</span>
-                       </div>
-                     </div>
-                   </div>
-                 </div>
-               </div>
+              <div className="mt-4 pt-4 border-t border-gray-700">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-400">Fundamental Score</span>
+                      <div className="flex items-center space-x-1">
+                        <div className="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-300 ${getFundamentalScoreColor(item.fundamentalScore)}`}
+                            style={{ width: `${item.fundamentalScore}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs font-medium text-gray-300">{item.fundamentalScore}%</span>
+                        <span className="text-xs text-gray-400">({getFundamentalScoreText(item.fundamentalScore)})</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           ))}
         </div>

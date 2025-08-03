@@ -287,12 +287,12 @@ export default function DashboardContent({
 
                     {/* Category Filter */}
                     <div className="flex flex-wrap gap-2">
-                      {categories.map(category => (
+                      {['All', 'Technology', 'Finance', 'Healthcare', 'Energy', 'Cryptocurrency', 'Index', 'International', 'Commodity', 'Currency'].map(category => (
                         <button
                           key={category}
                           onClick={() => setSelectedCategory(category)}
                           className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                            selectedCategory === category
+                            selectedCategory === category 
                               ? 'bg-blue-600 text-white'
                               : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                           }`}
@@ -313,7 +313,15 @@ export default function DashboardContent({
                             ? 'bg-green-600 border-green-500 text-white'
                             : 'bg-gray-700 border-gray-600 hover:bg-gray-600 text-gray-300'
                         }`}
-                        onClick={() => !isAssetInPortfolio(asset.symbol) && handleAddAsset(asset)}
+                        onClick={() => {
+                          if (isAssetInPortfolio(asset.symbol)) {
+                            // Si ya está en el portfolio, lo removemos
+                            handleRemoveAsset(asset.symbol, asset.symbol)
+                          } else {
+                            // Si no está en el portfolio, lo agregamos
+                            handleAddAsset(asset)
+                          }
+                        }}
                       >
                         <div className="text-center">
                           <div className="font-semibold text-lg mb-1">{asset.symbol}</div>

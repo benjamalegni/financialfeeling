@@ -35,23 +35,52 @@ export async function analyzeStocks(stocks: string[]): Promise<AnalysisResult | 
     console.log('Railway response status:', response.status);
     
     if (response.ok) {
-      const analysisResult = await response.json();
-      console.log('Railway analysis result:', analysisResult);
-      return {
-        ...analysisResult,
-        timestamp: new Date().toISOString(),
-      };
+      const railwayData = await response.json();
+      console.log('Railway analysis result:', railwayData);
+      
+      // Transform Railway response to our format
+      if (railwayData && railwayData.length > 0 && railwayData[0].forecast) {
+        const forecast = railwayData[0].forecast;
+        const analysisResults: StockAnalysis[] = [];
+        
+        for (const symbol of stocks) {
+          const stockData = forecast[symbol];
+          if (stockData) {
+            // Use exact data from Railway without modification
+            analysisResults.push({
+              symbol: symbol.toUpperCase(),
+              analysis: {
+                sentiment: stockData.impact, // Use exact impact as sentiment
+                confidence: 75, // Default confidence since Railway doesn't provide it
+                news: stockData.news, // Use exact news from Railway
+                recommendation: `Based on ${stockData.impact} impact: ${stockData.reason}` // Use reason as recommendation
+              }
+            });
+          }
+        }
+        
+        const result: AnalysisResult = {
+          stocks: analysisResults,
+          timestamp: new Date().toISOString(),
+          note: 'Analysis from Railway backend - News-based forecasting'
+        };
+        
+        return result;
+      } else {
+        console.log('No forecast data available from Railway');
+        return null;
+      }
     } else {
       const errorText = await response.text();
       console.error('Railway API error:', response.status, errorText);
       
-      // If Railway is not available, use mock data immediately
-      console.log('Railway not available, using mock data');
-      return getMockAnalysisResult(stocks);
+      // If Railway API fails, return null instead of mock data
+      console.log('Railway API not available, no data to show');
+      return null;
     }
   } catch (error) {
-    console.log('Railway not available or failed, using mock data:', error);
-    return getMockAnalysisResult(stocks);
+    console.log('Railway API call failed, no data to show:', error);
+    return null;
   }
 }
 
