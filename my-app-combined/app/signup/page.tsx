@@ -143,9 +143,7 @@ export default function SignUpPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {
-        redirectTo: process.env.NODE_ENV === 'production' 
-          ? 'https://benjamalegni.github.io/financialfeeling/auth/callback'
-          : `${location.origin}/auth/callback`,
+        redirectTo: 'https://benjamalegni.github.io/financialfeeling/auth/callback',
       },
     })
     if (error) {
@@ -162,9 +160,7 @@ export default function SignUpPage() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: process.env.NODE_ENV === 'production'
-            ? 'https://benjamalegni.github.io/financialfeeling/auth/callback'
-            : `${window.location.origin}/auth/callback`,
+          redirectTo: 'https://benjamalegni.github.io/financialfeeling/auth/callback',
         },
       })
       

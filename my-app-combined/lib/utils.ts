@@ -10,7 +10,6 @@ export function getRoute(path: string): string {
   // Remove leading slash if present
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
   
-  // Use basePath for GitHub Pages in production
-  const basePath = process.env.NODE_ENV === 'production' ? '/financialfeeling' : '';
-  return `${basePath}/${cleanPath}`;
+  // Always use the full path for GitHub Pages
+  return `/financialfeeling/${cleanPath}`;
 }
