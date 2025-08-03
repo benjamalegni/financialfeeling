@@ -55,6 +55,7 @@ export default function HomePage() {
     }, 3000)
     return () => clearInterval(interval)
   }, [])
+
   const router = useRouter()
 
   // Comprehensive list of financial assets
@@ -518,7 +519,7 @@ export default function HomePage() {
                     <div className="space-x-2">
                       <Button 
                         variant="ghost" 
-                        onClick={() => router.push(getRoute('/login'))}
+                        onClick={() => router.push('/login')}
                         className="text-gray-300 hover:text-white hover:bg-gray-800 transition-colors"
                       >
                         Login to FF
