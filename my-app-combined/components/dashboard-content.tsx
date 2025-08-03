@@ -244,14 +244,14 @@ export default function DashboardContent({
           {/* Dashboard Content */}
           <div className="space-y-8">
             {/* Portfolio Management Section */}
-            <div className="bg-gray-900 rounded-lg border border-gray-700 p-6 shadow-lg">
+            <div className="bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-indigo-900/20 backdrop-blur-sm rounded-lg border border-gray-700 p-6 shadow-lg">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-semibold text-white">Portfolio</h2>
                 <div className="flex space-x-2">
                   <ClearTestDataButton />
                   <button
                     onClick={() => setShowAssetSelector(!showAssetSelector)}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition-colors flex items-center space-x-2"
+                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-md transition-all duration-300 flex items-center space-x-2 shadow-lg"
                   >
                     <Plus className="h-4 w-4" />
                     <span>Add Assets</span>
@@ -261,7 +261,7 @@ export default function DashboardContent({
 
               {/* Asset Selector Modal */}
               {showAssetSelector && (
-                <div className="mb-6 p-4 bg-gray-800 rounded-lg border border-gray-600">
+                <div className="mb-6 p-4 bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-sm rounded-lg border border-gray-600">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-white">Add Assets to Portfolio</h3>
                     <button
@@ -281,7 +281,7 @@ export default function DashboardContent({
                         placeholder="Search assets..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full pl-10 pr-4 py-2 bg-gray-700/50 backdrop-blur-sm border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
@@ -293,8 +293,8 @@ export default function DashboardContent({
                           onClick={() => setSelectedCategory(category)}
                           className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                             selectedCategory === category 
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                              : 'bg-gray-700/50 backdrop-blur-sm text-gray-300 hover:bg-gray-600/50'
                           }`}
                         >
                           {category}
@@ -308,10 +308,10 @@ export default function DashboardContent({
                     {filteredAssets.map((asset) => (
                       <div
                         key={asset.symbol}
-                        className={`p-3 rounded-lg border cursor-pointer transition-all relative ${
+                        className={`p-3 rounded-lg border cursor-pointer transition-all duration-300 relative ${
                           isAssetInPortfolio(asset.symbol)
-                            ? 'bg-green-600 border-green-500 text-white'
-                            : 'bg-gray-700 border-gray-600 hover:bg-gray-600 text-gray-300'
+                            ? 'bg-gradient-to-r from-green-600 to-emerald-600 border-green-500 text-white shadow-lg'
+                            : 'bg-gradient-to-r from-gray-700/50 to-gray-800/50 backdrop-blur-sm border-gray-600 hover:bg-gray-600/50 text-gray-300'
                         }`}
                         onClick={() => {
                           if (isAssetInPortfolio(asset.symbol)) {
@@ -352,7 +352,7 @@ export default function DashboardContent({
                     </p>
                     <button
                       onClick={() => setShowAssetSelector(true)}
-                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+                      className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg"
                     >
                       Add Assets to Portfolio
                     </button>
@@ -360,7 +360,7 @@ export default function DashboardContent({
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {currentAssets.map((asset) => (
-                      <div key={asset.id} className="bg-gray-800 p-4 rounded-lg border border-gray-600">
+                      <div key={asset.id} className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-sm p-4 rounded-lg border border-gray-600 shadow-lg">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <h4 className="text-lg font-semibold text-white">{asset.asset_name || asset.asset_identifier}</h4>
