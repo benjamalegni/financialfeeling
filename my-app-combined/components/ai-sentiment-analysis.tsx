@@ -30,85 +30,72 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
     setError(null)
 
     try {
-      const response = await fetch('/api/analyze-stocks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          stocks: selectedAssets
-        })
+      // Simular datos de sentimiento directamente sin llamada HTTP
+      // En deployment estático no hay API routes disponibles
+      const mockSentimentData: SentimentData[] = selectedAssets.map((asset, index) => {
+        const assetData = {
+          'AAPL': {
+            news: 'Apple reports record iPhone sales and strong services growth',
+            reason: 'iPhone 15 Pro Max demand exceeds expectations with 23% YoY growth in services revenue',
+            impact: 'positive' as const,
+            horizon: 'Short-term',
+            fundamentalScore: 85
+          },
+          'TSLA': {
+            news: 'Tesla faces production challenges but maintains strong delivery targets',
+            reason: 'Supply chain issues impact Q4 production, but demand remains robust with 1.8M deliveries expected',
+            impact: 'neutral' as const,
+            horizon: 'Medium-term',
+            fundamentalScore: 72
+          },
+          'MSFT': {
+            news: 'Microsoft Azure cloud services show exceptional growth',
+            reason: 'AI integration drives 35% revenue increase in cloud segment, expanding market leadership',
+            impact: 'positive' as const,
+            horizon: 'Long-term',
+            fundamentalScore: 92
+          },
+          'GOOGL': {
+            news: 'Google faces regulatory scrutiny over search dominance',
+            reason: 'Antitrust concerns may impact future revenue streams, but core business remains strong',
+            impact: 'negative' as const,
+            horizon: 'Medium-term',
+            fundamentalScore: 78
+          },
+          'AMZN': {
+            news: 'Amazon Web Services continues to dominate cloud market',
+            reason: 'AWS revenue grows 28% with expanding AI and machine learning services',
+            impact: 'positive' as const,
+            horizon: 'Long-term',
+            fundamentalScore: 88
+          }
+        }
+
+        const defaultData = {
+          news: 'Market analysis shows mixed signals for this asset',
+          reason: 'Technical indicators suggest moderate volatility with stable fundamentals',
+          impact: ['positive', 'negative', 'neutral'][index % 3] as 'positive' | 'negative' | 'neutral',
+          horizon: ['Short-term', 'Medium-term', 'Long-term'][index % 3],
+          fundamentalScore: Math.floor(Math.random() * 30) + 70 // 70-100
+        }
+
+        const data = assetData[asset as keyof typeof assetData] || defaultData
+
+        return {
+          symbol: asset,
+          horizon: data.horizon,
+          impact: data.impact,
+          news: data.news,
+          reason: data.reason,
+          fundamentalScore: data.fundamentalScore,
+          timestamp: new Date().toISOString()
+        }
       })
 
-      if (response.ok) {
-        const data = await response.json()
-        
-        // Simular datos de sentimiento basados en la respuesta de n8n
-        // En producción, esto vendría directamente de n8n
-        const mockSentimentData: SentimentData[] = selectedAssets.map((asset, index) => {
-          const assetData = {
-            'AAPL': {
-              news: 'Apple reports record iPhone sales and strong services growth',
-              reason: 'iPhone 15 Pro Max demand exceeds expectations with 23% YoY growth in services revenue',
-              impact: 'positive' as const,
-              horizon: 'Short-term',
-              fundamentalScore: 85
-            },
-            'TSLA': {
-              news: 'Tesla faces production challenges but maintains strong delivery targets',
-              reason: 'Supply chain issues impact Q4 production, but demand remains robust with 1.8M deliveries expected',
-              impact: 'neutral' as const,
-              horizon: 'Medium-term',
-              fundamentalScore: 72
-            },
-            'MSFT': {
-              news: 'Microsoft Azure cloud services show exceptional growth',
-              reason: 'AI integration drives 35% revenue increase in cloud segment, expanding market leadership',
-              impact: 'positive' as const,
-              horizon: 'Long-term',
-              fundamentalScore: 92
-            },
-            'GOOGL': {
-              news: 'Google faces regulatory scrutiny over search dominance',
-              reason: 'Antitrust concerns may impact future revenue streams, but core business remains strong',
-              impact: 'negative' as const,
-              horizon: 'Medium-term',
-              fundamentalScore: 78
-            },
-            'AMZN': {
-              news: 'Amazon Web Services continues to dominate cloud market',
-              reason: 'AWS revenue grows 28% with expanding AI and machine learning services',
-              impact: 'positive' as const,
-              horizon: 'Long-term',
-              fundamentalScore: 88
-            }
-          }
-
-          const defaultData = {
-            news: 'Market analysis shows mixed signals for this asset',
-            reason: 'Technical indicators suggest moderate volatility with stable fundamentals',
-            impact: ['positive', 'negative', 'neutral'][index % 3] as 'positive' | 'negative' | 'neutral',
-            horizon: ['Short-term', 'Medium-term', 'Long-term'][index % 3],
-            fundamentalScore: Math.floor(Math.random() * 30) + 70 // 70-100
-          }
-
-          const data = assetData[asset as keyof typeof assetData] || defaultData
-
-          return {
-            symbol: asset,
-            horizon: data.horizon,
-            impact: data.impact,
-            news: data.news,
-            reason: data.reason,
-            fundamentalScore: data.fundamentalScore,
-            timestamp: new Date().toISOString()
-          }
-        })
-
-        setSentimentData(mockSentimentData)
-      } else {
-        throw new Error('Failed to fetch sentiment analysis')
-      }
+      // Simular delay para mostrar el loading
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      setSentimentData(mockSentimentData)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred')
     } finally {
