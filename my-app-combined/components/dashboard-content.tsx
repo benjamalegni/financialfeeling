@@ -7,6 +7,8 @@ import AISentimentAnalysis from './ai-sentiment-analysis'
 import { createBrowserClient } from '@supabase/ssr'
 import { redirect } from 'next/navigation'
 import { getRoute } from '@/lib/utils'
+import { config } from '@/lib/config'
+import { Database } from '@/lib/database.types'
 
 interface DashboardContentProps {
   selectedAssets: any[];
@@ -75,9 +77,9 @@ export default function DashboardContent({
 
   // Add asset to portfolio
   const handleAddAsset = async (asset: any) => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    const supabase = createBrowserClient<Database>(
+      config.supabase.url,
+      config.supabase.anonKey
     );
 
     try {
@@ -117,9 +119,9 @@ export default function DashboardContent({
 
   // Remove asset from portfolio
   const handleRemoveAsset = async (assetId: string, assetSymbol: string) => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    const supabase = createBrowserClient<Database>(
+      config.supabase.url,
+      config.supabase.anonKey
     );
 
     try {
@@ -170,9 +172,9 @@ export default function DashboardContent({
   // Sign Out Button Component
   const SignOutButton = () => {
     const handleSignOut = async () => {
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      const supabase = createBrowserClient<Database>(
+        config.supabase.url,
+        config.supabase.anonKey
       )
       await supabase.auth.signOut()
       window.location.href = getRoute('/login')
@@ -242,14 +244,14 @@ export default function DashboardContent({
           {/* Dashboard Content */}
           <div className="space-y-8">
             {/* Portfolio Management Section */}
-            <div className="bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-indigo-900/20 rounded-lg border border-gray-700 p-6 shadow-lg backdrop-blur-sm">
+            <div className="bg-gray-900 rounded-lg border border-gray-700 p-6 shadow-lg">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-semibold text-white">Portfolio</h2>
                 <div className="flex space-x-2">
                   <ClearTestDataButton />
                   <button
                     onClick={() => setShowAssetSelector(!showAssetSelector)}
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-md transition-all duration-300 flex items-center space-x-2 shadow-lg"
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition-colors flex items-center space-x-2"
                   >
                     <Plus className="h-4 w-4" />
                     <span>Add Assets</span>
@@ -259,12 +261,12 @@ export default function DashboardContent({
 
               {/* Asset Selector Modal */}
               {showAssetSelector && (
-                <div className="mb-6 p-4 bg-gradient-to-br from-gray-800/90 to-gray-900/90 rounded-lg border border-gray-600 backdrop-blur-sm">
+                <div className="mb-6 p-4 bg-gray-800 rounded-lg border border-gray-600">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-white">Add Assets to Portfolio</h3>
                     <button
                       onClick={() => setShowAssetSelector(false)}
-                      className="text-gray-400 hover:text-white transition-colors"
+                      className="text-gray-400 hover:text-white"
                     >
                       <X className="h-5 w-5" />
                     </button>
@@ -279,7 +281,7 @@ export default function DashboardContent({
                         placeholder="Search assets..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-gray-700/50 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 backdrop-blur-sm"
+                        className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
 
@@ -289,10 +291,10 @@ export default function DashboardContent({
                         <button
                           key={category}
                           onClick={() => setSelectedCategory(category)}
-                          className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 ${
+                          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                             selectedCategory === category
-                              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                              : 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 backdrop-blur-sm'
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                           }`}
                         >
                           {category}
@@ -306,10 +308,10 @@ export default function DashboardContent({
                     {filteredAssets.map((asset) => (
                       <div
                         key={asset.symbol}
-                        className={`p-3 rounded-lg border cursor-pointer transition-all duration-300 relative ${
+                        className={`p-3 rounded-lg border cursor-pointer transition-all relative ${
                           isAssetInPortfolio(asset.symbol)
-                            ? 'bg-gradient-to-br from-green-600 to-green-700 border-green-500 text-white shadow-lg'
-                            : 'bg-gradient-to-br from-gray-700/50 to-gray-800/50 border-gray-600 hover:from-gray-600/50 hover:to-gray-700/50 text-gray-300 backdrop-blur-sm'
+                            ? 'bg-green-600 border-green-500 text-white'
+                            : 'bg-gray-700 border-gray-600 hover:bg-gray-600 text-gray-300'
                         }`}
                         onClick={() => !isAssetInPortfolio(asset.symbol) && handleAddAsset(asset)}
                       >
@@ -321,7 +323,7 @@ export default function DashboardContent({
                         
                         {/* Checkmark for assets already in portfolio */}
                         {isAssetInPortfolio(asset.symbol) && (
-                          <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1 shadow-lg">
+                          <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1">
                             <div className="w-2 h-2 bg-white rounded-full"></div>
                           </div>
                         )}
@@ -342,7 +344,7 @@ export default function DashboardContent({
                     </p>
                     <button
                       onClick={() => setShowAssetSelector(true)}
-                      className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg"
+                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
                     >
                       Add Assets to Portfolio
                     </button>
@@ -350,7 +352,7 @@ export default function DashboardContent({
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {currentAssets.map((asset) => (
-                      <div key={asset.id} className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-4 rounded-lg border border-gray-600 backdrop-blur-sm hover:from-gray-700/50 hover:to-gray-800/50 transition-all duration-300">
+                      <div key={asset.id} className="bg-gray-800 p-4 rounded-lg border border-gray-600">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <h4 className="text-lg font-semibold text-white">{asset.asset_name || asset.asset_identifier}</h4>
@@ -364,7 +366,7 @@ export default function DashboardContent({
                           </div>
                           <button
                             onClick={() => handleRemoveAsset(asset.id, asset.asset_identifier)}
-                            className="ml-2 p-1 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded transition-all duration-300"
+                            className="ml-2 p-1 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded transition-colors"
                             title="Remove from portfolio"
                           >
                             <X className="h-4 w-4" />

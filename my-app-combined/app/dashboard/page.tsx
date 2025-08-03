@@ -5,6 +5,7 @@ import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from '@/lib/database.types'
 import DashboardWrapper from '@/components/dashboard-wrapper'
 import DashboardContent from '@/components/dashboard-content'
+import { config } from '@/lib/config'
 
 interface SelectedAsset {
   id: string;
@@ -23,8 +24,8 @@ export default function DashboardPage() {
   useEffect(() => {
     const initSupabase = async () => {
       const supabase = createBrowserClient<Database>(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        config.supabase.url,
+        config.supabase.anonKey
       )
 
       const { data: { session } } = await supabase.auth.getSession()

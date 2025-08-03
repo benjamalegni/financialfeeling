@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import type { Database } from '@/lib/database.types' // Asegúrate que esta ruta sea correcta
 
 // Definición del tipo Plan (debe coincidir con tu tabla 'plans')
@@ -21,11 +21,7 @@ export default function PricingPage() {
   const [plans, setPlans] = useState<Plan[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
-  // Create Supabase client with fallback for build time
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
-  const supabase = createBrowserClient<Database>(supabaseUrl, supabaseKey)
+  const supabase = createClientComponentClient<Database>()
 
   useEffect(() => {
     const fetchPlans = async () => {

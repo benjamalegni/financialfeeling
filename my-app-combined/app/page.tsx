@@ -30,6 +30,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import SharedSidebar from '@/components/shared-sidebar'
 import { getRoute } from '@/lib/utils'
+import { config } from '@/lib/config'
 
 export default function HomePage() {
   const [user, setUser] = useState<any>(null)
@@ -117,8 +118,8 @@ export default function HomePage() {
   ]
   
   // Create Supabase client with fallback for build time
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
+  const supabaseUrl = config.supabase.url
+  const supabaseKey = config.supabase.anonKey
   const supabase = createBrowserClient<Database>(supabaseUrl, supabaseKey)
 
   useEffect(() => {
@@ -237,12 +238,6 @@ export default function HomePage() {
     const value = e.target.value
     setMessage(value)
     
-    // Si el usuario no está autenticado y está intentando escribir, redirigir al login
-    if (!user && value.trim()) {
-      router.push(getRoute('/login'))
-      return
-    }
-    
     if (user && value.trim()) {
       const suggestions = getAutocompleteSuggestions(value)
       setAutocompleteSuggestions(suggestions)
@@ -292,78 +287,11 @@ export default function HomePage() {
     return () => document.removeEventListener('click', handleClickOutside)
   }, [])
 
-  const handleAssetSelection = async (symbol: string) => {
+  const handleAssetSelection = (symbol: string) => {
     if (selectedAssets.includes(symbol)) {
-      // Remove asset from selection
-      const newSelectedAssets = selectedAssets.filter(asset => asset !== symbol)
-      setSelectedAssets(newSelectedAssets)
-      
-      // Remove from database if user is logged in
-      if (user) {
-        try {
-          const { error } = await supabase
-            .from('user_selected_assets')
-            .delete()
-            .eq('user_id', user.id)
-            .eq('asset_identifier', symbol)
-
-          if (error) {
-            console.error('Error removing asset from database:', error)
-            // Revert the selection if database operation fails
-            setSelectedAssets(selectedAssets)
-            alert('Error removing asset from portfolio. Please try again.')
-            return
-          }
-
-          console.log('Asset removed from database:', symbol)
-          
-          // Update original assets to reflect the change
-          setOriginalAssets(newSelectedAssets)
-        } catch (error) {
-          console.error('Error removing asset from database:', error)
-          // Revert the selection if database operation fails
-          setSelectedAssets(selectedAssets)
-          alert('Error removing asset from portfolio. Please try again.')
-        }
-      }
+      setSelectedAssets(selectedAssets.filter(asset => asset !== symbol))
     } else {
-      // Add asset to selection
-      const newSelectedAssets = [...selectedAssets, symbol]
-      setSelectedAssets(newSelectedAssets)
-      
-      // Add to database if user is logged in
-      if (user) {
-        try {
-          const asset = financialAssets.find((a: any) => a.symbol === symbol)
-          const { error } = await supabase
-            .from('user_selected_assets')
-            .upsert({
-              user_id: user.id,
-              asset_identifier: symbol,
-              asset_type: asset?.type || null,
-              asset_name: asset?.name || null,
-              selected_at: new Date().toISOString()
-            }, { onConflict: 'user_id,asset_identifier' })
-
-          if (error) {
-            console.error('Error adding asset to database:', error)
-            // Revert the selection if database operation fails
-            setSelectedAssets(selectedAssets)
-            alert('Error adding asset to portfolio. Please try again.')
-            return
-          }
-
-          console.log('Asset added to database:', symbol)
-          
-          // Update original assets to reflect the change
-          setOriginalAssets(newSelectedAssets)
-        } catch (error) {
-          console.error('Error adding asset to database:', error)
-          // Revert the selection if database operation fails
-          setSelectedAssets(selectedAssets)
-          alert('Error adding asset to portfolio. Please try again.')
-        }
-      }
+      setSelectedAssets([...selectedAssets, symbol])
     }
   }
 

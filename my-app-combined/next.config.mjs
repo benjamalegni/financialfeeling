@@ -15,6 +15,10 @@ const nextConfig = {
     trailingSlash: true,
     basePath: '/financialfeeling',
     assetPrefix: '/financialfeeling/',
+    // Excluir rutas que no pueden ser estáticas
+    experimental: {
+      excludeDefaultMomentLocales: false,
+    },
   } : {}),
 }
 

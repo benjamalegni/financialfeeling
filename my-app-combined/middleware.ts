@@ -2,14 +2,20 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { Database } from '@/lib/database.types'
+import { config as appConfig } from '@/lib/config'
 
 export async function middleware(req: NextRequest) {
+  // Deshabilitar middleware durante export estático
+  if (appConfig.app.isStaticExport) {
+    return NextResponse.next()
+  }
+
   const res = NextResponse.next()
 
   try {
     // Check if environment variables are available
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const supabaseUrl = appConfig.supabase.url
+    const supabaseKey = appConfig.supabase.anonKey
 
     if (!supabaseUrl || !supabaseKey) {
       console.error('Missing Supabase environment variables')

@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator'
 import { Github, X } from 'lucide-react'
 import { getRoute } from '@/lib/utils'
+import { config } from '@/lib/config'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -20,8 +21,8 @@ export default function LoginPage() {
   const router = useRouter()
   
   // Create Supabase client with fallback for build time
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
+  const supabaseUrl = config.supabase.url
+  const supabaseKey = config.supabase.anonKey
   const supabase = createBrowserClient<Database>(supabaseUrl, supabaseKey)
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -144,7 +145,7 @@ export default function LoginPage() {
 
           <div className="text-center text-sm text-gray-400">
             Don&apos;t have an account?{' '}
-            <a onClick={() => router.push(getRoute('/signup'))} className="font-medium text-blue-400 hover:text-blue-300 underline cursor-pointer">
+            <a href={getRoute('/signup')} className="font-medium text-blue-400 hover:text-blue-300 underline">
               Sign Up
             </a>
           </div>
