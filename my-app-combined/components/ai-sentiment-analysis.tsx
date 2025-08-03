@@ -1,8 +1,9 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import { TrendingUp, TrendingDown, Minus, AlertTriangle, Info, Clock, Activity } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, AlertTriangle, Info, Clock, Activity, BarChart3, X } from 'lucide-react'
 import { analyzeStocks } from '@/lib/stockAnalysis'
+import { getFinancialData, FinancialMetrics } from '@/lib/financialData'
 
 interface SentimentData {
   symbol: string
@@ -12,6 +13,7 @@ interface SentimentData {
   reason: string
   fundamentalScore: number
   timestamp?: string
+  financialData?: FinancialMetrics
 }
 
 interface AISentimentAnalysisProps {
@@ -23,6 +25,8 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
   const [sentimentData, setSentimentData] = useState<SentimentData[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showFinancialModal, setShowFinancialModal] = useState(false)
+  const [selectedFinancialData, setSelectedFinancialData] = useState<FinancialMetrics | null>(null)
 
   const fetchSentimentAnalysis = async () => {
     if (selectedAssets.length === 0) return
@@ -36,27 +40,40 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
       
       if (analysisResult && analysisResult.stocks.length > 0) {
         // Transform Railway data to sentiment format
-        const realSentimentData: SentimentData[] = analysisResult.stocks.map((stock) => {
-          // Calculate fundamental score based on sentiment (simulated for now)
-          let fundamentalScore = 75; // Default
-          if (stock.analysis.sentiment === 'positive') {
-            fundamentalScore = Math.floor(Math.random() * 20) + 80; // 80-100
-          } else if (stock.analysis.sentiment === 'negative') {
-            fundamentalScore = Math.floor(Math.random() * 20) + 60; // 60-80
-          } else {
-            fundamentalScore = Math.floor(Math.random() * 20) + 70; // 70-90
-          }
+        const realSentimentData: SentimentData[] = await Promise.all(
+          analysisResult.stocks.map(async (stock) => {
+            // Calculate fundamental score based on sentiment (simulated for now)
+            let fundamentalScore = 75; // Default
+            if (stock.analysis.sentiment === 'positive') {
+              fundamentalScore = Math.floor(Math.random() * 20) + 80; // 80-100
+            } else if (stock.analysis.sentiment === 'negative') {
+              fundamentalScore = Math.floor(Math.random() * 20) + 60; // 60-80
+            } else {
+              fundamentalScore = Math.floor(Math.random() * 20) + 70; // 70-90
+            }
 
-          return {
-            symbol: stock.symbol,
-            horizon: 'Short-term', // Default horizon
-            impact: stock.analysis.sentiment,
-            news: stock.analysis.news,
-            reason: stock.analysis.recommendation,
-            fundamentalScore: fundamentalScore,
-            timestamp: analysisResult.timestamp
-          }
-        })
+            // Fetch financial data for stocks only
+            let financialData: FinancialMetrics | undefined
+            if (stock.symbol && stock.symbol.length <= 5) { // Only for stocks, not ETFs or other assets
+              try {
+                financialData = await getFinancialData(stock.symbol)
+              } catch (error) {
+                console.error(`Error fetching financial data for ${stock.symbol}:`, error)
+              }
+            }
+
+            return {
+              symbol: stock.symbol,
+              horizon: 'Short-term', // Default horizon
+              impact: stock.analysis.sentiment,
+              news: stock.analysis.news,
+              reason: stock.analysis.recommendation,
+              fundamentalScore: fundamentalScore,
+              timestamp: analysisResult.timestamp,
+              financialData: financialData
+            }
+          })
+        )
 
         setSentimentData(realSentimentData)
       } else {
@@ -70,6 +87,11 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleShowFinancialData = (financialData: FinancialMetrics) => {
+    setSelectedFinancialData(financialData)
+    setShowFinancialModal(true)
   }
 
   // Process external analysis data when available
@@ -215,6 +237,16 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
                   <div className="flex items-center space-x-2">
                     {getImpactIcon(item.impact)}
                     <h3 className="text-xl font-bold text-white">{item.symbol}</h3>
+                    {/* Show financial data icon only for stocks */}
+                    {item.financialData && (
+                      <button
+                        onClick={() => handleShowFinancialData(item.financialData!)}
+                        className="p-1 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 rounded transition-colors"
+                        title="View fundamental data"
+                      >
+                        <BarChart3 className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                     item.impact === 'positive' ? 'bg-green-900/30 text-green-300' :
@@ -270,6 +302,81 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Financial Data Modal */}
+      {showFinancialModal && selectedFinancialData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-white">
+                Fundamental Data - {selectedFinancialData.symbol}
+              </h3>
+              <button
+                onClick={() => setShowFinancialModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div className="bg-gray-700 p-3 rounded">
+                  <span className="text-sm text-gray-400">P/E Ratio</span>
+                  <div className="text-white font-semibold">{selectedFinancialData.peRatio.toFixed(2)}</div>
+                </div>
+                <div className="bg-gray-700 p-3 rounded">
+                  <span className="text-sm text-gray-400">Forward P/E</span>
+                  <div className="text-white font-semibold">{selectedFinancialData.forwardPE.toFixed(2)}</div>
+                </div>
+                <div className="bg-gray-700 p-3 rounded">
+                  <span className="text-sm text-gray-400">PEG Ratio</span>
+                  <div className="text-white font-semibold">{selectedFinancialData.pegRatio.toFixed(2)}</div>
+                </div>
+                <div className="bg-gray-700 p-3 rounded">
+                  <span className="text-sm text-gray-400">Price to Book</span>
+                  <div className="text-white font-semibold">{selectedFinancialData.priceToBook.toFixed(2)}</div>
+                </div>
+                <div className="bg-gray-700 p-3 rounded">
+                  <span className="text-sm text-gray-400">Debt to Equity</span>
+                  <div className="text-white font-semibold">{selectedFinancialData.debtToEquity.toFixed(2)}</div>
+                </div>
+                <div className="bg-gray-700 p-3 rounded">
+                  <span className="text-sm text-gray-400">Current Ratio</span>
+                  <div className="text-white font-semibold">{selectedFinancialData.currentRatio.toFixed(2)}</div>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="bg-gray-700 p-3 rounded">
+                  <span className="text-sm text-gray-400">Return on Equity</span>
+                  <div className="text-white font-semibold">{selectedFinancialData.returnOnEquity.toFixed(2)}%</div>
+                </div>
+                <div className="bg-gray-700 p-3 rounded">
+                  <span className="text-sm text-gray-400">Return on Assets</span>
+                  <div className="text-white font-semibold">{selectedFinancialData.returnOnAssets.toFixed(2)}%</div>
+                </div>
+                <div className="bg-gray-700 p-3 rounded">
+                  <span className="text-sm text-gray-400">Profit Margin</span>
+                  <div className="text-white font-semibold">{selectedFinancialData.profitMargin.toFixed(2)}%</div>
+                </div>
+                <div className="bg-gray-700 p-3 rounded">
+                  <span className="text-sm text-gray-400">Operating Margin</span>
+                  <div className="text-white font-semibold">{selectedFinancialData.operatingMargin.toFixed(2)}%</div>
+                </div>
+                <div className="bg-gray-700 p-3 rounded">
+                  <span className="text-sm text-gray-400">Revenue Growth</span>
+                  <div className="text-white font-semibold">{selectedFinancialData.revenueGrowth.toFixed(2)}%</div>
+                </div>
+                <div className="bg-gray-700 p-3 rounded">
+                  <span className="text-sm text-gray-400">Market Cap</span>
+                  <div className="text-white font-semibold">${parseInt(selectedFinancialData.marketCap).toLocaleString()}</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
