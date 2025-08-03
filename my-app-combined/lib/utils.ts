@@ -11,15 +11,17 @@ export function getRoute(path: string): string {
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
   
   // Check if we're in static export mode (GitHub Pages)
-  const isStaticExport = process.env.USE_STATIC_EXPORT === 'true';
-  const isProduction = process.env.NODE_ENV === 'production';
+  // Use window.location to detect if we're on GitHub Pages
+  const isGitHubPages = typeof window !== 'undefined' && 
+    (window.location.hostname === 'benjamalegni.github.io' || 
+     window.location.pathname.startsWith('/financialfeeling'));
   
-  // If we're in production and using static export, Next.js will handle the basePath
+  // If we're on GitHub Pages, Next.js handles the basePath automatically
   // So we just return the clean path without the prefix
-  if (isProduction && isStaticExport) {
+  if (isGitHubPages) {
     return `/${cleanPath}`;
   }
   
-  // For development or production without static export, add the prefix manually
+  // For development or other environments, add the prefix manually
   return `/financialfeeling/${cleanPath}`;
 }
