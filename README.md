@@ -1,4 +1,7 @@
-# 🚀 Financial Feeling - AI-Powered Investment Analysis Platform
+<img width="1905" height="941" alt="image" src="https://github.com/user-attachments/assets/10ac69be-b140-43e5-a5ad-5d0c73e3d28f" />
+[Financial Feeling](https://benjamalegni.github.io/financialfeeling/)
+
+# Financial Feeling - AI-Powered Investment Analysis Platform
 
 > **Transform your investment decisions with AI-driven sentiment analysis and fundamental data insights**
 
