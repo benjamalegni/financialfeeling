@@ -248,13 +248,12 @@ export default function DashboardContent({
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-semibold text-white">Portfolio</h2>
                 <div className="flex space-x-2">
-                  <ClearTestDataButton />
                   <button
                     onClick={() => setShowAssetSelector(!showAssetSelector)}
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-md transition-all duration-300 flex items-center space-x-2 shadow-lg"
+                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors flex items-center space-x-2 border border-blue-500 shadow-md"
                   >
                     <Plus className="h-4 w-4" />
-                    <span>Add Assets</span>
+                    <span>ADD</span>
                   </button>
                 </div>
               </div>
@@ -293,8 +292,8 @@ export default function DashboardContent({
                           onClick={() => setSelectedCategory(category)}
                           className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                             selectedCategory === category 
-                              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                              : 'bg-gray-700/50 backdrop-blur-sm text-gray-300 hover:bg-gray-600/50'
+                              ? 'bg-gray-600 text-white border border-gray-500'
+                              : 'bg-gray-700/50 backdrop-blur-sm text-gray-300 hover:bg-gray-600/50 border border-gray-600'
                           }`}
                         >
                           {category}
@@ -310,7 +309,7 @@ export default function DashboardContent({
                         key={asset.symbol}
                         className={`p-3 rounded-lg border cursor-pointer transition-all duration-300 relative ${
                           isAssetInPortfolio(asset.symbol)
-                            ? 'bg-gradient-to-r from-green-600 to-emerald-600 border-green-500 text-white shadow-lg'
+                            ? 'bg-green-600 border-green-500 text-white shadow-md'
                             : 'bg-gradient-to-r from-gray-700/50 to-gray-800/50 backdrop-blur-sm border-gray-600 hover:bg-gray-600/50 text-gray-300'
                         }`}
                         onClick={() => {
@@ -352,7 +351,7 @@ export default function DashboardContent({
                     </p>
                     <button
                       onClick={() => setShowAssetSelector(true)}
-                      className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg"
+                      className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors border border-gray-600"
                     >
                       Add Assets to Portfolio
                     </button>
