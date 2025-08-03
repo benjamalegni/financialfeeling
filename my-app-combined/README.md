@@ -1,203 +1,274 @@
-# Financial Feeling - Combined App
+# 🚀 Financial Feeling - AI-Powered Investment Analysis Platform
 
-Una aplicación web moderna para análisis de activos financieros con IA, construida con Next.js, Supabase y Tailwind CSS.
+> **Transform your investment decisions with AI-driven sentiment analysis and fundamental data insights**
 
-## 🚀 Características
+Financial Feeling is a comprehensive investment analysis platform that combines real-time news sentiment analysis with fundamental financial data to provide intelligent investment recommendations. Our platform helps investors make informed decisions by analyzing both market sentiment and company fundamentals.
 
-- **Análisis de IA**: Análisis de sentimiento de activos financieros
-- **Portafolio Personal**: Gestión de activos seleccionados
-- **Autenticación**: Sistema de login/signup con Supabase
-- **Interfaz Moderna**: Diseño elegante con gradientes animados
-- **Responsive**: Funciona en todos los dispositivos
-- **Tiempo Real**: Actualizaciones automáticas del análisis
+## 🌟 Key Features
 
-## 🛠️ Tecnologías
+### 🤖 **AI Sentiment Analysis**
+- **Real-time News Analysis**: Powered by Railway backend for instant market sentiment evaluation
+- **Sentiment Impact**: Positive, negative, or neutral sentiment classification
+- **News Context**: Detailed analysis of market-moving news and events
+- **Confidence Scoring**: AI-powered confidence levels for sentiment predictions
 
-- **Frontend**: Next.js 15, React 19, TypeScript
-- **Styling**: Tailwind CSS, shadcn/ui
-- **Backend**: Supabase (Auth, Database)
-- **Deployment**: GitHub Pages
-- **Análisis**: n8n (opcional), Mock Data
+### 📊 **Fundamental Analysis**
+- **Alpha Vantage Integration**: Real-time financial data from leading market data provider
+- **Key Metrics**: P/E Ratio, Forward P/E, PEG Ratio, Cash Flow, Debt, Market Cap
+- **Growth Analysis**: Revenue growth, profit margins, and company guidance
+- **Fundamental Score**: 0-100 scoring system based on comprehensive financial metrics
 
-## 📦 Instalación
+### 💡 **Intelligent Recommendations**
+- **Buy Opportunity Score**: Combines sentiment and fundamentals for optimal recommendations
+- **Smart Logic**: When good fundamentals meet negative news = potential buying opportunity
+- **Risk Assessment**: Clear Strong Buy, Buy, Hold, Sell, Strong Sell classifications
+- **Detailed Reasoning**: Explanations for each recommendation
 
+### 🎯 **Portfolio Management**
+- **Asset Selection**: Easy-to-use interface for selecting stocks and assets
+- **Real-time Sync**: Database synchronization for portfolio tracking
+- **Search & Filter**: Advanced filtering by category and search functionality
+- **Add/Remove Assets**: Seamless portfolio management with instant updates
+
+### 📱 **Modern UI/UX**
+- **Responsive Design**: Works perfectly on desktop, tablet, and mobile
+- **Dark Theme**: Professional dark interface for extended viewing
+- **Gradient Backgrounds**: Beautiful visual design with gradient effects
+- **Interactive Elements**: Hover effects, animations, and smooth transitions
+
+## 🛠 Technology Stack
+
+### **Frontend**
+- **Next.js 15**: React framework with App Router
+- **TypeScript**: Type-safe development
+- **Tailwind CSS**: Utility-first CSS framework
+- **Lucide React**: Beautiful icon library
+
+### **Backend & APIs**
+- **Railway**: News analysis and sentiment processing
+- **Alpha Vantage**: Real-time financial data
+- **Supabase**: Authentication and database management
+- **Stripe**: Payment processing integration
+
+### **Deployment**
+- **Static Export**: Optimized for GitHub Pages deployment
+- **Environment Variables**: Secure configuration management
+- **Build Optimization**: Fast loading and minimal bundle size
+
+## 📸 Screenshots
+
+### Dashboard Overview
+![Dashboard](screenshots/dashboard-overview.png)
+*Main dashboard showing portfolio management and AI sentiment analysis*
+
+### AI Sentiment Analysis
+![Sentiment Analysis](screenshots/ai-sentiment-analysis.png)
+*AI-powered sentiment analysis with fundamental scores and buy recommendations*
+
+### Financial Data Modal
+![Financial Modal](screenshots/financial-data-modal.png)
+*Detailed financial metrics modal showing P/E ratios, cash flow, and growth data*
+
+### Portfolio Management
+![Portfolio](screenshots/portfolio-management.png)
+*Asset selection interface with search and category filtering*
+
+### Authentication
+![Login](screenshots/login-screen.png)
+*Secure authentication with Supabase integration*
+
+> **📸 Screenshots Coming Soon**: High-quality screenshots of Financial Feeling in action will be added to showcase the platform's features and user interface. Follow the [Screenshots Guide](SCREENSHOTS_GUIDE.md) to capture and contribute screenshots.
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- Alpha Vantage API key
+- Supabase project
+
+### Installation
+
+1. **Clone the repository**
 ```bash
-# Clonar el repositorio
-git clone https://github.com/tu-usuario/financialfeeling.git
-cd financialfeeling
+git clone https://github.com/your-username/financial-feeling.git
+cd financial-feeling
+```
 
-# Instalar dependencias
+2. **Install dependencies**
+```bash
 npm install
+```
 
-# Configurar variables de entorno
+3. **Configure environment variables**
+```bash
 cp .env.example .env.local
-# Editar .env.local con tus credenciales de Supabase
+```
 
-# Ejecutar en desarrollo
+Edit `.env.local` with your API keys:
+```bash
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Alpha Vantage API
+NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY=your_alpha_vantage_key
+
+# Railway Backend
+NEXT_PUBLIC_RAILWAY_WEBHOOK_URL=https://ffaiagent-n8n-production.up.railway.app/webhook/analyze-stocks
+```
+
+4. **Run the development server**
+```bash
 npm run dev
 ```
 
-## 🔧 Configuración
+5. **Open your browser**
+Navigate to [http://localhost:3000](http://localhost:3000)
 
-### Variables de Entorno
+## 🎯 How to Use Financial Feeling
 
-Crea un archivo `.env.local` con:
+### 1. **Authentication**
+- Sign up or log in to access your personalized dashboard
+- Your portfolio and analysis history are securely stored
 
-```bash
-NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase
-NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key_de_supabase
-SUPABASE_SERVICE_ROLE_KEY=tu_service_role_key_de_supabase
+### 2. **Asset Selection**
+- Browse available stocks and assets
+- Use search and category filters to find specific assets
+- Add assets to your portfolio with a single click
+
+### 3. **AI Analysis**
+- Select assets from your portfolio
+- Click "RUN" to start AI sentiment analysis
+- View real-time sentiment impact and news analysis
+
+### 4. **Fundamental Analysis**
+- Click the 📊 icon next to any stock symbol
+- View detailed financial metrics and ratios
+- Understand company fundamentals and growth prospects
+
+### 5. **Investment Decisions**
+- Review AI recommendations (Strong Buy, Buy, Hold, Sell, Strong Sell)
+- Consider both sentiment and fundamental factors
+- Make informed investment decisions
+
+## 📊 Key Metrics Explained
+
+### **Sentiment Analysis**
+- **Positive**: Favorable market sentiment, potential upside
+- **Negative**: Unfavorable sentiment, exercise caution
+- **Neutral**: Mixed signals, consider fundamentals
+
+### **Fundamental Score (0-100)**
+- **80-100**: Excellent fundamentals, strong buy opportunity
+- **60-79**: Good fundamentals, consider buying
+- **40-59**: Mixed fundamentals, monitor closely
+- **20-39**: Poor fundamentals, consider selling
+- **0-19**: Very poor fundamentals, strong sell
+
+### **Buy Opportunity Logic**
+- **Strong Buy**: High fundamental score with positive sentiment
+- **Buy**: Good fundamentals, potential opportunity
+- **Hold**: Mixed signals, wait for better conditions
+- **Sell**: Poor fundamentals, consider exiting
+- **Strong Sell**: Very poor fundamentals, exit immediately
+
+## 🔧 Advanced Features
+
+### **Real-time Data Integration**
+- **Alpha Vantage**: Live financial data updates
+- **Railway Backend**: Instant news sentiment analysis
+- **Supabase**: Real-time portfolio synchronization
+
+### **Smart Combination Logic**
+```typescript
+// Good fundamentals + Bad news = Buying opportunity
+if (fundamentalScore >= 70 && sentiment === 'negative') {
+  buyScore += 15;
+  recommendation = 'Strong fundamentals despite negative news';
+}
 ```
 
-### Supabase Setup
+### **Responsive Design**
+- **Mobile-first**: Optimized for all screen sizes
+- **Touch-friendly**: Easy navigation on mobile devices
+- **Fast loading**: Optimized for performance
 
-1. Crea un proyecto en [supabase.com](https://supabase.com)
-2. Ejecuta las migraciones en `supabase_migrations/`
-3. Configura las políticas RLS
-4. Configura autenticación (GitHub OAuth opcional)
+## 🎨 Design Philosophy
 
-## 🚀 Despliegue en GitHub Pages
+Financial Feeling emphasizes **user experience** and **data clarity**:
 
-### Configuración Automática
+- **Dark Theme**: Reduces eye strain during extended analysis sessions
+- **Color Coding**: Semantic colors for quick data interpretation
+- **Gradient Effects**: Modern, professional aesthetic
+- **Interactive Elements**: Engaging user interface with smooth animations
 
-El proyecto está configurado para desplegar automáticamente en GitHub Pages:
+## 🔒 Security & Privacy
 
-1. **Habilitar GitHub Pages**:
-   - Ve a Settings > Pages
-   - Source: GitHub Actions
+- **Supabase Auth**: Secure user authentication
+- **Environment Variables**: Protected API keys
+- **HTTPS**: Secure data transmission
+- **No Data Storage**: Financial data is not permanently stored
 
-2. **Configurar Secrets** (opcional):
-   - Ve a Settings > Secrets and variables > Actions
-   - Agrega las variables de entorno si necesitas funcionalidad completa
+## 📈 Performance Optimization
 
-3. **Push a main**:
-   - Cada push a la rama `main` desplegará automáticamente
+- **Static Export**: Fast loading times
+- **Code Splitting**: Optimized bundle sizes
+- **Image Optimization**: Compressed screenshots and assets
+- **Caching**: Efficient data caching strategies
 
-### Despliegue Manual
+## 🤝 Contributing
 
-```bash
-# Construir el proyecto
-npm run build
+We welcome contributions to Financial Feeling! Please read our contributing guidelines:
 
-# Los archivos estáticos se generan en out/
-# Subir a GitHub Pages
-```
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-### URL de Producción
+## 📄 License
 
-Una vez desplegado, estará disponible en:
-`https://[tu-usuario].github.io/[nombre-del-repositorio]/`
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 📁 Estructura del Proyecto
+## 🙏 Acknowledgments
 
-```
-my-app-combined/
-├── app/                    # App Router de Next.js
-│   ├── dashboard/         # Página del dashboard
-│   ├── login/            # Página de login
-│   ├── signup/           # Página de registro
-│   └── page.tsx          # Página principal
-├── components/            # Componentes reutilizables
-│   ├── shared-sidebar.tsx
-│   ├── dashboard-content.tsx
-│   └── ui/               # Componentes de shadcn/ui
-├── lib/                   # Utilidades y configuraciones
-│   ├── supabaseClient.ts
-│   ├── stockAnalysis.ts
-│   └── database.types.ts
-├── .github/workflows/     # GitHub Actions
-└── supabase_migrations/   # Migraciones de base de datos
-```
+- **Alpha Vantage**: For providing comprehensive financial data
+- **Railway**: For hosting our sentiment analysis backend
+- **Supabase**: For authentication and database services
+- **Next.js Team**: For the excellent React framework
+- **Tailwind CSS**: For the utility-first CSS framework
 
-## 🎯 Funcionalidades Principales
+## 📞 Support
 
-### 1. Análisis de Activos
-- Selección de múltiples activos
-- Análisis de sentimiento con IA
-- Recomendaciones automáticas
-- Visualización de resultados
+If you have questions or need support:
 
-### 2. Gestión de Portafolio
-- Agregar/eliminar activos
-- Persistencia en base de datos
-- Interfaz intuitiva
-- Sincronización automática
+- **GitHub Issues**: [Create an issue](https://github.com/your-username/financial-feeling/issues)
+- **Documentation**: Check our [Wiki](https://github.com/your-username/financial-feeling/wiki)
+- **Email**: support@financialfeeling.com
 
-### 3. Autenticación
-- Login/Signup con Supabase
-- Sesiones persistentes
-- Protección de rutas
-- Perfiles de usuario
+## 🚀 Roadmap
 
-### 4. Interfaz de Usuario
-- Diseño moderno y responsive
-- Gradientes animados
-- Componentes interactivos
-- Navegación fluida
+### **Phase 1** ✅
+- [x] AI Sentiment Analysis
+- [x] Fundamental Data Integration
+- [x] Portfolio Management
+- [x] Responsive UI
 
-## 🔄 Flujo de Trabajo
+### **Phase 2** 🔄
+- [ ] Advanced Charting
+- [ ] Portfolio Performance Tracking
+- [ ] Alert System
+- [ ] Mobile App
 
-1. **Selección de Activos**: Usuario selecciona activos en el portafolio
-2. **Análisis**: Presiona "RUN" para ejecutar análisis de IA
-3. **Resultados**: Visualiza sentimiento, confianza y recomendaciones
-4. **Gestión**: Agrega o elimina activos según sea necesario
+### **Phase 3** 📋
+- [ ] Social Features
+- [ ] Advanced Analytics
+- [ ] API for Developers
+- [ ] Enterprise Features
 
-## 🐛 Troubleshooting
+---
 
-### Problemas Comunes
+**Financial Feeling** - Where AI meets investment intelligence. Make smarter investment decisions with the power of artificial intelligence and comprehensive financial analysis.
 
-1. **Build falla**:
-   - Verifica que todas las dependencias estén instaladas
-   - Revisa los logs del workflow en GitHub Actions
-
-2. **Autenticación no funciona**:
-   - Verifica las variables de entorno
-   - Asegúrate de que Supabase esté configurado correctamente
-
-3. **Análisis no funciona**:
-   - El análisis usa datos mock por defecto
-   - Para análisis real, configura n8n
-
-### Logs de Despliegue
-
-Para ver los logs del despliegue:
-1. Ve a tu repositorio en GitHub
-2. Ve a Actions
-3. Selecciona el workflow "Deploy to GitHub Pages"
-4. Revisa los logs del job "build" y "deploy"
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT.
-
-## 🤝 Contribuir
-
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
-## 📞 Soporte
-
-Para soporte, abre un issue en GitHub o contacta al equipo de desarrollo.
-
-# Updated for GitHub Pages deploy
-
-# Trigger GitHub Actions workflow
-
-# Testing GitHub Pages deployment
-
-# Switch to GitHub Actions
-
-# Manual deploy trigger
-
-# Fixed repository URL - trigger deploy
-
-# 🚀 FINAL DEPLOYMENT - Financial Feeling
-
-# Switch to GitHub Actions workflow
-
-# Manual workflow trigger
-# Force workflow detection
-# Force GitHub to detect workflows
+*Built with ❤️ for investors who want to feel confident about their financial decisions.*
