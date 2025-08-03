@@ -65,7 +65,9 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {
-        redirectTo: `${location.origin}/auth/callback`,
+        redirectTo: process.env.NODE_ENV === 'production' 
+          ? 'https://benjamalegni.github.io/financialfeeling/auth/callback'
+          : `${location.origin}/auth/callback`,
       },
     })
     if (error) {
@@ -82,7 +84,9 @@ export default function LoginPage() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: process.env.NODE_ENV === 'production'
+            ? 'https://benjamalegni.github.io/financialfeeling/auth/callback'
+            : `${window.location.origin}/auth/callback`,
         },
       })
       

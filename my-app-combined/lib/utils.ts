@@ -7,12 +7,10 @@ export function cn(...inputs: ClassValue[]) {
 
 // Function to handle routes with correct basePath for GitHub Pages
 export function getRoute(path: string): string {
-  // Don't add basePath if the path already starts with it
-  if (path.startsWith('/financialfeeling')) {
-    return path;
-  }
+  // Remove leading slash if present
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
   
   // Use basePath for GitHub Pages in production
   const basePath = process.env.NODE_ENV === 'production' ? '/financialfeeling' : '';
-  return `${basePath}${path}`;
+  return `${basePath}/${cleanPath}`;
 }
