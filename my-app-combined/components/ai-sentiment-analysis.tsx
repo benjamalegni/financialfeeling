@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { TrendingUp, TrendingDown, Minus, AlertTriangle, Info, Clock, Activity } from 'lucide-react'
+import { analyzeStocks } from '@/lib/stockAnalysis'
 
 interface SentimentData {
   symbol: string
@@ -30,74 +31,42 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
     setError(null)
 
     try {
-      // Simular datos de sentimiento directamente sin llamada HTTP
-      // En deployment estático no hay API routes disponibles
-      const mockSentimentData: SentimentData[] = selectedAssets.map((asset, index) => {
-        const assetData = {
-          'AAPL': {
-            news: 'Apple reports record iPhone sales and strong services growth',
-            reason: 'iPhone 15 Pro Max demand exceeds expectations with 23% YoY growth in services revenue',
-            impact: 'positive' as const,
-            horizon: 'Short-term',
-            fundamentalScore: 85
-          },
-          'TSLA': {
-            news: 'Tesla faces production challenges but maintains strong delivery targets',
-            reason: 'Supply chain issues impact Q4 production, but demand remains robust with 1.8M deliveries expected',
-            impact: 'neutral' as const,
-            horizon: 'Medium-term',
-            fundamentalScore: 72
-          },
-          'MSFT': {
-            news: 'Microsoft Azure cloud services show exceptional growth',
-            reason: 'AI integration drives 35% revenue increase in cloud segment, expanding market leadership',
-            impact: 'positive' as const,
-            horizon: 'Long-term',
-            fundamentalScore: 92
-          },
-          'GOOGL': {
-            news: 'Google faces regulatory scrutiny over search dominance',
-            reason: 'Antitrust concerns may impact future revenue streams, but core business remains strong',
-            impact: 'negative' as const,
-            horizon: 'Medium-term',
-            fundamentalScore: 78
-          },
-          'AMZN': {
-            news: 'Amazon Web Services continues to dominate cloud market',
-            reason: 'AWS revenue grows 28% with expanding AI and machine learning services',
-            impact: 'positive' as const,
-            horizon: 'Long-term',
-            fundamentalScore: 88
-          }
-        }
-
-        const defaultData = {
-          news: 'Market analysis shows mixed signals for this asset',
-          reason: 'Technical indicators suggest moderate volatility with stable fundamentals',
-          impact: ['positive', 'negative', 'neutral'][index % 3] as 'positive' | 'negative' | 'neutral',
-          horizon: ['Short-term', 'Medium-term', 'Long-term'][index % 3],
-          fundamentalScore: Math.floor(Math.random() * 30) + 70 // 70-100
-        }
-
-        const data = assetData[asset as keyof typeof assetData] || defaultData
-
-        return {
-          symbol: asset,
-          horizon: data.horizon,
-          impact: data.impact,
-          news: data.news,
-          reason: data.reason,
-          fundamentalScore: data.fundamentalScore,
-          timestamp: new Date().toISOString()
-        }
-      })
-
-      // Simular delay para mostrar el loading
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Call Railway backend for real analysis
+      const analysisResult = await analyzeStocks(selectedAssets)
       
-      setSentimentData(mockSentimentData)
+      if (analysisResult && analysisResult.stocks.length > 0) {
+        // Transform Railway data to sentiment format
+        const realSentimentData: SentimentData[] = analysisResult.stocks.map((stock) => {
+          // Calculate fundamental score based on sentiment (simulated for now)
+          let fundamentalScore = 75; // Default
+          if (stock.analysis.sentiment === 'positive') {
+            fundamentalScore = Math.floor(Math.random() * 20) + 80; // 80-100
+          } else if (stock.analysis.sentiment === 'negative') {
+            fundamentalScore = Math.floor(Math.random() * 20) + 60; // 60-80
+          } else {
+            fundamentalScore = Math.floor(Math.random() * 20) + 70; // 70-90
+          }
+
+          return {
+            symbol: stock.symbol,
+            horizon: 'Short-term', // Default horizon
+            impact: stock.analysis.sentiment,
+            news: stock.analysis.news,
+            reason: stock.analysis.recommendation,
+            fundamentalScore: fundamentalScore,
+            timestamp: analysisResult.timestamp
+          }
+        })
+
+        setSentimentData(realSentimentData)
+      } else {
+        // No data available from Railway
+        setError('No analysis data available from backend. Please try again later.')
+        setSentimentData([])
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error occurred')
+      setError(err instanceof Error ? err.message : 'Failed to fetch analysis from backend')
+      setSentimentData([])
     } finally {
       setIsLoading(false)
     }
@@ -111,61 +80,23 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
       
       // Convert n8n data to sentiment data format
       const processedData: SentimentData[] = analysisData.data.stocks.map((stock: any) => {
-        const assetData = {
-          'AAPL': {
-            news: 'Apple reports record iPhone sales and strong services growth',
-            reason: 'iPhone 15 Pro Max demand exceeds expectations with 23% YoY growth in services revenue',
-            impact: 'positive' as const,
-            horizon: 'Short-term',
-            fundamentalScore: 85
-          },
-          'TSLA': {
-            news: 'Tesla faces production challenges but maintains strong delivery targets',
-            reason: 'Supply chain issues impact Q4 production, but demand remains robust with 1.8M deliveries expected',
-            impact: 'neutral' as const,
-            horizon: 'Medium-term',
-            fundamentalScore: 72
-          },
-          'MSFT': {
-            news: 'Microsoft Azure cloud services show exceptional growth',
-            reason: 'AI integration drives 35% revenue increase in cloud segment, expanding market leadership',
-            impact: 'positive' as const,
-            horizon: 'Long-term',
-            fundamentalScore: 92
-          },
-          'GOOGL': {
-            news: 'Google faces regulatory scrutiny over search dominance',
-            reason: 'Antitrust concerns may impact future revenue streams, but core business remains strong',
-            impact: 'negative' as const,
-            horizon: 'Medium-term',
-            fundamentalScore: 78
-          },
-          'AMZN': {
-            news: 'Amazon Web Services continues to dominate cloud market',
-            reason: 'AWS revenue grows 28% with expanding AI and machine learning services',
-            impact: 'positive' as const,
-            horizon: 'Long-term',
-            fundamentalScore: 88
-          }
-        };
-
-        const defaultData = {
-          news: 'Market analysis shows mixed signals for this asset',
-          reason: 'Technical indicators suggest moderate volatility with stable fundamentals',
-          impact: 'neutral' as const,
-          horizon: 'Medium-term',
-          fundamentalScore: Math.floor(Math.random() * 30) + 70
-        };
-
-        const data = assetData[stock.symbol as keyof typeof assetData] || defaultData;
+        // Calculate fundamental score based on sentiment
+        let fundamentalScore = 75;
+        if (stock.analysis?.sentiment === 'positive') {
+          fundamentalScore = Math.floor(Math.random() * 20) + 80;
+        } else if (stock.analysis?.sentiment === 'negative') {
+          fundamentalScore = Math.floor(Math.random() * 20) + 60;
+        } else {
+          fundamentalScore = Math.floor(Math.random() * 20) + 70;
+        }
 
         return {
           symbol: stock.symbol,
-          horizon: data.horizon,
-          impact: data.impact,
-          news: data.news,
-          reason: data.reason,
-          fundamentalScore: data.fundamentalScore,
+          horizon: 'Short-term',
+          impact: stock.analysis?.sentiment || 'neutral',
+          news: stock.analysis?.news || 'No news available',
+          reason: stock.analysis?.recommendation || 'No analysis available',
+          fundamentalScore: fundamentalScore,
           timestamp: new Date().toISOString()
         };
       });
@@ -270,7 +201,7 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
         <div className="text-center py-12">
           <TrendingUp className="h-12 w-12 text-blue-400 mx-auto mb-4" />
           <p className="text-gray-400 mb-4">Ready to analyze {selectedAssets.length} assets</p>
-          <p className="text-sm text-gray-500">Press the RUN button to start AI analysis</p>
+          <p className="text-sm text-gray-500">Press the RUN button to start AI analysis with Railway backend</p>
         </div>
       ) : (
         <div className="space-y-4">
