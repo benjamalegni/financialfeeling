@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Github } from 'lucide-react'
+import { getRoute } from '@/lib/utils'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -131,7 +132,7 @@ export default function LoginPage() {
 
           <div className="text-center text-sm text-gray-400">
             Don&apos;t have an account?{' '}
-            <a href="/financialfeeling/signup" className="font-medium text-blue-400 hover:text-blue-300 underline">
+            <a href={getRoute('/signup')} className="font-medium text-blue-400 hover:text-blue-300 underline">
               Sign Up
             </a>
           </div>

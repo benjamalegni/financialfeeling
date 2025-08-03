@@ -2,8 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from '@/lib/database.types'
+import { getRoute } from '@/lib/utils'
+import { config } from '@/lib/config'
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('')
@@ -13,7 +15,11 @@ export default function SignUpPage() {
   const [message, setMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
-  const supabase = createClientComponentClient<Database>()
+  
+  // Create Supabase client with fallback for build time
+  const supabaseUrl = config.supabase.url
+  const supabaseKey = config.supabase.anonKey
+  const supabase = createBrowserClient<Database>(supabaseUrl, supabaseKey)
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -165,7 +171,7 @@ export default function SignUpPage() {
 
         <p className="mt-8 text-center text-sm text-n8n-text-secondary">
           Already have an account?{' '}
-          <a href="/login" className="font-medium text-n8n-accent hover:text-n8n-accent-hover">
+          <a href={getRoute('/login')} className="font-medium text-n8n-accent hover:text-n8n-accent-hover">
             Sign In
           </a>
         </p>
