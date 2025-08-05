@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, TrendingUp, TrendingDown, Activity } from 'lucide-react'
+import { Loader2, TrendingUp, TrendingDown, Activity, AlertCircle } from 'lucide-react'
 import { config } from '@/lib/config'
 
 interface StockAnalysis {
@@ -40,6 +40,13 @@ export default function StockAnalyzer() {
 
       if (stockArray.length === 0) {
         setError('Please enter valid stock symbols')
+        return
+      }
+
+      // RESTRICCIÓN: Máximo 2 stocks por análisis
+      if (stockArray.length > 2) {
+        setError('Maximum 2 stocks allowed per analysis. Please select only 2 stocks.')
+        setLoading(false)
         return
       }
 
@@ -118,6 +125,18 @@ export default function StockAnalyzer() {
     return 'text-gray-500'
   }
 
+  // Función para contar stocks en el input
+  const getStockCount = () => {
+    if (!stocks.trim()) return 0
+    return stocks
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => s.length > 0).length
+  }
+
+  const stockCount = getStockCount()
+  const isOverLimit = stockCount > 2
+
   return (
     <div className="space-y-6">
       <Card className="bg-gray-900 border-gray-700">
@@ -130,23 +149,38 @@ export default function StockAnalyzer() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <label className="text-sm font-medium text-white">
-              Stock Symbols (comma-separated)
+              Stock Symbols (comma-separated) - Max 2 stocks
             </label>
             <Input
               value={stocks}
               onChange={(e) => setStocks(e.target.value)}
-              placeholder="AAPL, TSLA, MSFT, GOOGL"
-              className="bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+              placeholder="AAPL, TSLA (max 2 stocks)"
+              className={`bg-gray-800 border-gray-600 text-white placeholder-gray-400 ${
+                isOverLimit ? 'border-red-500' : ''
+              }`}
             />
-            <p className="text-xs text-gray-400">
-              Enter stock symbols separated by commas
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-400">
+                Enter stock symbols separated by commas
+              </p>
+              <div className={`text-xs ${isOverLimit ? 'text-red-400' : 'text-gray-400'}`}>
+                {stockCount}/2 stocks
+              </div>
+            </div>
+            
+            {/* Warning message for over limit */}
+            {isOverLimit && (
+              <div className="flex items-center gap-2 text-xs text-red-400 bg-red-900/20 p-2 rounded-md border border-red-800">
+                <AlertCircle className="h-4 w-4" />
+                Maximum 2 stocks allowed per analysis
+              </div>
+            )}
           </div>
 
           <Button
             onClick={handleAnalyze}
-            disabled={loading || !stocks.trim()}
-            className="w-full bg-blue-600 hover:bg-blue-700"
+            disabled={loading || !stocks.trim() || isOverLimit}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>
@@ -169,7 +203,7 @@ export default function StockAnalyzer() {
       {analysis.length > 0 && (
         <div className="space-y-4">
           <h3 className="text-lg font-semibold text-white">Analysis Results</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {analysis.map((stock, index) => (
               <Card key={index} className="bg-gray-900 border-gray-700">
                 <CardContent className="p-4">

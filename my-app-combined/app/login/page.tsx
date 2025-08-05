@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator'
 import { Github, X, Mail } from 'lucide-react'
 import { getRoute } from '@/lib/utils'
-import { config, validateSupabaseConfig } from '@/lib/config'
+import { config, validateSupabaseConfig, getRedirectUrl } from '@/lib/config'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -62,10 +62,14 @@ export default function LoginPage() {
   const handleGitHubSignIn = async () => {
     setIsSubmitting(true);
     setError(null);
+    
+    const redirectUrl = getRedirectUrl();
+    console.log('GitHub OAuth redirect URL:', redirectUrl);
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {
-        redirectTo: 'https://benjamalegni.github.io/financialfeeling/auth/callback',
+        redirectTo: redirectUrl,
       },
     })
     if (error) {
@@ -78,13 +82,14 @@ export default function LoginPage() {
     setIsSubmitting(true);
     setError(null);
     
+    const redirectUrl = getRedirectUrl();
+    console.log('Google OAuth redirect URL:', redirectUrl);
+    
     try {
-      console.log('Initiating Google OAuth with redirectTo:', 'https://benjamalegni.github.io/financialfeeling/auth/callback');
-      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://benjamalegni.github.io/financialfeeling/auth/callback',
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

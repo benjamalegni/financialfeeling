@@ -292,6 +292,11 @@ export default function HomePage() {
     if (selectedAssets.includes(symbol)) {
       setSelectedAssets(selectedAssets.filter(asset => asset !== symbol))
     } else {
+      // RESTRICCIÓN: Máximo 2 assets por usuario
+      if (selectedAssets.length >= 2) {
+        alert('Maximum 2 assets allowed per user. Please remove an asset before adding a new one.')
+        return
+      }
       setSelectedAssets([...selectedAssets, symbol])
     }
   }
@@ -682,7 +687,12 @@ export default function HomePage() {
                                 {/* Selected Assets */}
                                 {selectedAssets.length > 0 && (
                                   <div className="border-t border-gray-700 pt-4">
-                                    <h4 className="text-white font-semibold mb-2">Selected Assets ({selectedAssets.length}) - Click to remove</h4>
+                                    <h4 className="text-white font-semibold mb-2">
+                                      Selected Assets ({selectedAssets.length}/2) - Click to remove
+                                      {selectedAssets.length >= 2 && (
+                                        <span className="text-yellow-400 text-sm ml-2">(Maximum reached)</span>
+                                      )}
+                                    </h4>
                                     <div className="flex flex-wrap gap-2">
                                       {selectedAssets.map(symbol => {
                                         const asset = financialAssets.find(a => a.symbol === symbol)
@@ -772,7 +782,7 @@ export default function HomePage() {
 
               {/* How to Use Section */}
               <div className="mb-8">
-                <h2 className="text-6xl font-bold mb-6 text-center" style={{fontFamily: 'Newsreader, serif', fontWeight: 800}}>Learn to Use Stock Analysis</h2>
+                <h2 className="text-6xl font-bold mb-6 text-center">Learn to Use Stock Analysis</h2>
 
                 <Card className="bg-gray-900 border-gray-700">
                   <CardContent className="p-8">
