@@ -5,23 +5,22 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Function to handle routes with correct basePath for GitHub Pages
+// Function to handle routes with correct basePath for custom domain
 export function getRoute(path: string): string {
   // Remove leading slash if present
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
   
-  // Check if we're in static export mode (GitHub Pages)
-  // Use window.location to detect if we're on GitHub Pages
-  const isGitHubPages = typeof window !== 'undefined' && 
-    (window.location.hostname === 'benjamalegni.github.io' || 
-     window.location.pathname.startsWith('/financialfeeling'));
+  // Check if we're in production mode (custom domain)
+  // Use window.location to detect if we're on the custom domain
+  const isProduction = typeof window !== 'undefined' && 
+    (window.location.hostname === 'financialfeeling.com' || 
+     window.location.hostname === 'www.financialfeeling.com');
   
-  // If we're on GitHub Pages, Next.js handles the basePath automatically
-  // So we just return the clean path without the prefix
-  if (isGitHubPages) {
+  // If we're on production, no basePath needed
+  if (isProduction) {
     return `/${cleanPath}`;
   }
   
-  // For development or other environments, add the prefix manually
-  return `/financialfeeling/${cleanPath}`;
+  // For development, no prefix needed since we're not using GitHub Pages
+  return `/${cleanPath}`;
 }

@@ -9,12 +9,12 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Solo usar export estático si estamos en producción y queremos GitHub Pages
+  // Configuración para dominio personalizado financialfeeling.com
   ...(process.env.NODE_ENV === 'production' && process.env.USE_STATIC_EXPORT === 'true' ? {
     output: 'export',
     trailingSlash: true,
-    basePath: '/financialfeeling',
-    assetPrefix: '/financialfeeling/',
+    basePath: '',
+    assetPrefix: '',
   } : {}),
 }
 

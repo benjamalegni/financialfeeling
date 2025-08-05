@@ -1,7 +1,6 @@
 title: Financial Feeling
-description: AI-powered financial analysis and trading insights
-baseurl: "/financialfeeling"
-url: "https://benjamalegni.github.io"
+baseurl: ""
+url: "https://financialfeeling.com"
 
 # Build settings
 markdown: kramdown

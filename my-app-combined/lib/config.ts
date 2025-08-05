@@ -18,31 +18,30 @@ export const config = {
   
   // App Configuration
   app: {
-    basePath: process.env.NODE_ENV === 'production' ? '/financialfeeling' : '',
+    basePath: process.env.NODE_ENV === 'production' ? '' : '',
     isStaticExport: process.env.USE_STATIC_EXPORT === 'true',
     // URL de la aplicación - detecta automáticamente el entorno
     url: process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? 
-      window.location.origin + (window.location.pathname.startsWith('/financialfeeling') ? '/financialfeeling' : '') : 
+      window.location.origin : 
       'http://localhost:3000'),
   },
 
-  // OAuth Configuration - Corregir para detectar correctamente GitHub Pages
+  // OAuth Configuration - Actualizado para financialfeeling.com
   oauth: {
     // Detecta automáticamente la URL de redirección basada en el entorno
     redirectUrl: (() => {
       if (typeof window !== 'undefined') {
-        // Cliente - detecta automáticamente si estamos en GitHub Pages
+        // Cliente - detecta automáticamente si estamos en el dominio personalizado
         const origin = window.location.origin
-        const pathname = window.location.pathname
-        const isGitHubPages = origin === 'https://benjamalegni.github.io' || pathname.startsWith('/financialfeeling')
-        const basePath = isGitHubPages ? '/financialfeeling' : ''
+        const isProduction = origin === 'https://financialfeeling.com' || origin === 'https://www.financialfeeling.com'
+        const basePath = isProduction ? '' : ''
         return `${origin}${basePath}/auth/callback`
       } else {
         // Servidor - usa variables de entorno o valores por defecto
         const isProduction = process.env.NODE_ENV === 'production'
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-          (isProduction ? 'https://benjamalegni.github.io' : 'http://localhost:3000')
-        const basePath = isProduction ? '/financialfeeling' : ''
+          (isProduction ? 'https://financialfeeling.com' : 'http://localhost:3000')
+        const basePath = isProduction ? '' : ''
         return `${baseUrl}${basePath}/auth/callback`
       }
     })(),
@@ -50,7 +49,7 @@ export const config = {
     // URLs de redirección para diferentes entornos
     redirectUrls: {
       development: 'http://localhost:3000/auth/callback',
-      production: 'https://benjamalegni.github.io/financialfeeling/auth/callback',
+      production: 'https://financialfeeling.com/auth/callback',
     }
   }
 }
