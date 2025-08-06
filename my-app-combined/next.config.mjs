@@ -9,12 +9,12 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Configuración para dominio personalizado financialfeeling.com
+  // Configuración para GitHub Pages (dominio que funciona)
   ...(process.env.NODE_ENV === 'production' && process.env.USE_STATIC_EXPORT === 'true' ? {
     output: 'export',
     trailingSlash: true,
-    basePath: '',
-    assetPrefix: '',
+    basePath: '/financialfeeling',
+    assetPrefix: '/financialfeeling/',
     // Forzar HTTPS en producción
     async headers() {
       return [

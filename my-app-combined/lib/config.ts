@@ -26,22 +26,24 @@ export const config = {
       'http://localhost:3000'),
   },
 
-  // OAuth Configuration - Actualizado para financialfeeling.com
+  // OAuth Configuration - Actualizado para usar el dominio que funciona
   oauth: {
     // Detecta automáticamente la URL de redirección basada en el entorno
     redirectUrl: (() => {
       if (typeof window !== 'undefined') {
-        // Cliente - detecta automáticamente si estamos en el dominio personalizado
+        // Cliente - detecta automáticamente si estamos en producción
         const origin = window.location.origin
-        const isProduction = origin === 'https://financialfeeling.com' || origin === 'https://www.financialfeeling.com'
-        const basePath = isProduction ? '' : ''
+        const isProduction = origin === 'https://benjamalegni.github.io' || 
+                           origin === 'https://www.financialfeeling.com' ||
+                           origin === 'https://financialfeeling.com'
+        const basePath = isProduction ? '/financialfeeling' : ''
         return `${origin}${basePath}/auth/callback`
       } else {
         // Servidor - usa variables de entorno o valores por defecto
         const isProduction = process.env.NODE_ENV === 'production'
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-          (isProduction ? 'https://financialfeeling.com' : 'http://localhost:3000')
-        const basePath = isProduction ? '' : ''
+          (isProduction ? 'https://benjamalegni.github.io' : 'http://localhost:3000')
+        const basePath = isProduction ? '/financialfeeling' : ''
         return `${baseUrl}${basePath}/auth/callback`
       }
     })(),
@@ -49,7 +51,7 @@ export const config = {
     // URLs de redirección para diferentes entornos
     redirectUrls: {
       development: 'http://localhost:3000/auth/callback',
-      production: 'https://financialfeeling.com/auth/callback',
+      production: 'https://benjamalegni.github.io/financialfeeling/auth/callback',
     }
   }
 }
@@ -67,7 +69,9 @@ export function getRedirectUrl() {
 // Función para forzar HTTPS en producción
 export function forceHTTPS() {
   if (typeof window !== 'undefined' && window.location.protocol === 'http:' && 
-      (window.location.hostname === 'financialfeeling.com' || window.location.hostname === 'www.financialfeeling.com')) {
+      (window.location.hostname === 'benjamalegni.github.io' || 
+       window.location.hostname === 'www.financialfeeling.com' ||
+       window.location.hostname === 'financialfeeling.com')) {
     window.location.href = window.location.href.replace('http:', 'https:');
   }
 }

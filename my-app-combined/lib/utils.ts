@@ -5,22 +5,22 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Function to handle routes with correct basePath for custom domain
+// Function to handle routes with correct basePath for GitHub Pages
 export function getRoute(path: string): string {
   // Remove leading slash if present
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
   
-  // Check if we're in production mode (custom domain)
-  // Use window.location to detect if we're on the custom domain
+  // Check if we're in production mode (GitHub Pages)
+  // Use window.location to detect if we're on GitHub Pages
   const isProduction = typeof window !== 'undefined' && 
-    (window.location.hostname === 'financialfeeling.com' || 
-     window.location.hostname === 'www.financialfeeling.com');
+    (window.location.hostname === 'benjamalegni.github.io' || 
+     window.location.pathname.startsWith('/financialfeeling'));
   
-  // If we're on production, no basePath needed
+  // If we're on GitHub Pages, add the basePath
   if (isProduction) {
-    return `/${cleanPath}`;
+    return `/financialfeeling/${cleanPath}`;
   }
   
-  // For development, no prefix needed since we're not using GitHub Pages
+  // For development, no prefix needed
   return `/${cleanPath}`;
 }
