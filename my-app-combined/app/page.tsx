@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Plus, Send, LogOut, User, BarChart3, Zap, Search, Star, TrendingUp, DollarSign, Bitcoin, Building2, X } from 'lucide-react'
 import SimpleTypewriter from '@/components/simple-typewriter'
 import { getRandomText } from '@/lib/texts'
+import Carousel3D from '@/components/3d-carousel'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,18 +44,40 @@ export default function HomePage() {
   const [originalAssets, setOriginalAssets] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [autocompleteSuggestions, setAutocompleteSuggestions] = useState<any[]>([])
-  const [currentStep, setCurrentStep] = useState(0)
   const [showAutocomplete, setShowAutocomplete] = useState(false)
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1)
   const [analysisData, setAnalysisData] = useState<any>(null)
 
-  // Auto-rotate carousel
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentStep((prev) => (prev === 3 ? 0 : prev + 1))
-    }, 3000)
-    return () => clearInterval(interval)
-  }, [])
+  const howToSteps = [
+    {
+      id: 1,
+      title: 'Enter Stock Symbols',
+      description:
+        'Type the stock symbols you want to analyze, separated by commas. Example: AAPL, TSLA, MSFT, GOOGL',
+      color: '#3b82f6'
+    },
+    {
+      id: 2,
+      title: 'Get AI Analysis',
+      description:
+        'Our AI will analyze market data, trends, and provide trading recommendations with confidence scores for each stock.',
+      color: '#10b981'
+    },
+    {
+      id: 3,
+      title: 'Review Results',
+      description:
+        'View detailed analysis including price changes, recommendations, and confidence levels for informed decision making.',
+      color: '#f59e0b'
+    },
+    {
+      id: 4,
+      title: 'A good company with bad news is a BUY',
+      description:
+        'Use the insights to make informed trading decisions based on AI-powered analysis and market trends.',
+      color: '#a855f7'
+    }
+  ]
 
   const router = useRouter()
 
@@ -786,86 +809,7 @@ export default function HomePage() {
 
                 <Card className="bg-gray-900 border-gray-700">
                   <CardContent className="p-8">
-                    <div className="relative h-64 overflow-hidden">
-                      {/* Carrusel de pasos */}
-                      <div className="flex transition-transform duration-500 ease-in-out" style={{ transform: `translateX(-${currentStep * 100}%)` }}>
-                        {/* Paso 1 */}
-                        <div className="w-full flex-shrink-0 flex items-center justify-center">
-                          <div className="text-center max-w-md">
-                            <div className="text-6xl font-bold text-blue-500 mb-4">1</div>
-                            <h3 className="text-2xl font-bold text-white mb-4">Enter Stock Symbols</h3>
-                            <p className="text-gray-300 text-lg">
-                              Type the stock symbols you want to analyze, separated by commas.
-                              <br />
-                              <span className="text-blue-400 font-semibold">Example: AAPL, TSLA, MSFT, GOOGL</span>
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Paso 2 */}
-                        <div className="w-full flex-shrink-0 flex items-center justify-center">
-                          <div className="text-center max-w-md">
-                            <div className="text-6xl font-bold text-green-500 mb-4">2</div>
-                            <h3 className="text-2xl font-bold text-white mb-4">Get AI Analysis</h3>
-                            <p className="text-gray-300 text-lg">
-                              Our AI will analyze market data, trends, and provide trading recommendations
-                              with confidence scores for each stock.
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Paso 3 */}
-                        <div className="w-full flex-shrink-0 flex items-center justify-center">
-                          <div className="text-center max-w-md">
-                            <div className="text-6xl font-bold text-yellow-500 mb-4">3</div>
-                            <h3 className="text-2xl font-bold text-white mb-4">Review Results</h3>
-                            <p className="text-gray-300 text-lg">
-                              View detailed analysis including price changes, recommendations,
-                              and confidence levels for informed decision making.
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Paso 4 */}
-                        <div className="w-full flex-shrink-0 flex items-center justify-center">
-                          <div className="text-center max-w-md">
-                            <div className="text-6xl font-bold text-purple-500 mb-4">4</div>
-                            <h3 className="text-2xl font-bold text-white mb-4">A good company with bad news is a BUY</h3>
-                            <p className="text-gray-300 text-lg">
-                              Use the insights to make informed trading decisions based on
-                              AI-powered analysis and market trends.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Controles del carrusel */}
-                      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                        {[0, 1, 2, 3].map((step) => (
-                          <button
-                            key={step}
-                            onClick={() => setCurrentStep(step)}
-                            className={`w-3 h-3 rounded-full transition-colors duration-300 ${
-                              currentStep === step ? 'bg-white' : 'bg-gray-500'
-                            }`}
-                          />
-                        ))}
-                      </div>
-
-                      {/* Botones de navegación */}
-                      <button
-                        onClick={() => setCurrentStep((prev) => (prev === 0 ? 3 : prev - 1))}
-                        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors duration-300"
-                      >
-                        ←
-                      </button>
-                      <button
-                        onClick={() => setCurrentStep((prev) => (prev === 3 ? 0 : prev + 1))}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors duration-300"
-                      >
-                        →
-                      </button>
-                    </div>
+                    <Carousel3D steps={howToSteps} />
                   </CardContent>
                 </Card>
               </div>
