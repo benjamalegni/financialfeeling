@@ -64,6 +64,14 @@ export function getRedirectUrl() {
   return config.oauth.redirectUrl
 }
 
+// Función para forzar HTTPS en producción
+export function forceHTTPS() {
+  if (typeof window !== 'undefined' && window.location.protocol === 'http:' && 
+      (window.location.hostname === 'financialfeeling.com' || window.location.hostname === 'www.financialfeeling.com')) {
+    window.location.href = window.location.href.replace('http:', 'https:');
+  }
+}
+
 // Función para verificar si las claves de Supabase son válidas
 export function validateSupabaseConfig() {
   const url = config.supabase.url
