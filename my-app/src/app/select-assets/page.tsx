@@ -186,7 +186,7 @@ export default function SelectAssetsPage() {
             </div>
           )}
           {searchTerm && searchResults.length === 0 && (
-            <p className="text-n8n-text-secondary text-sm text-center">No assets found for "{searchTerm}".</p>
+            <p className="text-n8n-text-secondary text-sm text-center">No assets found for &quot;{searchTerm}&quot;.</p>
           )}
 
           {selectedAssets.size > 0 && (
