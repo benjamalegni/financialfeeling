@@ -1,0 +1,75 @@
+NAMECHEAP DNS CONFIGURATION
+================================
+
+INSTRUCCIONES PASO A PASO:
+1. Ve a tu panel de control de Namecheap
+2. Domain List → Manage → Advanced DNS
+3. Elimina todos los registros existentes (si los hay)
+4. Agrega los siguientes registros uno por uno:
+
+================================
+REGISTROS A (para el dominio raíz)
+================================
+
+Registro #1:
+- Type: A Record
+- Host: @ (dejar vacío)
+- Value: 185.199.108.153
+- TTL: Automatic
+
+Registro #2:
+- Type: A Record
+- Host: @ (dejar vacío)
+- Value: 185.199.109.153
+- TTL: Automatic
+
+Registro #3:
+- Type: A Record
+- Host: @ (dejar vacío)
+- Value: 185.199.110.153
+- TTL: Automatic
+
+Registro #4:
+- Type: A Record
+- Host: @ (dejar vacío)
+- Value: 185.199.111.153
+- TTL: Automatic
+
+================================
+REGISTRO CNAME (para www)
+================================
+
+Registro #5:
+- Type: CNAME Record
+- Host: www
+- Value: benjamalegni.github.io
+- TTL: Automatic
+
+================================
+CONFIGURACIÓN EN GITHUB
+================================
+
+Después de configurar DNS en Namecheap:
+
+1. Ve a: https://github.com/benjamalegni/financialfeeling/settings/pages
+2. En "Custom domain" escribe: financialfeeling.com
+3. Marca "Enforce HTTPS"
+4. Haz clic en "Save"
+
+================================
+VERIFICACIÓN
+================================
+
+Después de 24-48 horas, verifica con:
+- https://financialfeeling.com/
+- https://www.financialfeeling.com/
+
+================================
+NOTAS IMPORTANTES
+================================
+
+- Los registros A son para el dominio raíz (financialfeeling.com)
+- El registro CNAME es para www.financialfeeling.com
+- TTL "Automatic" es lo recomendado
+- Puede tomar hasta 48 horas para propagarse completamente
+- GitHub Pages automáticamente configurará SSL después de 24 horas 
