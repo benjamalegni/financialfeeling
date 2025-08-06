@@ -1,67 +1,29 @@
 #!/usr/bin/env node
 
 /**
- * Probar la función validateSupabaseConfig arreglada
+ * Validate Supabase configuration values.
+ *
+ * Returns an object describing whether the URL/key look valid and
+ * flags any specific issues encountered.
  */
 
-console.log('🔍 Probando validateSupabaseConfig')
-console.log('==================================')
-console.log('')
+const assert = require('assert');
 
-// Simular la función validateSupabaseConfig
-function validateSupabaseConfig() {
-  const url = 'https://yhxdyndkdhhnuginaekn.supabase.co'
-  const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InloeGR5bmRrZGhobnVnaW5hZWtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3MTYxMTgsImV4cCI6MjA2NjI5MjExOH0.-3qFN_HEZx7i1rGhpaZg9edxoSRDgUkPzDYfrPNiIqI'
-  
-  // Verificar si la URL es de ejemplo
-  const isExampleUrl = !url || url === 'https://yhxdyndkdhhnuginaekn.supabase.co'
-  
-  // Verificar si la clave es de ejemplo (contiene caracteres repetidos de ejemplo)
-  const isExampleKey = !key || key.includes('Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8')
-  
-  // Verificar si la clave tiene el formato correcto de JWT
-  const isValidJWTFormat = key && key.split('.').length === 3
-  
-  // Verificar si la clave tiene la longitud correcta
-  const isValidLength = key && key.length > 100 && key.length < 500
-  
-  console.log('📋 Análisis de la configuración:')
-  console.log('URL:', url)
-  console.log('Key Length:', key.length)
-  console.log('Key Preview:', key.substring(0, 50) + '...')
-  console.log('')
-  
-  console.log('🔍 Verificaciones:')
-  console.log('- isExampleUrl:', isExampleUrl)
-  console.log('- isExampleKey:', isExampleKey)
-  console.log('- isValidJWTFormat:', isValidJWTFormat)
-  console.log('- isValidLength:', isValidLength)
-  console.log('')
-  
-  if (isExampleUrl) {
-    console.log('⚠️ Supabase URL parece ser una URL de ejemplo')
-  }
-  
-  if (isExampleKey) {
-    console.log('⚠️ Supabase anonKey parece ser una clave de ejemplo')
-  }
-  
-  if (!isValidJWTFormat) {
-    console.log('⚠️ Supabase anonKey no tiene el formato JWT correcto')
-  }
-  
-  if (!isValidLength) {
-    console.log('⚠️ Supabase anonKey no tiene la longitud correcta')
-  }
-  
-  const isValid = url && key && !isExampleUrl && !isExampleKey && isValidJWTFormat && isValidLength
-  
-  console.log('')
-  console.log('📊 Resultado:')
-  console.log('- isValid:', isValid)
-  console.log('- Total de problemas:', [isExampleUrl, isExampleKey, !isValidJWTFormat, !isValidLength].filter(Boolean).length)
-  console.log('')
-  
+function validateSupabaseConfig(url, key) {
+  const isExampleUrl = !url || url === 'https://yhxdyndkdhhnuginaekn.supabase.co';
+  const isExampleKey =
+    !key || key.includes('Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8');
+  const isValidJWTFormat = !!key && key.split('.').length === 3;
+  const isValidLength = !!key && key.length > 100 && key.length < 500;
+
+  const isValid =
+    !!url &&
+    !!key &&
+    !isExampleUrl &&
+    !isExampleKey &&
+    isValidJWTFormat &&
+    isValidLength;
+
   return {
     isValid,
     url,
@@ -74,30 +36,58 @@ function validateSupabaseConfig() {
       exampleUrl: isExampleUrl,
       exampleKey: isExampleKey,
       invalidJWT: !isValidJWTFormat,
-      invalidLength: !isValidLength
-    }
-  }
+      invalidLength: !isValidLength,
+    },
+  };
 }
 
-// Ejecutar la validación
-const result = validateSupabaseConfig()
+function runTests() {
+  const VALID_URL = 'https://project.supabase.co';
+  const VALID_KEY =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
+    'a'.repeat(60) +
+    '.' +
+    'b'.repeat(60);
+  const EXAMPLE_URL = 'https://yhxdyndkdhhnuginaekn.supabase.co';
+  const EXAMPLE_KEY = 'Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8';
 
-console.log('🎯 Recomendación:')
-if (result.isValid) {
-  console.log('✅ Las claves parecen ser válidas')
-  console.log('El problema de OAuth puede ser:')
-  console.log('1. URLs de redirección no configuradas')
-  console.log('2. Google OAuth no habilitado')
-  console.log('3. Configuración en Google Cloud Console')
-} else {
-  console.log('❌ Las claves tienen problemas:')
-  if (result.issues.exampleUrl) console.log('- URL es de ejemplo')
-  if (result.issues.exampleKey) console.log('- Clave es de ejemplo')
-  if (result.issues.invalidJWT) console.log('- Formato JWT incorrecto')
-  if (result.issues.invalidLength) console.log('- Longitud incorrecta')
-  console.log('')
-  console.log('🔧 Solución: Obtener claves reales de Supabase')
+  // Valid configuration should pass
+  let result = validateSupabaseConfig(VALID_URL, VALID_KEY);
+  assert.strictEqual(result.isValid, true, 'Expected valid configuration');
+
+  // Example URL should be flagged
+  result = validateSupabaseConfig(EXAMPLE_URL, VALID_KEY);
+  assert.strictEqual(result.isValid, false, 'Example URL should fail');
+  assert.strictEqual(result.isExampleUrl, true, 'Example URL not detected');
+
+  // Example key should be flagged
+  result = validateSupabaseConfig(VALID_URL, EXAMPLE_KEY);
+  assert.strictEqual(result.isValid, false, 'Example key should fail');
+  assert.strictEqual(result.isExampleKey, true, 'Example key not detected');
+
+  // Invalid JWT format (only two parts)
+  const BAD_JWT =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' + 'a'.repeat(120);
+  result = validateSupabaseConfig(VALID_URL, BAD_JWT);
+  assert.strictEqual(result.isValid, false, 'Invalid JWT should fail');
+  assert.strictEqual(
+    result.isValidJWTFormat,
+    false,
+    'Invalid JWT format not detected',
+  );
+
+  // Invalid key length
+  const SHORT_KEY =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' +
+    'a'.repeat(10) +
+    '.' +
+    'b'.repeat(10);
+  result = validateSupabaseConfig(VALID_URL, SHORT_KEY);
+  assert.strictEqual(result.isValid, false, 'Short key should fail');
+  assert.strictEqual(result.isValidLength, false, 'Invalid length not detected');
+
+  console.log('All tests passed');
 }
 
-console.log('')
-console.log('✅ Validación completada') 
+runTests();
+
