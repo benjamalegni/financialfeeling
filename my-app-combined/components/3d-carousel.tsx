@@ -46,10 +46,10 @@ export default function Carousel3D({ steps, interval = 4000 }: Carousel3DProps) 
               }}
             >
               <div className="text-center max-w-md">
-                <div className="text-6xl font-bold mb-4" style={{ color: step.color }}>
+                <div className="text-6xl font-season font-bold mb-4" style={{ color: step.color }}>
                   {i + 1}
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-4">{step.title}</h3>
+                <h3 className="text-2xl font-season font-bold text-white mb-4">{step.title}</h3>
                 <p className="text-gray-300 text-lg">{step.description}</p>
               </div>
             </div>
