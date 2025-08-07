@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Plus, Send, LogOut, User, BarChart3, Zap, Search, Star, TrendingUp, DollarSign, Bitcoin, Building2, X } from 'lucide-react'
 import SimpleTypewriter from '@/components/simple-typewriter'
 import { getRandomText } from '@/lib/texts'
-const Carousel3D = dynamic(() => import('@/components/3d-carousel'), { ssr: false })
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -726,7 +726,16 @@ export default function HomePage() {
 
               <Card className="bg-gray-900 border-gray-700">
                 <CardContent className="p-8">
-                  <Carousel3D steps={howToSteps} />
+                  <div className="grid gap-8 sm:grid-cols-2">
+                    {howToSteps.map(step => (
+                      <div key={step.id} className="text-center">
+                        <h3 className="mb-2 text-2xl font-semibold" style={{ color: step.color }}>
+                          {step.title}
+                        </h3>
+                        <p className="text-gray-300 text-sm">{step.description}</p>
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </div>
