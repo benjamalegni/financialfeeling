@@ -9,12 +9,11 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Configuración para GitHub Pages (dominio que funciona)
   ...(process.env.NODE_ENV === 'production' && process.env.USE_STATIC_EXPORT === 'true' ? {
     output: 'export',
     trailingSlash: true,
-    basePath: '/financialfeeling',
-    assetPrefix: '/financialfeeling/',
+    basePath: '',
+    assetPrefix: '',
     // Forzar HTTPS en producción
     async headers() {
       return [

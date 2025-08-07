@@ -31,7 +31,7 @@ export default function SharedSidebar({ selectedAssets = [], onAnalysisComplete 
       
       // Mostrar resultados más detallados
       let message = '✅ Análisis de acciones completado!\n\n';
-      if (data.stocks) {
+      if (data && data.stocks) {
         data.stocks.forEach((stock: any) => {
           message += `${stock.symbol}: ${stock.analysis.sentiment} (${stock.analysis.confidence}% confianza)\n`;
           message += `Recomendación: ${stock.analysis.recommendation}\n\n`;

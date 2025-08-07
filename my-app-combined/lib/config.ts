@@ -2,56 +2,57 @@
 export const config = {
   // Supabase Configuration
   supabase: {
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://yhxdyndkdhhnuginaekn.supabase.co',
-    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InloeGR5bmRrZGhobnVnaW5hZWtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3MTYxMTgsImV4cCI6MjA2NjI5MjExOH0.-3qFN_HEZx7i1rGhpaZg9edxoSRDgUkPzDYfrPNiIqI'
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://your-project.supabase.co',
+    anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'your-anon-key',
   },
-  
-  // Railway Backend - Actualizar a la URL que funciona
+
+  // Railway Backend Configuration
   railway: {
     webhookUrl: process.env.NEXT_PUBLIC_RAILWAY_WEBHOOK_URL || 'https://ffaiagent-n8n-production.up.railway.app/webhook/analyze-stocks',
   },
-  
-  // Alpha Vantage API
+
+  // Alpha Vantage Configuration
   alphaVantage: {
     apiKey: process.env.NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY || 'UVJUR5P1SEQ00P2P',
-  },
-  
-  // App Configuration
-  app: {
-    basePath: process.env.NODE_ENV === 'production' ? '' : '',
-    isStaticExport: process.env.USE_STATIC_EXPORT === 'true',
-    // URL de la aplicación - detecta automáticamente el entorno
-    url: process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? 
-      window.location.origin : 
-      'http://localhost:3000'),
+    baseUrl: 'https://www.alphavantage.co/query',
   },
 
-  // OAuth Configuration - Actualizado para usar el dominio que funciona
+  // App Configuration
+  app: {
+    url: (() => {
+      if (typeof window !== 'undefined') {
+        return window.location.origin
+      }
+      return process.env.NEXT_PUBLIC_APP_URL || 'https://www.financialfeeling.com'
+    })(),
+    name: 'Financial Feeling',
+    description: 'AI-powered financial analysis and trading insights',
+  },
+
+  // OAuth Configuration - Actualizado para usar www.financialfeeling.com
   oauth: {
     // Detecta automáticamente la URL de redirección basada en el entorno
     redirectUrl: (() => {
       if (typeof window !== 'undefined') {
         // Cliente - detecta automáticamente si estamos en producción
         const origin = window.location.origin
-        const isProduction = origin === 'https://benjamalegni.github.io' || 
-                           origin === 'https://www.financialfeeling.com' ||
+        const isProduction = origin === 'https://www.financialfeeling.com' || 
                            origin === 'https://financialfeeling.com'
-        const basePath = isProduction ? '/financialfeeling' : ''
+        const basePath = isProduction ? '' : ''
         return `${origin}${basePath}/auth/callback`
       } else {
         // Servidor - usa variables de entorno o valores por defecto
         const isProduction = process.env.NODE_ENV === 'production'
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-          (isProduction ? 'https://benjamalegni.github.io' : 'http://localhost:3000')
-        const basePath = isProduction ? '/financialfeeling' : ''
+          (isProduction ? 'https://www.financialfeeling.com' : 'http://localhost:3000')
+        const basePath = isProduction ? '' : ''
         return `${baseUrl}${basePath}/auth/callback`
       }
     })(),
     
-    // URLs de redirección para diferentes entornos
     redirectUrls: {
       development: 'http://localhost:3000/auth/callback',
-      production: 'https://benjamalegni.github.io/financialfeeling/auth/callback',
+      production: 'https://www.financialfeeling.com/auth/callback',
     }
   }
 }
@@ -66,11 +67,9 @@ export function getRedirectUrl() {
   return config.oauth.redirectUrl
 }
 
-// Función para forzar HTTPS en producción
 export function forceHTTPS() {
   if (typeof window !== 'undefined' && window.location.protocol === 'http:' && 
-      (window.location.hostname === 'benjamalegni.github.io' || 
-       window.location.hostname === 'www.financialfeeling.com' ||
+      (window.location.hostname === 'www.financialfeeling.com' ||
        window.location.hostname === 'financialfeeling.com')) {
     window.location.href = window.location.href.replace('http:', 'https:');
   }
