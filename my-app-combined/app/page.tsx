@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Plus, Send, LogOut, User, BarChart3, Zap, Search, Star, TrendingUp, DollarSign, Bitcoin, Building2, X } from 'lucide-react'
 import SimpleTypewriter from '@/components/simple-typewriter'
 import { getRandomText } from '@/lib/texts'
-import Carousel3D from '@/components/3d-carousel'
+const Carousel3D = dynamic(() => import('@/components/3d-carousel'), { ssr: false })
 import {
   DropdownMenu,
   DropdownMenuContent,
