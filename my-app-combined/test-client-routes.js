@@ -37,15 +37,15 @@ function getRoute(path) {
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
   
   // Simular la detección del entorno
-  const isGitHubPages = typeof window !== 'undefined' && 
-    (window.location.hostname === 'benjamalegni.github.io' || 
+  const isGitHubPages = typeof window !== 'undefined' &&
+    (window.location.hostname === 'benjamalegni.github.io' ||
      window.location.pathname.startsWith('/financialfeeling'));
-  
+
   if (isGitHubPages) {
-    return `/${cleanPath}`;
+    return `/financialfeeling/${cleanPath}`;
   }
-  
-  return `/financialfeeling/${cleanPath}`;
+
+  return `/${cleanPath}`;
 }
 
 // Probar cada entorno
