@@ -56,7 +56,7 @@ export default function SharedSidebar({ selectedAssets = [], onAnalysisComplete 
       
       {/* Botón Run FF Analysis vertical con colores 80s animados */}
       <div className="flex-1 flex items-center justify-center">
-        <button 
+        {/* <button 
           onClick={handleRunAnalysis}
           disabled={isLoading}
           className={`w-12 h-32 text-white font-bold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center justify-center border border-gray-600 ${
@@ -80,7 +80,7 @@ export default function SharedSidebar({ selectedAssets = [], onAnalysisComplete 
               </>
             )}
           </div>
-        </button>
+        </button> */}
       </div>
       
       <div className="space-y-2">
@@ -90,5 +90,5 @@ export default function SharedSidebar({ selectedAssets = [], onAnalysisComplete 
         <div className="w-4 h-4 bg-gray-600 rounded mx-auto shadow-sm"></div>
       </div>
     </div>
-  )
-} 
+  );
+}

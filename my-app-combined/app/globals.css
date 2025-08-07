@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import '@glidejs/glide/dist/css/glide.core.min.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -203,4 +204,19 @@
 /* Custom font weight for extra bold text */
 .font-ultrabold {
   font-weight: 950;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) both;
 }

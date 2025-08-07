@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
@@ -30,6 +30,30 @@ import {
 import { Badge } from '@/components/ui/badge'
 import SharedSidebar from '@/components/shared-sidebar'
 import { getRoute } from '@/lib/utils'
+import Glide from '@glidejs/glide';
+import CandleChart from '@/components/CandleChart';
+
+// Agrega esta función para rotar los stocks diariamente:
+function getDailyStocks() {
+  const allStocks = [
+    'AAPL', 'TSLA', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'NFLX',
+    'JPM', 'BAC', 'WFC', 'GS', 'JNJ', 'PFE', 'UNH', 'ABBV',
+    'XOM', 'CVX', 'COP', 'BTC', 'ETH', 'BNB', 'ADA', 'SOL'
+  ];
+  
+  // Usa la fecha actual como seed para seleccionar stocks consistentemente por día
+  const today = new Date();
+  const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+  
+  // Selecciona 3 stocks basado en la fecha
+  const selectedStocks = [];
+  for (let i = 0; i < 3; i++) {
+    const index = (seed + i) % allStocks.length;
+    selectedStocks.push(allStocks[index]);
+  }
+  
+  return selectedStocks;
+}
 
 export default function HomePage() {
   const [user, setUser] = useState<any>(null)
@@ -45,6 +69,10 @@ export default function HomePage() {
   const [showAutocomplete, setShowAutocomplete] = useState(false)
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1)
   const [analysisData, setAnalysisData] = useState<any>(null)
+
+  // Cambia la declaración de stockCharts para tipar correctamente:
+  const [stockCharts, setStockCharts] = useState<{ symbol: string, data: { x: string, y: [number, number, number, number] }[] }[]>([]);
+  const [loadingCharts, setLoadingCharts] = useState(true);
 
   const howToSteps = [
     {
@@ -78,6 +106,57 @@ export default function HomePage() {
   ]
 
   const router = useRouter()
+
+  const glideRef = useRef(null);
+  useEffect(() => {
+    if (glideRef.current) {
+      const glide = new Glide(glideRef.current, {
+        type: 'carousel',
+        perView: 1,
+        gap: 32,
+        autoplay: 5000,
+        hoverpause: true,
+      });
+      glide.mount();
+      return () => glide.destroy();
+    }
+  }, []);
+
+  useEffect(() => {
+    async function fetchStock(symbol: string) {
+      const apiKey = process.env.NEXT_PUBLIC_TWELVE_DATA_API_KEY;
+      const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=30&apikey=${apiKey}&format=JSON`;
+      const res = await fetch(url);
+      const json = await res.json();
+      console.log('TwelveData response for', symbol, json);
+      if (!json.values) {
+        return [];
+      }
+      // OHLC para velas
+      const data = json.values
+        .slice(0, 30)
+        .reverse()
+        .map((point: any) => ({
+          x: point.datetime,
+          y: [
+            parseFloat(point.open),
+            parseFloat(point.high),
+            parseFloat(point.low),
+            parseFloat(point.close),
+          ],
+        }));
+      return data;
+    }
+    async function fetchAll() {
+      setLoadingCharts(true);
+      const dailyStocks = getDailyStocks();
+      console.log('Stocks del día:', dailyStocks);
+      const results = await Promise.all(dailyStocks.map(fetchStock));
+      setStockCharts(dailyStocks.map((symbol, i) => ({ symbol, data: results[i] })));
+      setLoadingCharts(false);
+    }
+    fetchAll();
+  }, []);
 
   // Comprehensive list of financial assets
   const financialAssets = [
@@ -722,23 +801,49 @@ export default function HomePage() {
 
             {/* How to Use Section */}
             <div className="mb-8">
-              <h2 className="text-6xl font-bold mb-6 text-center">Learn to Use Financial Analysis</h2>
 
-              <Card className="bg-gray-900 border-gray-700">
+              <Card className="bg-black border-gray-700">
                 <CardContent className="p-8">
-                  <div className="grid gap-8 sm:grid-cols-2">
-                    {howToSteps.map(step => (
-                      <div key={step.id} className="text-center">
-                        <h3 className="mb-2 text-2xl font-semibold" style={{ color: step.color }}>
-                          {step.title}
-                        </h3>
-                        <p className="text-gray-300 text-sm">{step.description}</p>
-                      </div>
-                    ))}
+                  <div ref={glideRef} className="glide">
+                    <div className="glide__track" data-glide-el="track">
+                      <ul className="glide__slides">
+                        {howToSteps.map(step => (
+                          <li key={step.id} className="glide__slide text-center">
+                            <h3 className="mb-2 text-2xl font-semibold text-white" style={{ color: step.color }}>
+                              {step.title}
+                            </h3>
+                            <p className="text-gray-200 text-sm">{step.description}</p>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="glide__bullets" data-glide-el="controls[nav]">
+                      {howToSteps.map((_, idx) => (
+                        <button key={idx} className="glide__bullet" data-glide-dir={`=${idx}`}></button>
+                      ))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
+              <h2 className="text-6xl font-bold mb-6 text-center">Our daily picks</h2>                        
+
+            {!loadingCharts && (
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                {stockCharts.map(stock => (
+                  stock.data.length === 0 ? (
+                    <div key={stock.symbol} className="text-red-400 bg-black/60 rounded-lg p-4 mb-4">
+                      No hay datos para {stock.symbol}
+                    </div>
+                  ) : (
+                    <CandleChart key={stock.symbol} symbol={stock.symbol} data={stock.data} />
+                  )
+                ))}
+              </div>
+            )}
+            {loadingCharts && (
+              <div className="mt-8 text-center text-white">Cargando gráficos de acciones...</div>
+            )}
 
             {/* Stock Analysis Section */}
             {user && (
