@@ -822,12 +822,12 @@ export default function HomePage() {
                         </ul>
                       </div>
                       <div className="glide__arrows" data-glide-el="controls">
-                        <button className="glide__arrow glide__arrow--left backdrop-blur-md rounded-full p-3 hover:bg-white/30 transition-colors" data-glide-dir="<">
+                        <button className="glide__arrow glide__arrow--left bg-white/20 backdrop-blur-md rounded-full p-3 hover:bg-white/30 transition-colors" data-glide-dir="<">
                           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                           </svg>
                         </button>
-                        <button className="glide__arrow glide__arrow--right backdrop-blur-md rounded-full p-3 hover:bg-white/30 transition-colors" data-glide-dir=">">
+                        <button className="glide__arrow glide__arrow--right bg-white/20 backdrop-blur-md rounded-full p-3 hover:bg-white/30 transition-colors" data-glide-dir=">">
                           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
@@ -858,7 +858,7 @@ export default function HomePage() {
                         <Button
                           onClick={() => router.push(`/dashboard?symbol=${stock.symbol}`)}
                           size="sm"
-                          className="bg-grey-500 hover:bg-gray-700 text-white shadow-lg backdrop-blur-md"
+                          className="bg-gray-500 hover:bg-gray-700 text-white shadow-lg backdrop-blur-md"
                         >
                           <BarChart3 className="w-4 h-4 mr-1" />
                           Analyze
