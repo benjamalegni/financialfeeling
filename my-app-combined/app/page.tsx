@@ -100,7 +100,7 @@ export default function HomePage() {
       id: 4,
       title: 'A good company with bad news is a BUY',
       description:
-        'Use the insights to make informed trading decisions based on AI-powered analysis and market trends.',
+        'Use the insights to make informed trading decisions.',
       color: '#a855f7'
     }
   ]
@@ -800,31 +800,47 @@ export default function HomePage() {
             )}
 
             {/* How to Use Section */}
-            <div className="mb-8">
+            <div className="mb-5">
 
-              <Card className="bg-black border-gray-700">
-                <CardContent className="p-8">
-                  <div ref={glideRef} className="glide">
-                    <div className="glide__track" data-glide-el="track">
-                      <ul className="glide__slides">
-                        {howToSteps.map(step => (
-                          <li key={step.id} className="glide__slide text-center">
-                            <h3 className="mb-2 text-2xl font-semibold text-white" style={{ color: step.color }}>
-                              {step.title}
-                            </h3>
-                            <p className="text-gray-200 text-sm">{step.description}</p>
-                          </li>
+                              <Card className="bg-transparent border-transparent shadow-none">
+                  <CardContent className="p-8">
+                    <div ref={glideRef} className="glide">
+                      <div className="glide__track" data-glide-el="track">
+                        <ul className="glide__slides">
+                          {howToSteps.map(step => (
+                            <li key={step.id} className="glide__slide text-center flex flex-col justify-center min-h-[280px]">
+                              <div className="bg-black/20 backdrop-blur-md rounded-lg p-8 mx-8 border border-white/60 shadow-2xl shadow-black/50">
+                                <h3 className="mb-4 text-3xl font-semibold text-white" style={{ color: step.color }}>
+                                  {step.title}
+                                </h3>
+                                <p className="text-gray-200 text-base">
+                                  {step.description}
+                                </p>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="glide__arrows" data-glide-el="controls">
+                        <button className="glide__arrow glide__arrow--left backdrop-blur-md rounded-full p-3 hover:bg-white/30 transition-colors" data-glide-dir="<">
+                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <button className="glide__arrow glide__arrow--right backdrop-blur-md rounded-full p-3 hover:bg-white/30 transition-colors" data-glide-dir=">">
+                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+                      <div className="glide__bullets" data-glide-el="controls[nav]">
+                        {howToSteps.map((_, idx) => (
+                          <button key={idx} className="glide__bullet" data-glide-dir={`=${idx}`}></button>
                         ))}
-                      </ul>
+                      </div>
                     </div>
-                    <div className="glide__bullets" data-glide-el="controls[nav]">
-                      {howToSteps.map((_, idx) => (
-                        <button key={idx} className="glide__bullet" data-glide-dir={`=${idx}`}></button>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
             </div>
               <h2 className="text-6xl font-bold mb-6 text-center">Our daily picks</h2>                        
 
@@ -836,7 +852,19 @@ export default function HomePage() {
                       No hay datos para {stock.symbol}
                     </div>
                   ) : (
-                    <CandleChart key={stock.symbol} symbol={stock.symbol} data={stock.data} />
+                    <div key={stock.symbol} className="relative">
+                      <CandleChart symbol={stock.symbol} data={stock.data} />
+                      <div className="absolute top-2 right-2 z-10">
+                        <Button
+                          onClick={() => router.push(`/dashboard?symbol=${stock.symbol}`)}
+                          size="sm"
+                          className="bg-grey-500 hover:bg-gray-700 text-white shadow-lg backdrop-blur-md"
+                        >
+                          <BarChart3 className="w-4 h-4 mr-1" />
+                          Analyze
+                        </Button>
+                      </div>
+                    </div>
                   )
                 ))}
               </div>
