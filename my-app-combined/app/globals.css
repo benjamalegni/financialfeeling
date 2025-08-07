@@ -3,6 +3,37 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+  font-family: 'SeasonSerif';
+  src: url('/fonts/SeasonSerif-Regular.woff2') format('woff2'),
+       url('/fonts/SeasonSerif-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SeasonSerif';
+  src: url('/fonts/SeasonSerif-Medium.woff2') format('woff2'),
+       url('/fonts/SeasonSerif-Medium.woff') format('woff');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SeasonSerif';
+  src: url('/fonts/SeasonSerif-Bold.woff2') format('woff2'),
+       url('/fonts/SeasonSerif-Bold.woff') format('woff');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-season {
+  font-family: 'SeasonSerif', serif;
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
