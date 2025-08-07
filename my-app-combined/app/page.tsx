@@ -722,7 +722,7 @@ export default function HomePage() {
 
             {/* How to Use Section */}
             <div className="mb-8">
-              <h2 className="text-6xl font-season font-bold mb-6 text-center">Learn to Use Financial Analysis</h2>
+              <h2 className="text-6xl font-bold mb-6 text-center">Learn to Use Financial Analysis</h2>
 
               <Card className="bg-gray-900 border-gray-700">
                 <CardContent className="p-8">
