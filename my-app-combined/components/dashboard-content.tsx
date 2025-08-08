@@ -396,6 +396,7 @@ export default function DashboardContent({
             <AISentimentAnalysis 
               selectedAssets={analysisData ? currentAssets.map((asset: any) => asset.asset_identifier) : currentAssets.map((asset: any) => asset.asset_identifier)}
               analysisData={analysisData}
+              userId={session?.user?.id}
             />
           </div>
         </div>

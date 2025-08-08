@@ -92,3 +92,39 @@ export async function checkUserTableAccess(userId: string) {
     return false
   }
 }
+
+export async function saveAIAnalysisHistory(userId: string, selectedAssets: string[], result: any) {
+  try {
+    const payload = {
+      user_id: userId,
+      selected_assets: selectedAssets,
+      result,
+    }
+    const { data, error } = await supabase
+      .from('ai_analysis_history')
+      .insert(payload)
+      .select('*')
+      .maybeSingle()
+    if (error) throw error
+    return data
+  } catch (e) {
+    console.warn('saveAIAnalysisHistory error:', e)
+    return null
+  }
+}
+
+export async function listAIAnalysisHistory(userId: string, limit = 20) {
+  try {
+    const { data, error } = await supabase
+      .from('ai_analysis_history')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    if (error) throw error
+    return data || []
+  } catch (e) {
+    console.warn('listAIAnalysisHistory error:', e)
+    return []
+  }
+}

@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react'
 import { TrendingUp, TrendingDown, Minus, AlertTriangle, Info, Clock, Activity, BarChart3, X } from 'lucide-react'
 import { analyzeStocks } from '@/lib/stockAnalysis'
 import { getFinancialData, FinancialMetrics, calculateFundamentalScore } from '@/lib/financialData'
+import { createBrowserClient } from '@supabase/ssr'
+import { config } from '@/lib/config'
 
 interface SentimentData {
   symbol: string
@@ -19,16 +21,54 @@ interface SentimentData {
 interface AISentimentAnalysisProps {
   selectedAssets: string[];
   analysisData?: any;
+  userId?: string;
 }
 
-export default function AISentimentAnalysis({ selectedAssets, analysisData }: AISentimentAnalysisProps) {
+export default function AISentimentAnalysis({ selectedAssets, analysisData, userId }: AISentimentAnalysisProps) {
   const [sentimentData, setSentimentData] = useState<SentimentData[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showFinancialModal, setShowFinancialModal] = useState(false)
   const [selectedFinancialData, setSelectedFinancialData] = useState<FinancialMetrics | null>(null)
+  const [history, setHistory] = useState<any[]>([])
+
+  const supabase = createBrowserClient(config.supabase.url, config.supabase.anonKey)
 
   const isLikelyStock = (sym: string) => /^[A-Z]{1,5}$/.test(sym || '')
+
+  const fetchHistory = async () => {
+    try {
+      if (!userId) return
+      const { data, error } = await supabase
+        .from('ai_analysis_history')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20)
+      if (error) throw error
+      setHistory(data || [])
+    } catch (e) {
+      console.warn('fetchHistory error:', e)
+    }
+  }
+
+  const saveHistory = async (result: any) => {
+    try {
+      if (!userId) return
+      const payload = {
+        user_id: userId,
+        selected_assets: selectedAssets,
+        result,
+      }
+      const { error } = await supabase
+        .from('ai_analysis_history')
+        .insert(payload)
+      if (error) throw error
+      fetchHistory()
+    } catch (e) {
+      console.warn('saveHistory error:', e)
+    }
+  }
 
   const fetchSentimentAnalysis = async () => {
     if (selectedAssets.length === 0) return
@@ -77,6 +117,7 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
         )
 
         setSentimentData(realSentimentData)
+        await saveHistory({ stocks: realSentimentData, timestamp: analysisResult.timestamp })
       } else {
         // No data available from Railway
         setError('No analysis data available from backend. Please try again later.')
@@ -131,6 +172,8 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
       setSentimentData(processedData);
     }
   }, [analysisData]);
+
+  useEffect(() => { fetchHistory() }, [userId])
 
   const getImpactIcon = (impact: string) => {
     switch (impact) {
@@ -333,6 +376,32 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
           )}
         </div>
       )}
+
+      {/* Historical Section */}
+      <div className="mt-10 pt-6 border-t border-gray-700">
+        <div className="flex items-center space-x-3 mb-4">
+          <Clock className="h-5 w-5 text-gray-400" />
+          <h3 className="text-lg font-semibold text-white">Historical</h3>
+        </div>
+        {history.length === 0 ? (
+          <p className="text-gray-400 text-sm">No historical analyses yet.</p>
+        ) : (
+          <div className="space-y-3">
+            {history.map((h: any) => (
+              <div key={h.id} className="p-4 bg-gray-800/60 border border-gray-700 rounded-lg">
+                <div className="flex justify-between text-sm text-gray-300">
+                  <div>
+                    <span className="text-gray-400">Assets:</span> {Array.isArray(h.selected_assets) ? h.selected_assets.join(', ') : ''}
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Date:</span> {new Date(h.created_at).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Financial Data Modal */}
       {showFinancialModal && selectedFinancialData && (
