@@ -210,21 +210,8 @@ export default function DashboardContent({
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Home Button - Top Left */}
-      <div className="fixed top-4 left-4 z-50">
-        <div className="flex flex-col items-center space-y-2">
-          <div className="text-white text-xl font-bold">FF</div>
-          <Link
-            href={getRoute('/')}
-            className="text-white transition-all duration-500 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 border border-gray-600 bg-gray-800 hover:bg-gray-700 p-2 rounded-lg"
-          >
-            <Home className="h-4 w-4" />
-          </Link>
-        </div>
-      </div>
-
       {/* Main Content */}
-      <div className="ml-16 p-8">
+      <div className="p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header with Auth */}
           <div className="flex justify-between items-center mb-8">
@@ -407,7 +394,7 @@ export default function DashboardContent({
 
             {/* AI Sentiment Analysis Section */}
             <AISentimentAnalysis 
-              selectedAssets={currentAssets ? currentAssets.map((asset: any) => asset.asset_identifier) : []}
+              selectedAssets={analysisData ? currentAssets.map((asset: any) => asset.asset_identifier) : currentAssets.map((asset: any) => asset.asset_identifier)}
               analysisData={analysisData}
             />
           </div>

@@ -4,6 +4,38 @@ import { config } from './config'
 
 export const supabase = createBrowserClient<Database>(config.supabase.url, config.supabase.anonKey)
 
+// Daily Picks helpers
+export async function getDailyPicksFromDB(pickDateISO: string) {
+  const { data, error } = await supabase
+    .from('daily_picks')
+    .select('*')
+    .eq('pick_date', pickDateISO)
+    .maybeSingle()
+  if (error) {
+    console.warn('getDailyPicksFromDB error:', error.message)
+    return null
+  }
+  return data
+}
+
+export async function upsertDailyPicks(pickDateISO: string, symbols: string[], charts: any) {
+  const payload = {
+    pick_date: pickDateISO,
+    symbols,
+    charts,
+  } as any
+  const { data, error } = await supabase
+    .from('daily_picks')
+    .upsert(payload, { onConflict: 'pick_date' })
+    .select('*')
+    .maybeSingle()
+  if (error) {
+    console.warn('upsertDailyPicks error:', error.message)
+    return null
+  }
+  return data
+}
+
 // Función para inicializar datos de usuario después del registro (completamente opcional)
 export async function initializeUserData(userId: string) {
   try {

@@ -66,15 +66,24 @@ export default function LoginPage() {
     const redirectUrl = getRedirectUrl();
     console.log('GitHub OAuth redirect URL:', redirectUrl);
     
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'github',
-      options: {
-        redirectTo: redirectUrl,
-      },
-    })
-    if (error) {
-      setError(error.message);
-      setIsSubmitting(false);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: redirectUrl,
+          queryParams: { flow: 'pkce' },
+        },
+      })
+      if (error) throw error
+    } catch (err: any) {
+      const msg = err?.message || 'OAuth error'
+      console.error('GitHub OAuth error:', err)
+      if (msg.includes('Invalid redirect URI')) {
+        setError('Configuration error: Invalid redirect URI. Please set the exact callback in Supabase: ' + redirectUrl)
+      } else {
+        setError(`GitHub sign-in error: ${msg}`)
+      }
+      setIsSubmitting(false)
     }
   }
 
@@ -93,28 +102,25 @@ export default function LoginPage() {
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
+            flow: 'pkce',
           }
         },
       })
       
-      if (error) {
-        console.error('Google OAuth error:', error);
-        if (error.message.includes('Provider not enabled')) {
-          setError('Google sign-in is not configured. Please contact the administrator.');
-        } else if (error.message.includes('Invalid redirect URI')) {
-          setError('Configuration error: Invalid redirect URI. Please contact the administrator.');
-        } else {
-          setError(`Google sign-up error: ${error.message}`);
-        }
-        setIsSubmitting(false);
+      if (error) throw error
+      console.log('Google OAuth initiated successfully');
+      console.log('OAuth response:', data);
+      // The user will be redirected to Google
+    } catch (err: any) {
+      const msg = err?.message || 'OAuth error'
+      console.error('Google OAuth error:', err);
+      if (msg.includes('Invalid redirect URI')) {
+        setError('Configuration error: Invalid redirect URI. Please set the exact callback in Supabase: ' + redirectUrl)
+      } else if (msg.includes('code') && msg.includes('verifier')) {
+        setError('Session error: PKCE parameters missing. Please clear cookies and try again, or ensure flow=pkce is enabled.')
       } else {
-        console.log('Google OAuth initiated successfully');
-        console.log('OAuth response:', data);
-        // The user will be redirected to Google
+        setError(`Google sign-in error: ${msg}`);
       }
-    } catch (err) {
-      console.error('Unexpected error during Google sign-in:', err);
-      setError('An unexpected error occurred. Please try again.');
       setIsSubmitting(false);
     }
   }

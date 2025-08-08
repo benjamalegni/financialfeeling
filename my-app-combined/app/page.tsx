@@ -10,7 +10,7 @@ import { Plus, Send, LogOut, User, BarChart3, Zap, Search, Star, TrendingUp, Dol
 import SimpleTypewriter from '@/components/simple-typewriter'
 import { getRandomText } from '@/lib/texts'
 import Header from '@/components/header'
-import { supabase } from '@/lib/supabaseClient'
+import { supabase, getDailyPicksFromDB, upsertDailyPicks } from '@/lib/supabaseClient'
 
 import {
   DropdownMenu,
@@ -133,8 +133,30 @@ export default function HomePage() {
   async function fetchAll() {
     try {
       setLoadingCharts(true);
+
+      // Check cache in DB for today's picks
+      const today = new Date();
+      const pickDateISO = today.toISOString().slice(0, 10); // YYYY-MM-DD
+      const cached = await getDailyPicksFromDB(pickDateISO);
+      if (cached && cached.charts && Array.isArray(cached.charts)) {
+        try {
+          const parsedCharts = Array.isArray(cached.charts)
+            ? cached.charts
+            : JSON.parse(typeof cached.charts === 'string' ? cached.charts : JSON.stringify(cached.charts));
+          setStockCharts(parsedCharts);
+          return;
+        } catch (e) {
+          console.warn('Failed to parse cached charts, recomputing...', e);
+        }
+      }
+
+      // Compute and persist
       const selected = await selectTopMovers(fetchStock);
       setStockCharts(selected);
+
+      // Persist to DB
+      const symbols = selected.map(s => s.symbol);
+      await upsertDailyPicks(pickDateISO, symbols, selected);
     } catch (error) {
       console.error('Error fetching all stocks:', error);
     } finally {
@@ -185,31 +207,31 @@ export default function HomePage() {
   const howToSteps = [
     {
       id: 1,
-      title: 'Enter Stock Symbols',
+      title: 'Add Your Portfolio',
       description:
-        'Type the stock symbols you want to analyze, separated by commas. Example: AAPL, TSLA, MSFT, GOOGL',
+        'Select up to 2 assets (e.g., AAPL, TSLA) to track and analyze. You can add them from the + button or the chat box.',
       color: '#3b82f6',
-      background: '/backgrounds/wall-street-bull-bg.png' // Nueva imagen del Charging Bull (PNG)
+      background: '/backgrounds/wall-street-bull-bg.png'
     },
     {
       id: 2,
-      title: 'Get AI Analysis',
+      title: 'Run AI Analysis',
       description:
-        'Our AI will analyze market data, trends, and provide trading recommendations with confidence scores for each stock.',
+        'Launch the analysis when needed to get sentiment, recommendations and confidence scores for each asset.',
       color: '#10b981'
     },
     {
       id: 3,
-      title: 'Review Results',
+      title: 'Review Insights',
       description:
-        'View detailed analysis including price changes, recommendations, and confidence levels for informed decision making.',
+        'Compare signals, check price trends, and review the confidence to make informed decisions.',
       color: '#f59e0b'
     },
     {
       id: 4,
-      title: 'Make Informed Decisions',
+      title: 'Track & Adjust',
       description:
-        'Use our comprehensive analysis to make informed trading decisions with confidence and precision.',
+        'Re-run analysis over time, adjust your selection, and monitor how your picks perform.',
       color: '#8b5cf6'
     }
   ]
@@ -816,7 +838,7 @@ export default function HomePage() {
                   <div ref={glideRef} className="glide">
                     <div className="glide__track" data-glide-el="track">
                       <ul className="glide__slides">
-                        {howToSteps.map(step => (
+                        {howToSteps.map((step, idx) => (
                           <li key={step.id} className="glide__slide text-center flex flex-col justify-center min-h-[280px]">
                             <div 
                               className="bg-black/20 backdrop-blur-md rounded-lg p-8 mx-8 border border-white/60 shadow-2xl shadow-black/50 relative overflow-hidden"
@@ -828,12 +850,10 @@ export default function HomePage() {
                               }}
                             >
                               {/* Overlay para mejorar legibilidad cuando hay background */}
-                              {step.background && (
-                                <div className="absolute inset-0 bg-black/40"></div>
-                              )}
+                              <div className="absolute inset-0 bg-black/40"></div>
                               <div className="relative z-10">
                                 <h3 className="mb-4 text-3xl font-semibold text-white" style={{ color: step.color }}>
-                                  {step.title}
+                                  {idx + 1}. {step.title}
                                 </h3>
                                 <p className="text-gray-200 text-base">
                                   {step.description}
@@ -860,42 +880,6 @@ export default function HomePage() {
               <BullHead3D />
             </div>
 
-            {/* Dashboard Section - Show when user is logged in */}
-            {user && (
-              <div className="mb-8">
-                <div className="text-center mb-6">
-                  <h2 className="text-xl font-semibold mb-2">Access Your Dashboard</h2>
-                  <p className="text-gray-400">View your portfolio, analysis results, and trading insights</p>
-                </div>
-                <div className="flex justify-center">
-                  <Button
-                    onClick={() => router.push(getRoute('/dashboard'))}
-                    className="bg-green-600 hover:bg-green-700 text-white shadow-md transition-colors"
-                  >
-                    <BarChart3 className="w-4 h-4 mr-2" />
-                    Go to Dashboard
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Stock Analysis Section */}
-            {user && (
-              <div className="mb-8">
-                <div className="text-center mb-6">
-                  <h2 className="text-xl font-semibold mb-2">AI-Powered Stock Analysis</h2>
-                  <p className="text-gray-400">Get real-time stock analysis with AI recommendations</p>
-                </div>
-                <div className="flex justify-center">
-                  <Button
-                    onClick={() => router.push(getRoute('/stock-analysis'))}
-                    className="bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-colors"
-                  >
-                    Analyze Stocks
-                  </Button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
