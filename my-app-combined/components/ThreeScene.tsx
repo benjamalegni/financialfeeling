@@ -11,11 +11,119 @@ export default function ThreeScene() {
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const animationIdRef = useRef<number | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const [isInteracting, setIsInteracting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [useSimpleModel, setUseSimpleModel] = useState(false);
+
+  // Funciones para controles con botones
+  const rotateLeft = () => {
+    if (cameraRef.current && controlsRef.current) {
+      // Rotar la cámara alrededor del modelo
+      const angle = -0.1;
+      const radius = cameraRef.current.position.distanceTo(controlsRef.current.target);
+      const currentAngle = Math.atan2(cameraRef.current.position.x, cameraRef.current.position.z);
+      const newAngle = currentAngle + angle;
+      
+      cameraRef.current.position.x = Math.sin(newAngle) * radius;
+      cameraRef.current.position.z = Math.cos(newAngle) * radius;
+      cameraRef.current.lookAt(controlsRef.current.target);
+      controlsRef.current.update();
+    }
+  };
+
+  const rotateRight = () => {
+    if (cameraRef.current && controlsRef.current) {
+      // Rotar la cámara alrededor del modelo
+      const angle = 0.1;
+      const radius = cameraRef.current.position.distanceTo(controlsRef.current.target);
+      const currentAngle = Math.atan2(cameraRef.current.position.x, cameraRef.current.position.z);
+      const newAngle = currentAngle + angle;
+      
+      cameraRef.current.position.x = Math.sin(newAngle) * radius;
+      cameraRef.current.position.z = Math.cos(newAngle) * radius;
+      cameraRef.current.lookAt(controlsRef.current.target);
+      controlsRef.current.update();
+    }
+  };
+
+  const rotateUp = () => {
+    if (cameraRef.current && controlsRef.current) {
+      // Rotar hacia arriba
+      const angle = 0.1;
+      const radius = cameraRef.current.position.distanceTo(controlsRef.current.target);
+      const currentAngle = Math.atan2(cameraRef.current.position.y, Math.sqrt(cameraRef.current.position.x ** 2 + cameraRef.current.position.z ** 2));
+      const newAngle = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, currentAngle + angle));
+      
+      const horizontalRadius = radius * Math.cos(newAngle);
+      cameraRef.current.position.y = radius * Math.sin(newAngle);
+      cameraRef.current.position.x = horizontalRadius * Math.sin(Math.atan2(cameraRef.current.position.x, cameraRef.current.position.z));
+      cameraRef.current.position.z = horizontalRadius * Math.cos(Math.atan2(cameraRef.current.position.x, cameraRef.current.position.z));
+      cameraRef.current.lookAt(controlsRef.current.target);
+      controlsRef.current.update();
+    }
+  };
+
+  const rotateDown = () => {
+    if (cameraRef.current && controlsRef.current) {
+      // Rotar hacia abajo
+      const angle = -0.1;
+      const radius = cameraRef.current.position.distanceTo(controlsRef.current.target);
+      const currentAngle = Math.atan2(cameraRef.current.position.y, Math.sqrt(cameraRef.current.position.x ** 2 + cameraRef.current.position.z ** 2));
+      const newAngle = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, currentAngle + angle));
+      
+      const horizontalRadius = radius * Math.cos(newAngle);
+      cameraRef.current.position.y = radius * Math.sin(newAngle);
+      cameraRef.current.position.x = horizontalRadius * Math.sin(Math.atan2(cameraRef.current.position.x, cameraRef.current.position.z));
+      cameraRef.current.position.z = horizontalRadius * Math.cos(Math.atan2(cameraRef.current.position.x, cameraRef.current.position.z));
+      cameraRef.current.lookAt(controlsRef.current.target);
+      controlsRef.current.update();
+    }
+  };
+
+  const zoomIn = () => {
+    if (cameraRef.current && controlsRef.current) {
+      // Acercar la cámara
+      const direction = new THREE.Vector3();
+      direction.subVectors(cameraRef.current.position, controlsRef.current.target).normalize();
+      const distance = cameraRef.current.position.distanceTo(controlsRef.current.target);
+      const newDistance = Math.max(1.5, distance * 0.9);
+      
+      cameraRef.current.position.copy(controlsRef.current.target).add(direction.multiplyScalar(newDistance));
+      controlsRef.current.update();
+    }
+  };
+
+  const zoomOut = () => {
+    if (cameraRef.current && controlsRef.current) {
+      // Alejar la cámara
+      const direction = new THREE.Vector3();
+      direction.subVectors(cameraRef.current.position, controlsRef.current.target).normalize();
+      const distance = cameraRef.current.position.distanceTo(controlsRef.current.target);
+      const newDistance = Math.min(8, distance * 1.1);
+      
+      cameraRef.current.position.copy(controlsRef.current.target).add(direction.multiplyScalar(newDistance));
+      controlsRef.current.update();
+    }
+  };
+
+  const resetView = () => {
+    if (controlsRef.current && cameraRef.current) {
+      // Reset camera position
+      cameraRef.current.position.set(0, 1, 3);
+      cameraRef.current.lookAt(0, 0, 0);
+      
+      // Reset controls
+      controlsRef.current.target.set(0, 0, 0);
+      controlsRef.current.update();
+    }
+  };
 
   useEffect(() => {
     if (!mountRef.current) return;
+
+    console.log('Initializing Three.js scene...');
 
     // Scene setup
     const scene = new THREE.Scene();
@@ -30,6 +138,7 @@ export default function ThreeScene() {
       1000
     );
     camera.position.set(0, 1, 3);
+    cameraRef.current = camera;
 
     // Renderer setup
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -138,72 +247,9 @@ export default function ThreeScene() {
     spotlight.castShadow = true;
     scene.add(spotlight);
 
-    // Load the real bull model
-    const loader = new GLTFLoader();
-    let bullModel: THREE.Group | null = null;
-
-    loader.load(
-      '/wall-street-charging-bull/source/poly.glb',
-      (gltf) => {
-        bullModel = gltf.scene;
-        
-        // Scale and position the model - Ajustar escala y posición
-        bullModel.scale.set(0.8, 0.8, 0.8);
-        bullModel.position.set(0, -0.5, 0);
-        
-        // Enable shadows for all meshes
-        bullModel.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-            
-            // Enhance materials if they exist
-            if (child.material) {
-              if (Array.isArray(child.material)) {
-                child.material.forEach(mat => {
-                  if (mat instanceof THREE.MeshStandardMaterial) {
-                    mat.metalness = 0.3;
-                    mat.roughness = 0.7;
-                  }
-                });
-              } else if (child.material instanceof THREE.MeshStandardMaterial) {
-                child.material.metalness = 0.3;
-                child.material.roughness = 0.7;
-              }
-            }
-          }
-        });
-        
-        scene.add(bullModel);
-        setIsLoading(false);
-        
-        // Ajustar la cámara para enfocar el modelo
-        const box = new THREE.Box3().setFromObject(bullModel);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
-        
-        // Posicionar la cámara para ver todo el modelo
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const fov = camera.fov * (Math.PI / 180);
-        let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
-        
-        camera.position.set(0, center.y, cameraZ * 1.5);
-        camera.lookAt(center);
-        controls.target.copy(center);
-        controls.update();
-      },
-      (progress) => {
-        console.log('Loading progress:', (progress.loaded / progress.total * 100) + '%');
-      },
-      (error) => {
-        console.error('Error loading model:', error);
-        setIsLoading(false);
-        createFallbackBull();
-      }
-    );
-
     // Fallback bull creation function
     const createFallbackBull = () => {
+      console.log('Creating fallback bull model...');
       const group = new THREE.Group();
 
       // Bull head (main body)
@@ -255,7 +301,97 @@ export default function ThreeScene() {
 
       bullModel = group;
       scene.add(bullModel);
+      console.log('Fallback bull model created and added to scene');
     };
+
+    // Load the real bull model
+    const loader = new GLTFLoader();
+    let bullModel: THREE.Group | null = null;
+
+    console.log('Starting to load 3D model...');
+    
+    // Add timeout for model loading
+    const loadTimeout = setTimeout(() => {
+      console.error('Model loading timeout - falling back to default model');
+      setLoadError('Model loading timeout - using fallback model');
+      setIsLoading(false);
+      createFallbackBull();
+    }, 30000); // 30 second timeout
+    
+    // Always try to load the complex model first
+    console.log('Attempting to load complex 3D model...');
+    loader.load(
+      '/wall-street-charging-bull/source/poly.glb',
+      (gltf) => {
+        clearTimeout(loadTimeout);
+        console.log('3D model loaded successfully!', gltf);
+        bullModel = gltf.scene;
+        
+        // Scale and position the model - Ajustar escala y posición
+        bullModel.scale.set(0.8, 0.8, 0.8);
+        bullModel.position.set(0, -0.5, 0);
+        
+        // Enable shadows for all meshes
+        bullModel.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+            
+            // Enhance materials if they exist
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach(mat => {
+                  if (mat instanceof THREE.MeshStandardMaterial) {
+                    mat.metalness = 0.3;
+                    mat.roughness = 0.7;
+                  }
+                });
+              } else if (child.material instanceof THREE.MeshStandardMaterial) {
+                child.material.metalness = 0.3;
+                child.material.roughness = 0.7;
+              }
+            }
+          }
+        });
+        
+        scene.add(bullModel);
+        setIsLoading(false);
+        setLoadError(null);
+        
+        // Ajustar la cámara para enfocar el modelo
+        const box = new THREE.Box3().setFromObject(bullModel);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        
+        console.log('Model bounds:', { center, size });
+        
+        // Posicionar la cámara para ver todo el modelo
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const fov = camera.fov * (Math.PI / 180);
+        let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+        
+        camera.position.set(0, center.y, cameraZ * 1.5);
+        camera.lookAt(center);
+        controls.target.copy(center);
+        controls.update();
+        
+        console.log('Camera positioned at:', camera.position);
+        console.log('Camera looking at:', center);
+      },
+      (progress) => {
+        const percent = (progress.loaded / progress.total * 100);
+        console.log('Loading progress:', percent + '%');
+      },
+      (error) => {
+        clearTimeout(loadTimeout);
+        console.error('Error loading complex model:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        setLoadError(`Error loading 3D model: ${errorMessage}`);
+        setIsLoading(false);
+        console.log('Falling back to simple model...');
+        createFallbackBull();
+      }
+    );
 
     // Add a ground plane for shadows
     const groundGeometry = new THREE.PlaneGeometry(20, 20);
@@ -334,21 +470,115 @@ export default function ThreeScene() {
   }, []);
 
   return (
-    <div 
-      ref={mountRef} 
-      className={`w-full h-full absolute inset-0 transition-all duration-300 ${
-        isInteracting ? 'cursor-grabbing' : 'cursor-grab'
-      }`}
-      style={{ background: 'linear-gradient(to bottom, #1a1a1a, #000000)' }}
-    >
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
-          <div className="text-white text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-400 mx-auto mb-4"></div>
-            <p>Loading Wall Street Bull 3D model...</p>
+    <div className="relative w-full h-full">
+      <div 
+        ref={mountRef} 
+        className={`w-full h-full absolute inset-0 transition-all duration-300 ${
+          isInteracting ? 'cursor-grabbing' : 'cursor-grab'
+        }`}
+        style={{ background: 'linear-gradient(to bottom, #1a1a1a, #000000)' }}
+      >
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
+            <div className="text-white text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-400 mx-auto mb-4"></div>
+              <p>Loading Wall Street Bull 3D model...</p>
+            </div>
           </div>
+        )}
+        
+        {loadError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
+            <div className="text-white text-center">
+              <div className="text-red-400 mb-4">⚠️</div>
+              <p className="text-red-400 mb-2">Error loading 3D model</p>
+              <p className="text-sm text-gray-400">{loadError}</p>
+              <p className="text-xs text-gray-500 mt-2">Showing fallback model instead</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Control Buttons */}
+      <div className="absolute bottom-4 left-4 z-20 flex flex-col space-y-2">
+        {/* Rotation Controls */}
+        <div className="flex space-x-2">
+          <button
+            onClick={rotateLeft}
+            className="w-12 h-12 bg-black/60 hover:bg-black/80 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
+            title="Rotate Left"
+          >
+            ↶
+          </button>
+          <button
+            onClick={rotateRight}
+            className="w-12 h-12 bg-black/60 hover:bg-black/80 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
+            title="Rotate Right"
+          >
+            ↷
+          </button>
         </div>
-      )}
+        
+        <div className="flex space-x-2">
+          <button
+            onClick={rotateUp}
+            className="w-12 h-12 bg-black/60 hover:bg-black/80 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
+            title="Rotate Up"
+          >
+            ↶
+          </button>
+          <button
+            onClick={rotateDown}
+            className="w-12 h-12 bg-black/60 hover:bg-black/80 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
+            title="Rotate Down"
+          >
+            ↷
+          </button>
+        </div>
+
+        {/* Zoom Controls */}
+        <div className="flex space-x-2">
+          <button
+            onClick={zoomIn}
+            className="w-12 h-12 bg-black/60 hover:bg-black/80 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
+            title="Zoom In"
+          >
+            +
+          </button>
+          <button
+            onClick={zoomOut}
+            className="w-12 h-12 bg-black/60 hover:bg-black/80 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
+            title="Zoom Out"
+          >
+            −
+          </button>
+        </div>
+
+        {/* Reset Button */}
+        <button
+          onClick={resetView}
+          className="w-12 h-12 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
+          title="Reset View"
+        >
+          ⟲
+        </button>
+      </div>
+
+      {/* Instructions */}
+      <div className="absolute top-4 right-4 z-20 bg-black/60 text-white p-3 rounded-lg text-sm">
+        <div className="font-semibold mb-2">Controls:</div>
+        <div className="space-y-1 text-xs">
+          <div>↶ ↷ Rotate</div>
+          <div>+ − Zoom</div>
+          <div>⟲ Reset</div>
+        </div>
+        
+        {/* Model Status */}
+        <div className="mt-3 text-xs">
+          <div className="text-green-400">✓ Complex Model</div>
+          <div className="text-gray-400">Auto-fallback if needed</div>
+        </div>
+      </div>
     </div>
   );
 } 
