@@ -8,7 +8,7 @@ const ThreeScene = dynamic(() => import('./ThreeScene'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-[80vh] bg-gradient-to-b from-neutral-900 to-black rounded-2xl relative flex items-center justify-center">
-      <div className="text-white text-lg">Cargando modelo 3D...</div>
+      <div className="text-white text-lg">Cargando modelo 3D interactivo...</div>
     </div>
   )
 });
@@ -24,6 +24,7 @@ interface Particle {
 export default function BullHead3D() {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [showThreeScene, setShowThreeScene] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(true);
 
   useEffect(() => {
     // Generate particles only on client side to avoid hydration issues
@@ -48,8 +49,27 @@ export default function BullHead3D() {
     <div className="w-full h-[80vh] bg-gradient-to-b from-neutral-900 to-black rounded-2xl relative overflow-hidden">
       <div className="absolute z-10 left-4 top-4 text-white">
         <h1 className="text-xl font-semibold">Financial Feeling — Toro 3D</h1>
-        <p className="text-xs opacity-80">Modelo 3D del Toro de Wall Street</p>
+        <p className="text-xs opacity-80">Modelo 3D interactivo del Toro de Wall Street</p>
       </div>
+
+      {/* Interactive Instructions */}
+      {showInstructions && (
+        <div className="absolute z-20 top-4 right-4 bg-black/70 backdrop-blur rounded-lg p-4 text-white text-sm max-w-xs">
+          <h3 className="font-semibold mb-2">🎮 Controles Interactivos:</h3>
+          <ul className="space-y-1 text-xs">
+            <li>🖱️ <strong>Arrastra</strong> para rotar el toro</li>
+            <li>🔍 <strong>Scroll</strong> para hacer zoom</li>
+            <li>🖱️ <strong>Doble clic</strong> para centrar</li>
+            <li>🖱️ <strong>Click derecho</strong> para pan</li>
+          </ul>
+          <button 
+            onClick={() => setShowInstructions(false)}
+            className="mt-2 text-xs text-amber-400 hover:text-amber-300"
+          >
+            ✕ Cerrar instrucciones
+          </button>
+        </div>
+      )}
 
       {/* Three.js Scene */}
       {showThreeScene ? (
@@ -91,18 +111,19 @@ export default function BullHead3D() {
 
       {/* CTA overlay */}
       <div className="absolute bottom-4 right-4 z-10">
-        <a
-          href="#"
+        <button
+          onClick={() => setShowInstructions(!showInstructions)}
           className="bg-white/10 backdrop-blur rounded-2xl px-4 py-2 text-white text-sm shadow hover:bg-white/20 transition-colors"
         >
-          Probar demo
-        </a>
+          {showInstructions ? 'Ocultar' : 'Mostrar'} controles
+        </button>
       </div>
 
       {/* Instructions */}
       <div className="absolute bottom-4 left-4 z-10 text-white/60 text-xs">
         <p>🎯 Modelo 3D interactivo del Toro de Wall Street</p>
         <p>💎 Símbolo de fortaleza y prosperidad financiera</p>
+        <p className="mt-1 text-amber-400">🖱️ ¡Arrastra para interactuar!</p>
       </div>
     </div>
   );
