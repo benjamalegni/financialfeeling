@@ -11,7 +11,7 @@ interface SentimentData {
   impact: 'positive' | 'negative' | 'neutral'
   news: string
   reason: string
-  fundamentalScore: number
+  fundamentalScore?: number
   timestamp?: string
   financialData?: FinancialMetrics | null
 }
@@ -28,6 +28,8 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
   const [showFinancialModal, setShowFinancialModal] = useState(false)
   const [selectedFinancialData, setSelectedFinancialData] = useState<FinancialMetrics | null>(null)
 
+  const isLikelyStock = (sym: string) => /^[A-Z]{1,5}$/.test(sym || '')
+
   const fetchSentimentAnalysis = async () => {
     if (selectedAssets.length === 0) return
 
@@ -42,56 +44,32 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
         // Transform Railway data to sentiment format
         const realSentimentData: SentimentData[] = await Promise.all(
           analysisResult.stocks.map(async (stock) => {
-            // Fetch financial data for stocks only
+            const sym = (stock.symbol || '').toUpperCase()
+            const stockLike = isLikelyStock(sym)
+
+            // Fetch financial data only for likely stocks
             let financialData: FinancialMetrics | undefined
-            let fundamentalScore = 75; // Default
-            if (stock.symbol && stock.symbol.length <= 5) { // Only for stocks, not ETFs or other assets
+            let fundamentalScore: number | undefined
+            if (stockLike) {
               try {
-                const data = await getFinancialData(stock.symbol)
+                const data = await getFinancialData(sym)
                 financialData = data || undefined
-                // Calculate fundamental score using the proper function if data is available
                 if (data) {
                   fundamentalScore = calculateFundamentalScore(data)
-                } else {
-                  // Fallback to sentiment-based calculation
-                  if (stock.analysis.sentiment === 'positive') {
-                    fundamentalScore = Math.floor(Math.random() * 20) + 80; // 80-100
-                  } else if (stock.analysis.sentiment === 'negative') {
-                    fundamentalScore = Math.floor(Math.random() * 20) + 60; // 60-80
-                  } else {
-                    fundamentalScore = Math.floor(Math.random() * 20) + 70; // 70-90
-                  }
                 }
               } catch (error) {
-                console.error(`Error fetching financial data for ${stock.symbol}:`, error)
+                console.error(`Error fetching financial data for ${sym}:`, error)
                 financialData = undefined
-                // Fallback to sentiment-based calculation
-                if (stock.analysis.sentiment === 'positive') {
-                  fundamentalScore = Math.floor(Math.random() * 20) + 80; // 80-100
-                } else if (stock.analysis.sentiment === 'negative') {
-                  fundamentalScore = Math.floor(Math.random() * 20) + 60; // 60-80
-                } else {
-                  fundamentalScore = Math.floor(Math.random() * 20) + 70; // 70-90
-                }
-              }
-            } else {
-              // For non-stocks, use sentiment-based calculation
-              if (stock.analysis.sentiment === 'positive') {
-                fundamentalScore = Math.floor(Math.random() * 20) + 80; // 80-100
-              } else if (stock.analysis.sentiment === 'negative') {
-                fundamentalScore = Math.floor(Math.random() * 20) + 60; // 60-80
-              } else {
-                fundamentalScore = Math.floor(Math.random() * 20) + 70; // 70-90
               }
             }
 
             return {
-              symbol: stock.symbol,
-              horizon: 'Short-term', // Default horizon
+              symbol: sym,
+              horizon: 'Short-term',
               impact: stock.analysis.sentiment,
               news: stock.analysis.news,
               reason: stock.analysis.recommendation,
-              fundamentalScore: fundamentalScore,
+              fundamentalScore,
               timestamp: analysisResult.timestamp,
               financialData: financialData
             }
@@ -125,25 +103,29 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
       
       // Convert n8n data to sentiment data format
       const processedData: SentimentData[] = analysisData.data.stocks.map((stock: any) => {
-        // Calculate fundamental score based on sentiment
-        let fundamentalScore = 75;
-        if (stock.analysis?.sentiment === 'positive') {
-          fundamentalScore = Math.floor(Math.random() * 20) + 80;
-        } else if (stock.analysis?.sentiment === 'negative') {
-          fundamentalScore = Math.floor(Math.random() * 20) + 60;
-        } else {
-          fundamentalScore = Math.floor(Math.random() * 20) + 70;
+        const sym = (stock.symbol || '').toUpperCase()
+        const stockLike = isLikelyStock(sym)
+        let fundamentalScore: number | undefined
+        if (stockLike) {
+          // fallback: derive score only if stock; else leave undefined
+          if (stock.analysis?.sentiment === 'positive') {
+            fundamentalScore = Math.floor(Math.random() * 20) + 80;
+          } else if (stock.analysis?.sentiment === 'negative') {
+            fundamentalScore = Math.floor(Math.random() * 20) + 60;
+          } else {
+            fundamentalScore = Math.floor(Math.random() * 20) + 70;
+          }
         }
 
         return {
-          symbol: stock.symbol,
+          symbol: sym,
           horizon: 'Short-term',
           impact: stock.analysis?.sentiment || 'neutral',
           news: stock.analysis?.news || 'No news available',
           reason: stock.analysis?.recommendation || 'No analysis available',
-          fundamentalScore: fundamentalScore,
+          fundamentalScore,
           timestamp: new Date().toISOString()
-        };
+        } as SentimentData
       });
 
       setSentimentData(processedData);
@@ -185,6 +167,92 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
     if (score >= 65) return 'Fair'
     return 'Poor'
   }
+
+  const inPortfolio = sentimentData.filter((s) => selectedAssets.includes(s.symbol))
+  const notInPortfolio = sentimentData.filter((s) => !selectedAssets.includes(s.symbol))
+
+  const renderItems = (items: SentimentData[]) => (
+    <div className="space-y-4">
+      {items.map((item, index) => (
+        <div
+          key={`${item.symbol}-${index}`}
+          className={`border-l-4 p-6 rounded-lg shadow-md ${getImpactColor(item.impact)}`}
+        >
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
+                {getImpactIcon(item.impact)}
+                <h3 className="text-xl font-bold text-white">{item.symbol}</h3>
+                {/* Show financial data icon only when we have financial data */}
+                {item.financialData && (
+                  <button
+                    onClick={() => handleShowFinancialData(item.financialData!)}
+                    className="p-1 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 rounded transition-colors"
+                    title="View fundamental data"
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                item.impact === 'positive' ? 'bg-green-900/30 text-green-300' :
+                item.impact === 'negative' ? 'bg-red-900/30 text-red-300' : 'bg-yellow-900/30 text-yellow-300'
+              }`}>
+                {item.impact.charAt(0).toUpperCase() + item.impact.slice(1)} Sentiment
+              </span>
+            </div>
+            {item.timestamp && (
+              <div className="flex items-center space-x-1 text-gray-400 text-sm">
+                <Clock className="h-4 w-4" />
+                <span>{new Date(item.timestamp).toLocaleString()}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <h4 className="text-sm font-semibold text-gray-300 mb-2 flex items-center space-x-2">
+                <Info className="h-4 w-4" />
+                <span>Latest News</span>
+              </h4>
+              <p className="text-white text-sm leading-relaxed">{item.news}</p>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-semibold text-gray-300 mb-2 flex items-center space-x-2">
+                <TrendingUp className="h-4 w-4" />
+                <span>AI Analysis</span>
+              </h4>
+              <p className="text-white text-sm leading-relaxed">{item.reason}</p>
+            </div>
+          </div>
+
+          {/* Fundamental score only for likely stocks with score */}
+          {typeof item.fundamentalScore === 'number' && isLikelyStock(item.symbol) && (
+            <div className="mt-4 pt-4 border-t border-gray-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-400">Fundamental Score</span>
+                    <div className="flex items-center space-x-1">
+                      <div className="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full transition-all duration-300 ${getFundamentalScoreColor(item.fundamentalScore)}`}
+                          style={{ width: `${item.fundamentalScore}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-xs font-medium text-gray-300">{item.fundamentalScore}%</span>
+                      <span className="text-xs text-gray-400">({getFundamentalScoreText(item.fundamentalScore)})</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )
 
   if (selectedAssets.length === 0) {
     return (
@@ -242,99 +310,27 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData }: AI
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-400">We are analyzing the latest financial news...</p>
         </div>
-      ) : sentimentData.length === 0 ? (
-        <div className="text-center py-12">
-          <TrendingUp className="h-12 w-12 text-blue-400 mx-auto mb-4" />
-          <p className="text-gray-400 mb-4">Ready to analyze {selectedAssets.length} assets</p>
-          <p className="text-sm text-gray-500">Press the RUN button to start AI analysis with Railway backend</p>
-        </div>
       ) : (
-        <div className="space-y-4">
-          {sentimentData.map((item, index) => (
-            <div
-              key={`${item.symbol}-${index}`}
-              className={`border-l-4 p-6 rounded-lg shadow-md ${getImpactColor(item.impact)}`}
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2">
-                    {getImpactIcon(item.impact)}
-                    <h3 className="text-xl font-bold text-white">{item.symbol}</h3>
-                    {/* Show financial data icon only for stocks */}
-                    {item.financialData && (
-                      <button
-                        onClick={() => handleShowFinancialData(item.financialData!)}
-                        className="p-1 text-blue-400 hover:text-blue-300 hover:bg-blue-900/20 rounded transition-colors"
-                        title="View fundamental data"
-                      >
-                        <BarChart3 className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    item.impact === 'positive' ? 'bg-green-900/30 text-green-300' :
-                    item.impact === 'negative' ? 'bg-red-900/30 text-red-300' : 'bg-yellow-900/30 text-yellow-300'
-                  }`}>
-                    {item.impact.charAt(0).toUpperCase() + item.impact.slice(1)} Sentiment
-                  </span>
-                </div>
-                {item.timestamp && (
-                  <div className="flex items-center space-x-1 text-gray-400 text-sm">
-                    <Clock className="h-4 w-4" />
-                    <span>{new Date(item.timestamp).toLocaleString()}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-300 mb-2 flex items-center space-x-2">
-                    <Info className="h-4 w-4" />
-                    <span>Latest News</span>
-                  </h4>
-                  <p className="text-white text-sm leading-relaxed">{item.news}</p>
-                </div>
-
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-300 mb-2 flex items-center space-x-2">
-                    <TrendingUp className="h-4 w-4" />
-                    <span>AI Analysis</span>
-                  </h4>
-                  <p className="text-white text-sm leading-relaxed">{item.reason}</p>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs text-gray-400">Fundamental Score</span>
-                      <div className="flex items-center space-x-1">
-                        <div className="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full transition-all duration-300 ${getFundamentalScoreColor(item.fundamentalScore)}`}
-                            style={{ width: `${item.fundamentalScore}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-xs font-medium text-gray-300">{item.fundamentalScore}%</span>
-                        <span className="text-xs text-gray-400">({getFundamentalScoreText(item.fundamentalScore)})</span>
-                      </div>
-                    </div>
-                    
-                    {/* Buy Opportunity Indicator */}
-                    {item.impact === 'negative' && item.fundamentalScore >= 75 && (
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs text-gray-400">Buy Opportunity</span>
-                        <div className="px-2 py-1 bg-green-600 text-white text-xs font-medium rounded-full">
-                          BUY NOW
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+        <div className="space-y-8">
+          {inPortfolio.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-3">In your portfolio</h3>
+              {renderItems(inPortfolio)}
             </div>
-          ))}
+          )}
+          {notInPortfolio.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-3">Outside your portfolio</h3>
+              {renderItems(notInPortfolio)}
+            </div>
+          )}
+          {inPortfolio.length === 0 && notInPortfolio.length === 0 && (
+            <div className="text-center py-12">
+              <TrendingUp className="h-12 w-12 text-blue-400 mx-auto mb-4" />
+              <p className="text-gray-400 mb-4">Ready to analyze {selectedAssets.length} assets</p>
+              <p className="text-sm text-gray-500">Press the RUN button to start AI analysis with Railway backend</p>
+            </div>
+          )}
         </div>
       )}
 

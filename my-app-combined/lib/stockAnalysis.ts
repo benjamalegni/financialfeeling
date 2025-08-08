@@ -42,36 +42,54 @@ export async function analyzeStocks(stocks: string[]): Promise<AnalysisResult | 
       let analysisResults: StockAnalysis[] = [];
       
       if (Array.isArray(railwayData) && railwayData.length > 0) {
-        // Handle array format: [{"forecast":{}}]
+        // Handle array format: [{ forecast: { AAPL: {...} } }]
         if (railwayData[0].forecast) {
-          const forecast = railwayData[0].forecast;
-          
-          // If forecast is empty or doesn't contain stock data, create default analysis
-          if (Object.keys(forecast).length === 0) {
-            analysisResults = stocks.map((symbol, index) => ({
-              symbol: symbol.toUpperCase(),
-              analysis: {
-                sentiment: ['positive', 'negative', 'neutral'][index % 3] as 'positive' | 'negative' | 'neutral',
-                confidence: Math.floor(Math.random() * 30) + 70,
-                news: `Analysis in progress for ${symbol.toUpperCase()} - Railway backend processing`,
-                recommendation: `Railway analysis completed for ${symbol.toUpperCase()} - Review market conditions`
-              }
-            }));
-          } else {
-            // Use actual forecast data if available
-            for (const symbol of stocks) {
-              const stockData = forecast[symbol];
-              if (stockData) {
-                analysisResults.push({
-                  symbol: symbol.toUpperCase(),
-                  analysis: {
-                    sentiment: stockData.impact || 'neutral',
-                    confidence: 75,
-                    news: stockData.news || `Analysis completed for ${symbol.toUpperCase()}`,
-                    recommendation: stockData.reason || `Based on ${stockData.impact || 'neutral'} impact`
-                  }
-                });
-              }
+          const forecast = railwayData[0].forecast as Record<string, any>;
+
+          const extractTicker = (key: string): string => {
+            const m = key.match(/\(([^)]+)\)\s*$/);
+            return (m ? m[1] : key).toUpperCase();
+          };
+
+          // Try to map requested stocks by matching forecast keys or their (TICKER)
+          for (const symbol of stocks) {
+            const upper = symbol.toUpperCase();
+            // direct match
+            let entry = (forecast as any)[upper];
+            if (!entry) {
+              // search by extracted ticker or includes
+              const matchedKey = Object.keys(forecast).find((k) => {
+                const t = extractTicker(k);
+                return t === upper || k.toUpperCase() === upper;
+              });
+              if (matchedKey) entry = (forecast as any)[matchedKey];
+            }
+            if (entry) {
+              analysisResults.push({
+                symbol: upper,
+                analysis: {
+                  sentiment: entry.impact || 'neutral',
+                  confidence: 75,
+                  news: entry.news || `Analysis completed for ${upper}`,
+                  recommendation: entry.reason || `Based on ${entry.impact || 'neutral'} impact`,
+                },
+              });
+            }
+          }
+
+          // If nothing matched requested list, include all forecast entries (normalize symbol)
+          if (analysisResults.length === 0) {
+            for (const [key, entry] of Object.entries(forecast)) {
+              const sym = extractTicker(key);
+              analysisResults.push({
+                symbol: sym,
+                analysis: {
+                  sentiment: (entry as any).impact || 'neutral',
+                  confidence: 75,
+                  news: (entry as any).news || `Analysis completed for ${sym}`,
+                  recommendation: (entry as any).reason || `Based on ${(entry as any).impact || 'neutral'} impact`,
+                },
+              });
             }
           }
         } else {
@@ -87,10 +105,33 @@ export async function analyzeStocks(stocks: string[]): Promise<AnalysisResult | 
           }));
         }
       } else if (railwayData && typeof railwayData === 'object') {
-        // Handle object format
-        if (railwayData.data && Array.isArray(railwayData.data)) {
+        // Handle object formats
+        // Case: { data: { stocks: [...] } }
+        if (railwayData.data && Array.isArray(railwayData.data.stocks)) {
+          analysisResults = railwayData.data.stocks.map((stock: any) => ({
+            symbol: (stock.symbol || 'UNKNOWN').toUpperCase(),
+            analysis: {
+              sentiment: stock.analysis?.sentiment || 'neutral',
+              confidence: stock.analysis?.confidence || 75,
+              news: stock.analysis?.news || 'Analysis completed',
+              recommendation: stock.analysis?.recommendation || 'Review market conditions'
+            }
+          }));
+        // Case: { data: [...] }
+        } else if (railwayData.data && Array.isArray(railwayData.data)) {
           analysisResults = railwayData.data.map((stock: any) => ({
-            symbol: stock.symbol || 'UNKNOWN',
+            symbol: (stock.symbol || 'UNKNOWN').toUpperCase(),
+            analysis: {
+              sentiment: stock.analysis?.sentiment || 'neutral',
+              confidence: stock.analysis?.confidence || 75,
+              news: stock.analysis?.news || 'Analysis completed',
+              recommendation: stock.analysis?.recommendation || 'Review market conditions'
+            }
+          }));
+        // Case: { stocks: [...] }
+        } else if (Array.isArray(railwayData.stocks)) {
+          analysisResults = railwayData.stocks.map((stock: any) => ({
+            symbol: (stock.symbol || 'UNKNOWN').toUpperCase(),
             analysis: {
               sentiment: stock.analysis?.sentiment || 'neutral',
               confidence: stock.analysis?.confidence || 75,
@@ -100,7 +141,7 @@ export async function analyzeStocks(stocks: string[]): Promise<AnalysisResult | 
           }));
         } else if (railwayData.analysis) {
           analysisResults = railwayData.analysis.map((stock: any) => ({
-            symbol: stock.symbol || 'UNKNOWN',
+            symbol: (stock.symbol || 'UNKNOWN').toUpperCase(),
             analysis: {
               sentiment: stock.sentiment || 'neutral',
               confidence: stock.confidence || 75,

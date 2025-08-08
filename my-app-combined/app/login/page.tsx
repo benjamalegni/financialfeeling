@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { Github, X, Mail } from 'lucide-react'
+import { X, Mail } from 'lucide-react'
 import { getRoute } from '@/lib/utils'
 import { config, validateSupabaseConfig, getRedirectUrl } from '@/lib/config'
 
@@ -55,34 +55,6 @@ export default function LoginPage() {
     } catch (err) {
       console.error('Login error:', err)
       setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`)
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleGitHubSignIn = async () => {
-    setIsSubmitting(true);
-    setError(null);
-    
-    const redirectUrl = getRedirectUrl();
-    console.log('GitHub OAuth redirect URL:', redirectUrl);
-    
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: redirectUrl,
-          queryParams: { flow: 'pkce' },
-        },
-      })
-      if (error) throw error
-    } catch (err: any) {
-      const msg = err?.message || 'OAuth error'
-      console.error('GitHub OAuth error:', err)
-      if (msg.includes('Invalid redirect URI')) {
-        setError('Configuration error: Invalid redirect URI. Please set the exact callback in Supabase: ' + redirectUrl)
-      } else {
-        setError(`GitHub sign-in error: ${msg}`)
-      }
       setIsSubmitting(false)
     }
   }
@@ -209,16 +181,6 @@ export default function LoginPage() {
             >
               <Mail className="mr-2 h-4 w-4" />
               Sign In with Google
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={handleGitHubSignIn}
-              disabled={isSubmitting}
-              className="w-full border-gray-600 text-black hover:text-white hover:bg-gray-800 transition-colors"
-            >
-              <Github className="mr-2 h-4 w-4" />
-              Sign In with GitHub
             </Button>
           </div>
 
