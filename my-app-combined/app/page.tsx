@@ -190,7 +190,7 @@ export default function HomePage() {
       description:
         'Type the stock symbols you want to analyze, separated by commas. Example: AAPL, TSLA, MSFT, GOOGL',
       color: '#3b82f6',
-      background: '/backgrounds/stock-analysis-bg.jpg' // Background para la primera slide
+      background: '/backgrounds/wall-street-bull-bg.png' // Nueva imagen del Charging Bull (PNG)
     },
     {
       id: 2,
@@ -793,7 +793,7 @@ export default function HomePage() {
                           <Button
                             onClick={() => router.push(`/dashboard?symbol=${stock.symbol}`)}
                             size="sm"
-                            className="bg-gray-500 hover:bg-gray-700 text-white shadow-lg backdrop-blur-md"
+                            className="bg-transparent hover:bg-gray-700 text-white shadow-lg backdrop-blur-md"
                           >
                             <BarChart3 className="w-4 h-4 mr-1" />
                             Analyze
