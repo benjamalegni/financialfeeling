@@ -17,109 +17,6 @@ export default function ThreeScene() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [useSimpleModel, setUseSimpleModel] = useState(false);
 
-  // Funciones para controles con botones
-  const rotateLeft = () => {
-    if (cameraRef.current && controlsRef.current) {
-      // Rotar la cámara alrededor del modelo
-      const angle = -0.1;
-      const radius = cameraRef.current.position.distanceTo(controlsRef.current.target);
-      const currentAngle = Math.atan2(cameraRef.current.position.x, cameraRef.current.position.z);
-      const newAngle = currentAngle + angle;
-      
-      cameraRef.current.position.x = Math.sin(newAngle) * radius;
-      cameraRef.current.position.z = Math.cos(newAngle) * radius;
-      cameraRef.current.lookAt(controlsRef.current.target);
-      controlsRef.current.update();
-    }
-  };
-
-  const rotateRight = () => {
-    if (cameraRef.current && controlsRef.current) {
-      // Rotar la cámara alrededor del modelo
-      const angle = 0.1;
-      const radius = cameraRef.current.position.distanceTo(controlsRef.current.target);
-      const currentAngle = Math.atan2(cameraRef.current.position.x, cameraRef.current.position.z);
-      const newAngle = currentAngle + angle;
-      
-      cameraRef.current.position.x = Math.sin(newAngle) * radius;
-      cameraRef.current.position.z = Math.cos(newAngle) * radius;
-      cameraRef.current.lookAt(controlsRef.current.target);
-      controlsRef.current.update();
-    }
-  };
-
-  const rotateUp = () => {
-    if (cameraRef.current && controlsRef.current) {
-      // Rotar hacia arriba
-      const angle = 0.1;
-      const radius = cameraRef.current.position.distanceTo(controlsRef.current.target);
-      const currentAngle = Math.atan2(cameraRef.current.position.y, Math.sqrt(cameraRef.current.position.x ** 2 + cameraRef.current.position.z ** 2));
-      const newAngle = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, currentAngle + angle));
-      
-      const horizontalRadius = radius * Math.cos(newAngle);
-      cameraRef.current.position.y = radius * Math.sin(newAngle);
-      cameraRef.current.position.x = horizontalRadius * Math.sin(Math.atan2(cameraRef.current.position.x, cameraRef.current.position.z));
-      cameraRef.current.position.z = horizontalRadius * Math.cos(Math.atan2(cameraRef.current.position.x, cameraRef.current.position.z));
-      cameraRef.current.lookAt(controlsRef.current.target);
-      controlsRef.current.update();
-    }
-  };
-
-  const rotateDown = () => {
-    if (cameraRef.current && controlsRef.current) {
-      // Rotar hacia abajo
-      const angle = -0.1;
-      const radius = cameraRef.current.position.distanceTo(controlsRef.current.target);
-      const currentAngle = Math.atan2(cameraRef.current.position.y, Math.sqrt(cameraRef.current.position.x ** 2 + cameraRef.current.position.z ** 2));
-      const newAngle = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, currentAngle + angle));
-      
-      const horizontalRadius = radius * Math.cos(newAngle);
-      cameraRef.current.position.y = radius * Math.sin(newAngle);
-      cameraRef.current.position.x = horizontalRadius * Math.sin(Math.atan2(cameraRef.current.position.x, cameraRef.current.position.z));
-      cameraRef.current.position.z = horizontalRadius * Math.cos(Math.atan2(cameraRef.current.position.x, cameraRef.current.position.z));
-      cameraRef.current.lookAt(controlsRef.current.target);
-      controlsRef.current.update();
-    }
-  };
-
-  const zoomIn = () => {
-    if (cameraRef.current && controlsRef.current) {
-      // Acercar la cámara
-      const direction = new THREE.Vector3();
-      direction.subVectors(cameraRef.current.position, controlsRef.current.target).normalize();
-      const distance = cameraRef.current.position.distanceTo(controlsRef.current.target);
-      const newDistance = Math.max(1.5, distance * 0.9);
-      
-      cameraRef.current.position.copy(controlsRef.current.target).add(direction.multiplyScalar(newDistance));
-      controlsRef.current.update();
-    }
-  };
-
-  const zoomOut = () => {
-    if (cameraRef.current && controlsRef.current) {
-      // Alejar la cámara
-      const direction = new THREE.Vector3();
-      direction.subVectors(cameraRef.current.position, controlsRef.current.target).normalize();
-      const distance = cameraRef.current.position.distanceTo(controlsRef.current.target);
-      const newDistance = Math.min(8, distance * 1.1);
-      
-      cameraRef.current.position.copy(controlsRef.current.target).add(direction.multiplyScalar(newDistance));
-      controlsRef.current.update();
-    }
-  };
-
-  const resetView = () => {
-    if (controlsRef.current && cameraRef.current) {
-      // Reset camera position
-      cameraRef.current.position.set(0, 1, 3);
-      cameraRef.current.lookAt(0, 0, 0);
-      
-      // Reset controls
-      controlsRef.current.target.set(0, 0, 0);
-      controlsRef.current.update();
-    }
-  };
-
   useEffect(() => {
     if (!mountRef.current) return;
 
@@ -128,7 +25,8 @@ export default function ThreeScene() {
     // Scene setup
     const scene = new THREE.Scene();
     sceneRef.current = scene;
-    scene.background = new THREE.Color(0x000000);
+    // Cambiar el fondo a un gradiente más elegante
+    scene.background = new THREE.Color(0x0a0a0a);
 
     // Camera setup - Ajustar posición más cerca
     const camera = new THREE.PerspectiveCamera(
@@ -222,23 +120,23 @@ export default function ThreeScene() {
       mountRef.current.addEventListener('touchend', handleTouchEnd);
     }
 
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.8);
+    // Lighting - Mejorar la iluminación para el nuevo fondo
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
     directionalLight.position.set(5, 10, 5);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;
     scene.add(directionalLight);
 
-    const pointLight = new THREE.PointLight(0xffd700, 1, 100);
+    const pointLight = new THREE.PointLight(0xffd700, 1.2, 100);
     pointLight.position.set(-5, 5, 5);
     scene.add(pointLight);
 
     // Add a spotlight for dramatic effect
-    const spotlight = new THREE.SpotLight(0xffffff, 1);
+    const spotlight = new THREE.SpotLight(0xffffff, 1.2);
     spotlight.position.set(0, 15, 0);
     spotlight.angle = Math.PI / 6;
     spotlight.penumbra = 0.1;
@@ -395,7 +293,7 @@ export default function ThreeScene() {
 
     // Add a ground plane for shadows
     const groundGeometry = new THREE.PlaneGeometry(20, 20);
-    const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
+    const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = -2;
@@ -476,7 +374,7 @@ export default function ThreeScene() {
         className={`w-full h-full absolute inset-0 transition-all duration-300 ${
           isInteracting ? 'cursor-grabbing' : 'cursor-grab'
         }`}
-        style={{ background: 'linear-gradient(to bottom, #1a1a1a, #000000)' }}
+        style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%)' }}
       >
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
@@ -499,78 +397,13 @@ export default function ThreeScene() {
         )}
       </div>
 
-      {/* Control Buttons */}
-      <div className="absolute bottom-4 left-4 z-20 flex flex-col space-y-2">
-        {/* Rotation Controls */}
-        <div className="flex space-x-2">
-          <button
-            onClick={rotateLeft}
-            className="w-12 h-12 bg-black/60 hover:bg-black/80 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
-            title="Rotate Left"
-          >
-            ↶
-          </button>
-          <button
-            onClick={rotateRight}
-            className="w-12 h-12 bg-black/60 hover:bg-black/80 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
-            title="Rotate Right"
-          >
-            ↷
-          </button>
-        </div>
-        
-        <div className="flex space-x-2">
-          <button
-            onClick={rotateUp}
-            className="w-12 h-12 bg-black/60 hover:bg-black/80 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
-            title="Rotate Up"
-          >
-            ↶
-          </button>
-          <button
-            onClick={rotateDown}
-            className="w-12 h-12 bg-black/60 hover:bg-black/80 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
-            title="Rotate Down"
-          >
-            ↷
-          </button>
-        </div>
-
-        {/* Zoom Controls */}
-        <div className="flex space-x-2">
-          <button
-            onClick={zoomIn}
-            className="w-12 h-12 bg-black/60 hover:bg-black/80 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
-            title="Zoom In"
-          >
-            +
-          </button>
-          <button
-            onClick={zoomOut}
-            className="w-12 h-12 bg-black/60 hover:bg-black/80 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
-            title="Zoom Out"
-          >
-            −
-          </button>
-        </div>
-
-        {/* Reset Button */}
-        <button
-          onClick={resetView}
-          className="w-12 h-12 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-105"
-          title="Reset View"
-        >
-          ⟲
-        </button>
-      </div>
-
       {/* Instructions */}
       <div className="absolute top-4 right-4 z-20 bg-black/60 text-white p-3 rounded-lg text-sm">
-        <div className="font-semibold mb-2">Controls:</div>
+        <div className="font-semibold mb-2">Interactive 3D Bull</div>
         <div className="space-y-1 text-xs">
-          <div>↶ ↷ Rotate</div>
-          <div>+ − Zoom</div>
-          <div>⟲ Reset</div>
+          <div>🖱️ Drag to rotate</div>
+          <div>🔍 Scroll to zoom</div>
+          <div>🔄 Auto-rotation</div>
         </div>
         
         {/* Model Status */}
