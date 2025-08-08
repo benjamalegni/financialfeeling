@@ -10,6 +10,7 @@ import { Plus, Send, LogOut, User, BarChart3, Zap, Search, Star, TrendingUp, Dol
 import SimpleTypewriter from '@/components/simple-typewriter'
 import { getRandomText } from '@/lib/texts'
 import Header from '@/components/header'
+import { supabase } from '@/lib/supabaseClient'
 
 import {
   DropdownMenu,
@@ -148,6 +149,39 @@ export default function HomePage() {
   useEffect(() => {
     fetchAll();
   }, []);
+
+  // Efecto para cargar el usuario actual
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser()
+        if (error) {
+          console.error('Error loading user:', error)
+        } else if (user) {
+          console.log('User loaded:', user)
+          setUser(user)
+        }
+      } catch (error) {
+        console.error('Error in loadUser:', error)
+      }
+    }
+
+    loadUser()
+
+    // Escuchar cambios en la sesión
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user)
+        if (session?.user) {
+          setUser(session.user)
+        } else {
+          setUser(null)
+        }
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   const howToSteps = [
     {
