@@ -48,6 +48,9 @@ export default function SignUpPage() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: getRedirectUrl(),
+        }
       })
 
       console.log('Signup response:', { data, error })
@@ -62,7 +65,7 @@ export default function SignUpPage() {
             email,
             password,
             options: {
-              emailRedirectTo: undefined, // No redirección de email
+              emailRedirectTo: getRedirectUrl(),
             }
           })
           
@@ -89,11 +92,8 @@ export default function SignUpPage() {
             }
           } else if (altData.user) {
             console.log('User created with alternative method')
-            setError('Account created successfully! You can now sign in with your credentials.')
+            setError('Account created successfully! Please check your email for the verification link.')
             setIsSubmitting(false)
-            setTimeout(() => {
-              router.push(getRoute('/login'))
-            }, 2000)
             return
           }
         } catch (altErr) {
@@ -133,6 +133,23 @@ export default function SignUpPage() {
     } catch (err) {
       console.error('Signup error:', err)
       setError(`Unexpected error: ${err instanceof Error ? err.message : 'Unknown error'}`)
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleResendVerification = async () => {
+    try {
+      setIsSubmitting(true)
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo: getRedirectUrl() }
+      } as any)
+      if (error) throw error
+      setError('Verification email resent. Please check your inbox (and spam).')
+    } catch (e: any) {
+      setError(`Could not resend verification email: ${e?.message || e}`)
+    } finally {
       setIsSubmitting(false)
     }
   }
@@ -252,7 +269,7 @@ export default function SignUpPage() {
 
             {error && (
               <div className={`text-sm p-3 rounded-md border ${
-                error.includes('Check your email') 
+                error.includes('Check your email') || error.toLowerCase().includes('verification email resent')
                   ? 'text-green-400 bg-green-900/20 border-green-800' 
                   : 'text-red-400 bg-red-900/20 border-red-800'
               }`}>
@@ -260,9 +277,23 @@ export default function SignUpPage() {
               </div>
             )}
 
-            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
-              {isSubmitting ? 'Creating Account...' : 'Create Account'}
-            </Button>
+            <div className="flex items-center justify-between">
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
+                {isSubmitting ? 'Creating Account...' : 'Create Account'}
+              </Button>
+            </div>
+
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={isSubmitting || !email}
+                className="text-xs text-blue-400 hover:text-blue-300 underline disabled:text-gray-500"
+                title="Resend verification email"
+              >
+                Resend verification email
+              </button>
+            </div>
           </form>
 
           <div className="relative">
