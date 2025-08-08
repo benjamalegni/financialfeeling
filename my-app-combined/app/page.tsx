@@ -858,7 +858,7 @@ export default function HomePage() {
 
             {/* 3. 3D Bull Model Section */}
             <div className="mb-12">
-              <h2 className="text-4xl font-bold mb-6 text-center">Toro 3D Interactivo</h2>
+              <h2 className="text-4xl font-bold mb-6 text-center">3D Bull</h2>
               <BullHead3D />
             </div>
 
