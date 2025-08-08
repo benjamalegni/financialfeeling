@@ -1,8 +1,49 @@
 'use client'
 
-import React from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import dynamic from 'next/dynamic';
+
+// Dynamic imports for Three.js components to avoid SSR issues
+const ThreeScene = dynamic(() => import('./ThreeScene'), { 
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[80vh] bg-gradient-to-b from-neutral-900 to-black rounded-2xl relative flex items-center justify-center">
+      <div className="text-white text-lg">Cargando modelo 3D...</div>
+    </div>
+  )
+});
+
+interface Particle {
+  id: number;
+  left: string;
+  top: string;
+  animationDelay: string;
+  animationDuration: string;
+}
 
 export default function BullHead3D() {
+  const [particles, setParticles] = useState<Particle[]>([]);
+  const [showThreeScene, setShowThreeScene] = useState(false);
+
+  useEffect(() => {
+    // Generate particles only on client side to avoid hydration issues
+    const generatedParticles = Array.from({ length: 20 }, (_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      animationDelay: `${Math.random() * 2}s`,
+      animationDuration: `${3 + Math.random() * 2}s`,
+    }));
+    setParticles(generatedParticles);
+
+    // Show Three.js scene after a short delay
+    const timer = setTimeout(() => {
+      setShowThreeScene(true);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="w-full h-[80vh] bg-gradient-to-b from-neutral-900 to-black rounded-2xl relative overflow-hidden">
       <div className="absolute z-10 left-4 top-4 text-white">
@@ -10,44 +51,39 @@ export default function BullHead3D() {
         <p className="text-xs opacity-80">Modelo 3D del Toro de Wall Street</p>
       </div>
 
-      {/* 3D Bull Model Placeholder */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative">
-          {/* Bull Head Geometry using CSS */}
-          <div className="relative w-48 h-48">
-            {/* Bull head base */}
-            <div className="absolute inset-0 bg-gradient-to-b from-amber-800 to-amber-900 rounded-full transform rotate-12 shadow-2xl animate-pulse"></div>
-            
-            {/* Bull horns */}
-            <div className="absolute -top-8 -left-4 w-8 h-16 bg-gradient-to-b from-amber-700 to-amber-900 rounded-full transform -rotate-45 shadow-lg"></div>
-            <div className="absolute -top-8 -right-4 w-8 h-16 bg-gradient-to-b from-amber-700 to-amber-900 rounded-full transform rotate-45 shadow-lg"></div>
-            
-            {/* Bull eyes */}
-            <div className="absolute top-8 left-8 w-4 h-4 bg-black rounded-full shadow-inner"></div>
-            <div className="absolute top-8 right-8 w-4 h-4 bg-black rounded-full shadow-inner"></div>
-            
-            {/* Bull nose */}
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-6 h-3 bg-black rounded-full"></div>
-          </div>
-          
-          {/* Rotating animation */}
-          <div className="absolute inset-0 animate-spin" style={{ animationDuration: '20s' }}>
-            <div className="w-full h-full rounded-full border-2 border-amber-500/30"></div>
+      {/* Three.js Scene */}
+      {showThreeScene ? (
+        <ThreeScene />
+      ) : (
+        /* Fallback CSS Bull Model */
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="relative">
+            <div className="relative w-48 h-48">
+              <div className="absolute inset-0 bg-gradient-to-b from-amber-800 to-amber-900 rounded-full transform rotate-12 shadow-2xl animate-pulse"></div>
+              <div className="absolute -top-8 -left-4 w-8 h-16 bg-gradient-to-b from-amber-700 to-amber-900 rounded-full transform -rotate-45 shadow-lg"></div>
+              <div className="absolute -top-8 -right-4 w-8 h-16 bg-gradient-to-b from-amber-700 to-amber-900 rounded-full transform rotate-45 shadow-lg"></div>
+              <div className="absolute top-8 left-8 w-4 h-4 bg-black rounded-full shadow-inner"></div>
+              <div className="absolute top-8 right-8 w-4 h-4 bg-black rounded-full shadow-inner"></div>
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-6 h-3 bg-black rounded-full"></div>
+            </div>
+            <div className="absolute inset-0 animate-spin" style={{ animationDuration: '20s' }}>
+              <div className="w-full h-full rounded-full border-2 border-amber-500/30"></div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Background particles */}
       <div className="absolute inset-0 overflow-hidden">
-        {[...Array(20)].map((_, i) => (
+        {particles.map((particle) => (
           <div
-            key={i}
+            key={particle.id}
             className="absolute w-2 h-2 bg-amber-400/30 rounded-full animate-bounce"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 2}s`,
-              animationDuration: `${3 + Math.random() * 2}s`,
+              left: particle.left,
+              top: particle.top,
+              animationDelay: particle.animationDelay,
+              animationDuration: particle.animationDuration,
             }}
           />
         ))}
