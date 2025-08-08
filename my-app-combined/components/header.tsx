@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { LogOut, BarChart3 } from 'lucide-react'
@@ -22,6 +22,9 @@ interface HeaderProps {
 
 export default function Header({ user, onSignOut }: HeaderProps) {
   const router = useRouter()
+  const pathname = usePathname() || ''
+  const normalizedPath = pathname.replace(/\/+$/, '') || '/'
+  const isDashboard = normalizedPath === '/dashboard'
 
   const getDashboardColorClasses = () => {
     return 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
@@ -47,7 +50,7 @@ export default function Header({ user, onSignOut }: HeaderProps) {
         {/* Right side - User menu and Dashboard button */}
         <div className="flex items-center space-x-4">
           {/* Dashboard Button */}
-          {user ? (
+          {user && !isDashboard ? (
             <Button
               size="sm"
               className={`text-white transition-all duration-500 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 border border-gray-600 ${getDashboardColorClasses()}`}
@@ -56,7 +59,8 @@ export default function Header({ user, onSignOut }: HeaderProps) {
               <BarChart3 className="h-4 w-4 mr-2" />
               Dashboard
             </Button>
-          ) : (
+          ) : null}
+          {!user && !isDashboard ? (
             <div className="relative group">
               <Button
                 size="sm"
@@ -72,7 +76,7 @@ export default function Header({ user, onSignOut }: HeaderProps) {
                 <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* User Menu */}
           {user ? (

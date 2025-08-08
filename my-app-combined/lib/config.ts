@@ -27,6 +27,8 @@ export const config = {
     })(),
     name: 'Financial Feeling',
     description: 'AI-powered financial analysis and trading insights',
+    maxAssetsPerUser: Number(process.env.NEXT_PUBLIC_MAX_ASSETS_PER_USER || 2),
+    twelveDataApiKey: process.env.NEXT_PUBLIC_TWELVE_DATA_API_KEY || 'fa7cfa25e2a0433a8f7fb2aaca442880',
   },
 
   // OAuth Configuration - Actualizado para usar www.financialfeeling.com

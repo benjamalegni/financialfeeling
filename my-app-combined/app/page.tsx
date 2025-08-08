@@ -35,6 +35,7 @@ import { getRoute } from '@/lib/utils'
 import Glide from '@glidejs/glide';
 import CandleChart from '@/components/CandleChart';
 import BullHead3D from '@/components/BullHead3D';
+import { config } from '@/lib/config'
 
 // Calcular top movers del día basados en variación intradía
 const candidateSymbols = [
@@ -72,6 +73,7 @@ export default function HomePage() {
   const [showAssetSelector, setShowAssetSelector] = useState(false)
   const [selectedAssets, setSelectedAssets] = useState<string[]>([])
   const [originalAssets, setOriginalAssets] = useState<string[]>([])
+  const [existingPortfolioSymbols, setExistingPortfolioSymbols] = useState<string[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [autocompleteSuggestions, setAutocompleteSuggestions] = useState<any[]>([])
   const [showAutocomplete, setShowAutocomplete] = useState(false)
@@ -81,11 +83,12 @@ export default function HomePage() {
   // Cambia la declaración de stockCharts para tipar correctamente:
   const [stockCharts, setStockCharts] = useState<{ symbol: string, data: { x: string, y: [number, number, number, number] }[] }[]>([]);
   const [loadingCharts, setLoadingCharts] = useState(true);
-
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  
   // Función para obtener datos de una acción
   async function fetchStock(symbol: string) {
     try {
-      const apiKey = process.env.NEXT_PUBLIC_TWELVE_DATA_API_KEY;
+      const apiKey = process.env.NEXT_PUBLIC_TWELVE_DATA_API_KEY || config.app.twelveDataApiKey;
       if (!apiKey || apiKey === 'your_twelve_data_api_key_here') {
         console.warn('API key not configured for', symbol);
         return [];
@@ -312,6 +315,9 @@ export default function HomePage() {
     { symbol: 'USD/CHF', name: 'US Dollar/Swiss Franc', type: 'Forex', category: 'Currency' },
     { symbol: 'AUD/USD', name: 'Australian Dollar/US Dollar', type: 'Forex', category: 'Currency' },
   ]
+  
+  // Derived categories from assets list
+  const categories = ['All', ...Array.from(new Set(financialAssets.map(asset => asset.category)))]
 
   // Change text every 8 seconds when user is not logged in
   useEffect(() => {
@@ -336,54 +342,14 @@ export default function HomePage() {
   }, [])
 
   const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut()
+    } catch (_) {}
     setUser(null)
     router.push(getRoute('/login'))
   }
 
-  const handleSendMessage = () => {
-    if (!user) {
-      // Si no está autenticado, redirigir al login
-      router.push(getRoute('/login'))
-      return
-    }
-    
-    if (message.trim()) {
-      // Procesar múltiples assets separados por comas
-      const assets = message.split(',').map(asset => asset.trim().toUpperCase()).filter(asset => asset.length > 0)
-      
-      if (assets.length > 0) {
-        // Verificar que los assets existen en nuestra lista
-        const validAssets = assets.filter(asset => 
-          financialAssets.some(fa => fa.symbol === asset)
-        )
-        
-        if (validAssets.length > 0) {
-          // Agregar los assets válidos al portafolio
-          const newAssets = [...selectedAssets]
-          validAssets.forEach(asset => {
-            if (!newAssets.includes(asset)) {
-              newAssets.push(asset)
-            }
-          })
-          setSelectedAssets(newAssets)
-          
-          // Mostrar mensaje de confirmación
-          console.log(`Added ${validAssets.length} assets to portfolio:`, validAssets)
-          
-          // Limpiar el input
-          setMessage('')
-          
-          // Guardar automáticamente los assets en el portafolio
-          savePortfolioFromChat(newAssets)
-          
-          // Opcional: Abrir el modal de selección de assets para mostrar los cambios
-          setShowAssetSelector(true)
-        } else {
-          console.log('No valid assets found in the message')
-        }
-      }
-    }
-  }
+
 
   // Filter assets based on search term
   const filteredAssets = financialAssets.filter(asset => {
@@ -413,30 +379,41 @@ export default function HomePage() {
     setSelectedSuggestionIndex(-1)
   }
 
-  // Handle input change with autocomplete
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setMessage(value)
-    
-    if (user && value.trim()) {
-      const suggestions = getAutocompleteSuggestions(value)
-      setAutocompleteSuggestions(suggestions)
-      setShowAutocomplete(suggestions.length > 0)
-      setSelectedSuggestionIndex(-1)
-    } else {
-      setShowAutocomplete(false)
-      setAutocompleteSuggestions([])
+  // Commit current typed token into selectedAssets if valid
+  const commitCurrentToken = (raw?: string) => {
+    const token = (raw ?? message).trim().toUpperCase()
+    if (!token) return
+    const exists = financialAssets.some(fa => fa.symbol === token)
+    if (!exists) return
+    if (selectedAssets.includes(token)) {
+      setMessage('')
+      return
     }
+    // Check limit considering existing portfolio
+    if (existingPortfolioSymbols.includes(token)) {
+      setMessage('')
+      return
+    }
+    const unionCount = new Set([...existingPortfolioSymbols, ...selectedAssets]).size
+    if (unionCount >= config.app.maxAssetsPerUser) {
+      alert(`Maximum ${config.app.maxAssetsPerUser} assets allowed per user.`)
+      return
+    }
+    setSelectedAssets([...selectedAssets, token])
+    setMessage('')
+    setShowAutocomplete(false)
+    setSelectedSuggestionIndex(-1)
   }
 
   // Handle keyboard navigation for autocomplete
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
+      e.preventDefault()
       if (showAutocomplete && selectedSuggestionIndex >= 0) {
-        e.preventDefault()
         handleAutocompleteSelect(autocompleteSuggestions[selectedSuggestionIndex])
       } else {
-        handleSendMessage()
+        // Commit typed token instead of sending
+        commitCurrentToken()
       }
     } else if (e.key === 'ArrowDown') {
       e.preventDefault()
@@ -456,6 +433,30 @@ export default function HomePage() {
     }
   }
 
+  // Also commit token when typing a comma
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === ',') {
+      e.preventDefault()
+      commitCurrentToken()
+    }
+  }
+
+  // Handle input change with autocomplete
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setMessage(value)
+    
+    if (user && value.trim()) {
+      const suggestions = getAutocompleteSuggestions(value)
+      setAutocompleteSuggestions(suggestions)
+      setShowAutocomplete(suggestions.length > 0)
+      setSelectedSuggestionIndex(-1)
+    } else {
+      setShowAutocomplete(false)
+      setAutocompleteSuggestions([])
+    }
+  }
+
   // Handle click outside to close autocomplete
   useEffect(() => {
     const handleClickOutside = () => {
@@ -471,13 +472,71 @@ export default function HomePage() {
     if (selectedAssets.includes(symbol)) {
       setSelectedAssets(selectedAssets.filter(asset => asset !== symbol))
     } else {
-      // RESTRICCIÓN: Máximo 2 assets por usuario
-      if (selectedAssets.length >= 2) {
-        alert('Maximum 2 assets allowed per user. Please remove an asset before adding a new one.')
+      // Enforce global limit considering existing portfolio
+      const alreadyHas = existingPortfolioSymbols.includes(symbol)
+      if (alreadyHas) {
+        // If already in portfolio, no need to add to selection
+        return
+      }
+      const unionCount = new Set([...existingPortfolioSymbols, ...selectedAssets]).size
+      if (unionCount >= config.app.maxAssetsPerUser) {
+        alert(`Maximum ${config.app.maxAssetsPerUser} assets allowed per user. Please remove an asset before adding a new one.`)
         return
       }
       setSelectedAssets([...selectedAssets, symbol])
     }
+  }
+
+  // Persist selected assets to user portfolio
+  const persistSelectedAssets = async (assets: string[]) => {
+    if (!user || assets.length === 0) return
+    try {
+      const uniqueAssets = Array.from(new Set(assets))
+      const rows = uniqueAssets.map(symbol => ({
+        user_id: user.id,
+        asset_identifier: symbol,
+        selected_at: new Date().toISOString(),
+      })) as any[]
+      const { error } = await supabase
+        .from('user_selected_assets')
+        .upsert(rows, { onConflict: 'user_id,asset_identifier' })
+      if (error) throw error
+      setOriginalAssets(uniqueAssets)
+      setExistingPortfolioSymbols(uniqueAssets)
+      alert('Portfolio updated successfully')
+    } catch (err) {
+      console.error('Error saving portfolio from chat:', err)
+      alert('Error saving portfolio. Please try again.')
+    }
+  }
+
+  // Override send to add selected assets to portfolio
+  const handleSendMessage = () => {
+    if (!user) {
+      router.push(getRoute('/login'))
+      return
+    }
+    // Merge typed assets with current selection (validate like Enter)
+    const typedRaw = message
+      .split(',')
+      .map(a => a.trim().toUpperCase())
+      .filter(a => a.length > 0)
+    const validTyped = typedRaw.filter(token => financialAssets.some(fa => fa.symbol === token))
+
+    const combined = Array.from(new Set([...existingPortfolioSymbols, ...selectedAssets, ...validTyped]))
+
+    // Enforce global limit
+    const limited = combined.slice(0, config.app.maxAssetsPerUser)
+
+    if (limited.length === 0) return
+
+    persistSelectedAssets(limited)
+
+    // Clear UI state
+    setSelectedAssets([])
+    setMessage('')
+    setShowAutocomplete(false)
+    setSelectedSuggestionIndex(-1)
   }
 
   const savePortfolio = async () => {
@@ -507,14 +566,17 @@ export default function HomePage() {
 
   const loadUserAssets = async () => {
     if (!user) return
-
     try {
-      // Simular carga de assets del usuario
-      const userAssetSymbols: string[] = []
-      setSelectedAssets(userAssetSymbols)
-      setOriginalAssets(userAssetSymbols) // Guardar los activos originales
-      
-      // Si hay assets cargados, limpiar el análisis anterior
+      const { data, error } = await supabase
+        .from('user_selected_assets')
+        .select('asset_identifier')
+        .eq('user_id', user.id)
+        .not('asset_identifier', 'is', null)
+      if (error) throw error
+      const userAssetSymbols: string[] = (data || []).map((r: any) => r.asset_identifier)
+      setExistingPortfolioSymbols(userAssetSymbols)
+      setOriginalAssets(userAssetSymbols)
+      setSelectedAssets([])
       if (userAssetSymbols.length > 0) {
         setAnalysisData(null)
       }
@@ -559,6 +621,43 @@ export default function HomePage() {
     }
   }
 
+  // Add asset immediately like dashboard (upsert to DB)
+  const handleAddAssetFromDialog = async (asset: { symbol: string; type?: string; name?: string }) => {
+    if (!user) {
+      router.push(getRoute('/login'))
+      return
+    }
+    // Enforce limit with current portfolio size
+    if (existingPortfolioSymbols.length >= config.app.maxAssetsPerUser) {
+      alert(`Maximum ${config.app.maxAssetsPerUser} assets allowed per user. Please remove an asset before adding a new one.`)
+      return
+    }
+    if (existingPortfolioSymbols.includes(asset.symbol)) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('user_selected_assets')
+        .upsert({
+          user_id: user.id,
+          asset_identifier: asset.symbol,
+          asset_type: asset.type || null,
+          asset_name: asset.name || null,
+          selected_at: new Date().toISOString()
+        }, { onConflict: 'user_id,asset_identifier' })
+      if (error) {
+        console.error('Error adding asset to database:', error)
+        alert('Error adding asset to portfolio. Please try again.')
+        return
+      }
+      setExistingPortfolioSymbols(prev => [...prev, asset.symbol])
+    } catch (err) {
+      console.error('Error adding asset:', err)
+      alert('Error adding asset to portfolio. Please try again.')
+    }
+  }
+
   return (
     <div className="min-h-screen text-white relative">
       {/* Gradiente fijo oscuro violeta y azul */}
@@ -591,18 +690,36 @@ export default function HomePage() {
                 <div className="relative bg-gray-900 rounded-lg border border-gray-700 p-4 shadow-lg">
                   <div className="flex items-center space-x-3">
                     <div className="relative flex-1">
-                      <Input
-                        value={message}
-                        onChange={handleInputChange}
-                        onKeyPress={handleKeyPress}
-                        placeholder={
-                          user
-                            ? "Type asset symbols (e.g., AAPL, TSLA, MSFT) or click + button..."
-                            : "Sign in to start selecting assets with Financial Feeling"
-                        }
-                        className="bg-transparent border-none text-white placeholder-gray-400 focus-visible:ring-0"
-                        disabled={!user}
-                      />
+                      <div className="flex flex-wrap items-center gap-2 min-h-[2.25rem]">
+                        {user && selectedAssets.map(symbol => (
+                          <Badge
+                            key={symbol}
+                            className="bg-blue-600 hover:bg-red-600 cursor-pointer transition-colors flex items-center gap-1"
+                            onClick={() => handleAssetSelection(symbol)}
+                          >
+                            {symbol}
+                            <X className="h-3 w-3 hover:text-red-200" />
+                          </Badge>
+                        ))}
+                        <Input
+                          value={message}
+                          onChange={handleInputChange}
+                          onKeyPress={handleKeyPress}
+                          onKeyDown={handleKeyDown}
+                          placeholder={
+                            user
+                              ? "Type asset symbols (e.g., AAPL), press Enter or , to add"
+                              : "Sign in to start selecting assets with Financial Feeling"
+                          }
+                          className="bg-transparent border-none text-white placeholder-gray-400 focus-visible:ring-0 flex-1 min-w-[10ch]"
+                          disabled={!user}
+                        />
+                        {user && (
+                          <span className="text-xs text-gray-400 ml-1">
+                            {selectedAssets.length}/{config.app.maxAssetsPerUser}
+                          </span>
+                        )}
+                      </div>
                       
                       {/* Autocomplete Dropdown */}
                       {showAutocomplete && user && (
@@ -642,7 +759,7 @@ export default function HomePage() {
                       size="icon" 
                       className="bg-blue-600 hover:bg-blue-700 shadow-md transition-colors" 
                       onClick={handleOpenAssetSelector}
-                      disabled={!user}
+                      disabled={!user || existingPortfolioSymbols.length >= config.app.maxAssetsPerUser}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -652,7 +769,7 @@ export default function HomePage() {
                         <DialogHeader>
                           <DialogTitle className="text-white">Select Assets</DialogTitle>
                           <DialogDescription className="text-gray-400">
-                            Choose up to 2 assets to analyze. You can search by symbol or name.
+                            Choose up to {config.app.maxAssetsPerUser} assets to analyze. You can search by symbol or name.
                           </DialogDescription>
                         </DialogHeader>
                         
@@ -666,49 +783,70 @@ export default function HomePage() {
                             className="pl-10 bg-gray-800 border-gray-600 text-white placeholder-gray-400"
                           />
                         </div>
+                        {/* Category Filter (like dashboard) */}
+                        <div className="mb-4 flex flex-wrap gap-2">
+                          {categories.map(category => (
+                            <button
+                              key={category}
+                              onClick={() => setSelectedCategory(category)}
+                              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                                selectedCategory === category 
+                                  ? 'bg-gray-600 text-white border border-gray-500'
+                                  : 'bg-gray-700/50 backdrop-blur-sm text-gray-300 hover:bg-gray-600/50 border border-gray-600'
+                              }`}
+                            >
+                              {category}
+                            </button>
+                          ))}
+                        </div>
                         
                         {/* Asset Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
                           {financialAssets
-                            .filter(asset => 
-                              asset.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                              asset.name.toLowerCase().includes(searchTerm.toLowerCase())
-                            )
-                            .map(asset => (
-                              <div
-                                key={asset.symbol}
-                                className={`p-4 rounded-lg border cursor-pointer transition-colors ${
-                                  selectedAssets.includes(asset.symbol)
-                                    ? 'bg-blue-600 border-blue-500'
-                                    : 'bg-gray-800 border-gray-600 hover:bg-gray-700'
-                                }`}
-                                onClick={() => handleAssetSelection(asset.symbol)}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center space-x-3">
-                                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
-                                      {asset.symbol.charAt(0)}
+                            .filter(asset => {
+                              const matchesSearch = asset.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                asset.name.toLowerCase().includes(searchTerm.toLowerCase());
+                              const matchesCategory = selectedCategory === 'All' || asset.category === selectedCategory;
+                              return matchesSearch && matchesCategory;
+                            })
+                            .map(asset => {
+                              const isSelected = selectedAssets.includes(asset.symbol) || existingPortfolioSymbols.includes(asset.symbol)
+                              return (
+                                <div
+                                  key={asset.symbol}
+                                  className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                                    isSelected
+                                      ? 'bg-blue-600 border-blue-500'
+                                      : 'bg-gray-800 border-gray-600 hover:bg-gray-700'
+                                  }`}
+                                  onClick={() => handleAddAssetFromDialog(asset)}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-3">
+                                      <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                                        {asset.symbol.charAt(0)}
+                                      </div>
+                                      <div>
+                                        <div className="text-white font-semibold">{asset.symbol}</div>
+                                        <div className="text-gray-400 text-sm">{asset.name}</div>
+                                      </div>
                                     </div>
-                                    <div>
-                                      <div className="text-white font-semibold">{asset.symbol}</div>
-                                      <div className="text-gray-400 text-sm">{asset.name}</div>
+                                    <div className="text-right">
+                                      <div className="text-gray-400 text-sm">{asset.type}</div>
+                                      <div className="text-gray-500 text-xs">{asset.category}</div>
                                     </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <div className="text-gray-400 text-sm">{asset.type}</div>
-                                    <div className="text-gray-500 text-xs">{asset.category}</div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              )
+                            })}
                         </div>
 
                         {/* Selected Assets */}
                         {selectedAssets.length > 0 && (
                           <div className="border-t border-gray-700 pt-4">
                             <h4 className="text-white font-semibold mb-2">
-                              Selected Assets ({selectedAssets.length}/2) - Click to remove
-                              {selectedAssets.length >= 2 && (
+                              Selected Assets ({existingPortfolioSymbols.length + selectedAssets.length}/{config.app.maxAssetsPerUser}) - Click to remove
+                              {(existingPortfolioSymbols.length + selectedAssets.length) >= config.app.maxAssetsPerUser && (
                                 <span className="text-yellow-400 text-sm ml-2">(Maximum reached)</span>
                               )}
                             </h4>
@@ -747,7 +885,7 @@ export default function HomePage() {
                       size="icon" 
                       className="bg-blue-600 hover:bg-blue-700 shadow-md transition-colors" 
                       onClick={handleSendMessage}
-                      disabled={!user || !message.trim()}
+                      disabled={!user || (selectedAssets.length === 0 && !message.trim())}
                     >
                       <Send className="h-4 w-4" />
                     </Button>
@@ -765,6 +903,7 @@ export default function HomePage() {
                     to start collaborating with Financial Feeling
                   </p>
                 )}
+                {/* Inline badges are rendered inside the input row above */}
               </div>
             </div>
 
