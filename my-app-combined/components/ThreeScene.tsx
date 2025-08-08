@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 export default function ThreeScene() {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -11,6 +12,7 @@ export default function ThreeScene() {
   const animationIdRef = useRef<number | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const [isInteracting, setIsInteracting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -27,7 +29,7 @@ export default function ThreeScene() {
       0.1,
       1000
     );
-    camera.position.set(0, 0, 5);
+    camera.position.set(0, 2, 5);
 
     // Renderer setup
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -35,6 +37,7 @@ export default function ThreeScene() {
     renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
     mountRef.current.appendChild(renderer.domElement);
 
     // OrbitControls setup
@@ -43,9 +46,9 @@ export default function ThreeScene() {
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.screenSpacePanning = false;
-    controls.minDistance = 2;
-    controls.maxDistance = 10;
-    controls.maxPolarAngle = Math.PI;
+    controls.minDistance = 3;
+    controls.maxDistance = 15;
+    controls.maxPolarAngle = Math.PI * 0.9;
     controls.enableZoom = true;
     controls.enableRotate = true;
     controls.enablePan = true;
@@ -60,12 +63,14 @@ export default function ThreeScene() {
     controls.addEventListener('end', handleEnd);
 
     // Lighting
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.8);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(5, 5, 5);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    directionalLight.position.set(5, 10, 5);
     directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
     scene.add(directionalLight);
 
     const pointLight = new THREE.PointLight(0xffd700, 1, 100);
@@ -74,7 +79,7 @@ export default function ThreeScene() {
 
     // Add a spotlight for dramatic effect
     const spotlight = new THREE.SpotLight(0xffffff, 1);
-    spotlight.position.set(0, 10, 0);
+    spotlight.position.set(0, 15, 0);
     spotlight.angle = Math.PI / 6;
     spotlight.penumbra = 0.1;
     spotlight.decay = 2;
@@ -82,8 +87,58 @@ export default function ThreeScene() {
     spotlight.castShadow = true;
     scene.add(spotlight);
 
-    // Create a simple bull head using geometry
-    const createBullHead = () => {
+    // Load the real bull model
+    const loader = new GLTFLoader();
+    let bullModel: THREE.Group | null = null;
+
+    loader.load(
+      '/wall-street-charging-bull/source/poly.glb',
+      (gltf) => {
+        bullModel = gltf.scene;
+        
+        // Scale and position the model
+        bullModel.scale.set(0.5, 0.5, 0.5);
+        bullModel.position.set(0, -1, 0);
+        
+        // Enable shadows for all meshes
+        bullModel.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+            
+            // Enhance materials if they exist
+            if (child.material) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach(mat => {
+                  if (mat instanceof THREE.MeshStandardMaterial) {
+                    mat.metalness = 0.3;
+                    mat.roughness = 0.7;
+                  }
+                });
+              } else if (child.material instanceof THREE.MeshStandardMaterial) {
+                child.material.metalness = 0.3;
+                child.material.roughness = 0.7;
+              }
+            }
+          }
+        });
+        
+        scene.add(bullModel);
+        setIsLoading(false);
+      },
+      (progress) => {
+        console.log('Loading progress:', (progress.loaded / progress.total * 100) + '%');
+      },
+      (error) => {
+        console.error('Error loading model:', error);
+        setIsLoading(false);
+        // Fallback to simple geometry if model fails to load
+        createFallbackBull();
+      }
+    );
+
+    // Fallback bull creation function
+    const createFallbackBull = () => {
       const group = new THREE.Group();
 
       // Bull head (main body)
@@ -133,11 +188,9 @@ export default function ThreeScene() {
       nose.position.set(0, -0.5, 1.5);
       group.add(nose);
 
-      return group;
+      bullModel = group;
+      scene.add(bullModel);
     };
-
-    const bullHead = createBullHead();
-    scene.add(bullHead);
 
     // Add a ground plane for shadows
     const groundGeometry = new THREE.PlaneGeometry(20, 20);
@@ -157,13 +210,16 @@ export default function ThreeScene() {
         controls.update();
       }
 
-      // Subtle head movement
-      if (bullHead) {
-        bullHead.rotation.x = Math.sin(Date.now() * 0.001) * 0.1;
-        
-        // Add breathing effect
+      // Animate the bull model
+      if (bullModel) {
+        // Subtle breathing effect
         const scale = 1 + Math.sin(Date.now() * 0.002) * 0.02;
-        bullHead.scale.set(scale, scale, scale);
+        bullModel.scale.set(scale * 0.5, scale * 0.5, scale * 0.5);
+        
+        // Gentle rotation when not interacting
+        if (!isInteracting) {
+          bullModel.rotation.y += 0.005;
+        }
       }
 
       // Animate lights
@@ -213,6 +269,15 @@ export default function ThreeScene() {
         isInteracting ? 'cursor-grabbing' : 'cursor-grab'
       }`}
       style={{ background: 'linear-gradient(to bottom, #1a1a1a, #000000)' }}
-    />
+    >
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
+          <div className="text-white text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-400 mx-auto mb-4"></div>
+            <p>Cargando modelo 3D del Toro de Wall Street...</p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 } 
