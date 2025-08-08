@@ -22,14 +22,14 @@ export default function ThreeScene() {
     sceneRef.current = scene;
     scene.background = new THREE.Color(0x000000);
 
-    // Camera setup
+    // Camera setup - Ajustar posición más cerca
     const camera = new THREE.PerspectiveCamera(
       75,
       mountRef.current.clientWidth / mountRef.current.clientHeight,
       0.1,
       1000
     );
-    camera.position.set(0, 2, 5);
+    camera.position.set(0, 1, 3); // Más cerca del modelo
 
     // Renderer setup
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -40,19 +40,19 @@ export default function ThreeScene() {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     mountRef.current.appendChild(renderer.domElement);
 
-    // OrbitControls setup
+    // OrbitControls setup - Ajustar límites
     const controls = new OrbitControls(camera, renderer.domElement);
     controlsRef.current = controls;
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.screenSpacePanning = false;
-    controls.minDistance = 3;
-    controls.maxDistance = 15;
+    controls.minDistance = 1.5; // Más cerca
+    controls.maxDistance = 8; // Más cerca
     controls.maxPolarAngle = Math.PI * 0.9;
     controls.enableZoom = true;
     controls.enableRotate = true;
     controls.enablePan = true;
-    controls.autoRotate = true;
+    controls.autoRotate = false; // Desactivar auto-rotación para mejor control
     controls.autoRotateSpeed = 0.5;
 
     // Add event listeners for interaction feedback
@@ -96,9 +96,9 @@ export default function ThreeScene() {
       (gltf) => {
         bullModel = gltf.scene;
         
-        // Scale and position the model
-        bullModel.scale.set(0.5, 0.5, 0.5);
-        bullModel.position.set(0, -1, 0);
+        // Scale and position the model - Ajustar escala y posición
+        bullModel.scale.set(0.8, 0.8, 0.8); // Más grande
+        bullModel.position.set(0, -0.5, 0); // Más cerca del centro
         
         // Enable shadows for all meshes
         bullModel.traverse((child) => {
@@ -125,6 +125,21 @@ export default function ThreeScene() {
         
         scene.add(bullModel);
         setIsLoading(false);
+        
+        // Ajustar la cámara para enfocar el modelo
+        const box = new THREE.Box3().setFromObject(bullModel);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        
+        // Posicionar la cámara para ver todo el modelo
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const fov = camera.fov * (Math.PI / 180);
+        let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+        
+        camera.position.set(0, center.y, cameraZ * 1.5);
+        camera.lookAt(center);
+        controls.target.copy(center);
+        controls.update();
       },
       (progress) => {
         console.log('Loading progress:', (progress.loaded / progress.total * 100) + '%');
@@ -214,12 +229,7 @@ export default function ThreeScene() {
       if (bullModel) {
         // Subtle breathing effect
         const scale = 1 + Math.sin(Date.now() * 0.002) * 0.02;
-        bullModel.scale.set(scale * 0.5, scale * 0.5, scale * 0.5);
-        
-        // Gentle rotation when not interacting
-        if (!isInteracting) {
-          bullModel.rotation.y += 0.005;
-        }
+        bullModel.scale.set(scale * 0.8, scale * 0.8, scale * 0.8);
       }
 
       // Animate lights
