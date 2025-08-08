@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Plus, Send, LogOut, User, BarChart3, Zap, Search, Star, TrendingUp, DollarSign, Bitcoin, Building2, X } from 'lucide-react'
 import SimpleTypewriter from '@/components/simple-typewriter'
 import { getRandomText } from '@/lib/texts'
+import Header from '@/components/header'
 
 import {
   DropdownMenu,
@@ -80,7 +81,8 @@ export default function HomePage() {
       title: 'Enter Stock Symbols',
       description:
         'Type the stock symbols you want to analyze, separated by commas. Example: AAPL, TSLA, MSFT, GOOGL',
-      color: '#3b82f6'
+      color: '#3b82f6',
+      background: '/backgrounds/stock-analysis-bg.jpg' // Background para la primera slide
     },
     {
       id: 2,
@@ -98,10 +100,10 @@ export default function HomePage() {
     },
     {
       id: 4,
-      title: 'A good company with bad news is a BUY',
+      title: 'Make Informed Decisions',
       description:
-        'Use the insights to make informed trading decisions.',
-      color: '#a855f7'
+        'Use our comprehensive analysis to make informed trading decisions with confidence and precision.',
+      color: '#8b5cf6'
     }
   ]
 
@@ -465,40 +467,8 @@ export default function HomePage() {
       {/* Gradiente fijo oscuro violeta y azul */}
       <div className="fixed inset-0 z-0 bg-gradient-to-br from-black via-purple-900 via-indigo-900 to-black"></div>
       <div className="relative z-10">
-        {/* Dashboard Button - Top Left */}
-        <div className="fixed top-4 left-4 z-50">
-          <div className="flex flex-col items-center space-y-2">
-            {/* FF superpuestas como en SharedSidebar */}
-            <div className="relative">
-              <div className="text-white text-xl font-bold">FF</div>
-              <div className="absolute top-0 right-0.5 text-white text-xl font-bold">FF</div>
-            </div>
-            {user ? (
-              <Button
-                size="icon"
-                className={`text-white transition-all duration-500 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 border border-gray-600 ${getDashboardColorClasses()}`}
-                onClick={() => router.push(getRoute('/dashboard'))}
-              >
-                <BarChart3 className="h-4 w-4" />
-              </Button>
-            ) : (
-              <div className="relative group">
-                <Button
-                  size="icon"
-                  className={`text-white transition-all duration-500 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 border border-gray-600 cursor-not-allowed ${getDashboardColorClasses()}`}
-                  disabled
-                >
-                  <BarChart3 className="h-4 w-4" />
-                </Button>
-                {/* Tooltip */}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
-                  Login to access Dashboard
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        {/* Header */}
+        <Header user={user} onSignOut={handleSignOut} />
 
         {/* Shared Sidebar */}
         <SharedSidebar 
@@ -507,52 +477,8 @@ export default function HomePage() {
         />
 
         {/* Main Content */}
-        <div className="ml-16 p-8">
+        <div className="ml-16 pt-24 p-8">
           <div className="max-w-6xl mx-auto">
-            {/* Header with Auth */}
-            <div className="flex justify-between items-center mb-8">
-              <div></div>
-              <div>
-                {user ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-8 w-8 rounded-full hover:bg-gray-800 transition-colors">
-                        <Avatar className="h-8 w-8 shadow-md bg-white text-black">
-                          <AvatarImage src="/avatars/01.png" alt={user.email} />
-                          <AvatarFallback className="bg-white text-black">{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-80 bg-gray-900 border-gray-700 shadow-xl" align="end" forceMount>
-                      <DropdownMenuLabel className="font-normal">
-                        <div className="flex flex-col space-y-1">
-                          <p className="text-sm font-medium leading-none text-white">{user.email}</p>
-                        </div>
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={handleSignOut}
-                        className="text-red-400 hover:text-red-300 hover:bg-gray-800 transition-colors"
-                      >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span>Log out</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <div className="space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      onClick={() => router.push('/login')}
-                      className="text-gray-300 hover:text-white hover:bg-gray-800 transition-colors"
-                    >
-                      Login to FF
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-
             {/* Main Content */}
             <div className="text-center mb-12">
               <h1 className="text-4xl font-bold mb-2">
@@ -598,11 +524,21 @@ export default function HomePage() {
                               onClick={() => handleAutocompleteSelect(asset)}
                             >
                               <div className="flex items-center justify-between">
-                                <div>
-                                  <div className="text-white font-semibold">{asset.symbol}</div>
-                                  <div className="text-gray-400 text-sm">{asset.name}</div>
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
+                                    {asset.symbol.charAt(0)}
+                                  </div>
+                                  <div>
+                                    <div className="text-white font-semibold">{asset.symbol}</div>
+                                    <div className="text-gray-400 text-sm">{asset.name}</div>
+                                  </div>
                                 </div>
-                                <div className="text-gray-500 text-xs">{asset.type}</div>
+                                <div className="text-right">
+                                  <div className="text-white font-semibold">${asset.price}</div>
+                                  <div className={`text-sm ${asset.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                    {asset.change >= 0 ? '+' : ''}{asset.change}%
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           ))}
@@ -610,150 +546,118 @@ export default function HomePage() {
                       )}
                     </div>
                     
-                    <div className="flex items-center space-x-2">
-                      {/* Show + button for both logged in and not logged in users */}
-                      <Dialog open={showAssetSelector} onOpenChange={setShowAssetSelector}>
-                        <DialogTrigger asChild>
-                          <Button
-                            size="icon"
-                            className={`shadow-md transition-colors ${
-                              user 
-                                ? 'bg-green-600 hover:bg-green-700' 
-                                : 'bg-gray-600 hover:bg-gray-700'
-                            }`}
-                            onClick={user ? handleOpenAssetSelector : () => router.push(getRoute('/login'))}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        {user && (
-                          <DialogContent className="bg-gray-900 border-gray-700 max-w-4xl max-h-[80vh] overflow-hidden">
-                            <DialogHeader className="relative">
-                              <DialogTitle className="text-white flex items-center gap-2">
-                                <Star className="h-5 w-5" />
-                                Select Financial Assets for Your Portfolio
-                              </DialogTitle>
-                              <DialogDescription className="text-gray-400">
-                                Choose from a wide range of stocks, cryptocurrencies, ETFs, commodities, and forex pairs.
-                              </DialogDescription>
-                              
-                              {/* Save & Close Button - Top Right */}
-                              <div className="absolute top-0 right-0">
-                                <Button
-                                  onClick={savePortfolio}
-                                  disabled={selectedAssets.length === 0}
-                                  className="bg-black hover:bg-gray-800 text-white"
-                                >
-                                  {hasPortfolioChanges() ? `Save & Close (${selectedAssets.length} assets)` : 'Close'}
-                                </Button>
-                              </div>
-                            </DialogHeader>
-                            
-                            <div className="space-y-4">
-                              {/* Search */}
-                              <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                                <Input
-                                  placeholder="Search assets by symbol, name, or category..."
-                                  value={searchTerm}
-                                  onChange={(e) => setSearchTerm(e.target.value)}
-                                  className="pl-10 bg-gray-800 border-gray-600 text-white"
-                                />
-                              </div>
-
-                              {/* Asset Categories */}
-                              <div className="flex flex-wrap gap-2 mb-4">
-                                {['All', 'Technology', 'Finance', 'Healthcare', 'Energy', 'Cryptocurrency', 'Index', 'International', 'Commodity', 'Currency'].map(category => (
-                                  <Badge
-                                    key={category}
-                                    variant={searchTerm === category ? "default" : "secondary"}
-                                    className="cursor-pointer hover:bg-blue-600"
-                                    onClick={() => setSearchTerm(category === 'All' ? '' : category)}
-                                  >
-                                    {category}
-                                  </Badge>
-                                ))}
-                              </div>
-
-                              {/* Assets Grid */}
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
-                                {filteredAssets.map((asset) => (
-                                  <div
-                                    key={asset.symbol}
-                                    className={`p-3 rounded-lg border cursor-pointer transition-all relative ${
-                                      selectedAssets.includes(asset.symbol)
-                                        ? 'bg-blue-600 border-blue-500 text-white'
-                                        : 'bg-gray-800 border-gray-600 hover:bg-gray-700 text-gray-300'
-                                    }`}
-                                    onClick={() => handleAssetSelection(asset.symbol)}
-                                  >
-                                    <div className="text-center">
-                                      <div className="font-semibold text-lg mb-1">{asset.symbol}</div>
-                                      <div className="text-xs opacity-75 mb-1">{asset.name}</div>
-                                      <div className="text-xs opacity-75">{asset.type}</div>
+                    <Button 
+                      size="icon" 
+                      className="bg-blue-600 hover:bg-blue-700 shadow-md transition-colors" 
+                      onClick={handleOpenAssetSelector}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                    
+                    <Dialog open={showAssetSelector} onOpenChange={setShowAssetSelector}>
+                      <DialogContent className="bg-gray-900 border-gray-700 max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle className="text-white">Select Assets</DialogTitle>
+                          <DialogDescription className="text-gray-400">
+                            Choose up to 2 assets to analyze. You can search by symbol or name.
+                          </DialogDescription>
+                        </DialogHeader>
+                        
+                        {/* Search */}
+                        <div className="relative mb-4">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                          <Input
+                            placeholder="Search assets..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10 bg-gray-800 border-gray-600 text-white placeholder-gray-400"
+                          />
+                        </div>
+                        
+                        {/* Asset Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                          {financialAssets
+                            .filter(asset => 
+                              asset.symbol.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              asset.name.toLowerCase().includes(searchTerm.toLowerCase())
+                            )
+                            .map(asset => (
+                              <div
+                                key={asset.symbol}
+                                className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                                  selectedAssets.includes(asset.symbol)
+                                    ? 'bg-blue-600 border-blue-500'
+                                    : 'bg-gray-800 border-gray-600 hover:bg-gray-700'
+                                }`}
+                                onClick={() => handleAssetSelection(asset.symbol)}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                                      {asset.symbol.charAt(0)}
                                     </div>
-                                    
-                                    {/* Checkmark for selected assets */}
-                                    {selectedAssets.includes(asset.symbol) && (
-                                      <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1">
-                                        <div className="w-2 h-2 bg-white rounded-full"></div>
-                                      </div>
-                                    )}
+                                    <div>
+                                      <div className="text-white font-semibold">{asset.symbol}</div>
+                                      <div className="text-gray-400 text-sm">{asset.name}</div>
+                                    </div>
                                   </div>
-                                ))}
-                              </div>
-
-                              {/* Selected Assets */}
-                              {selectedAssets.length > 0 && (
-                                <div className="border-t border-gray-700 pt-4">
-                                  <h4 className="text-white font-semibold mb-2">
-                                    Selected Assets ({selectedAssets.length}/2) - Click to remove
-                                    {selectedAssets.length >= 2 && (
-                                      <span className="text-yellow-400 text-sm ml-2">(Maximum reached)</span>
-                                    )}
-                                  </h4>
-                                  <div className="flex flex-wrap gap-2">
-                                    {selectedAssets.map(symbol => {
-                                      const asset = financialAssets.find(a => a.symbol === symbol)
-                                      return (
-                                        <Badge 
-                                          key={symbol} 
-                                          className="bg-blue-600 hover:bg-red-600 cursor-pointer transition-colors flex items-center gap-1"
-                                          onClick={() => handleAssetSelection(symbol)}
-                                        >
-                                          {symbol}
-                                          <X className="h-3 w-3 hover:text-red-200" />
-                                        </Badge>
-                                      )
-                                    })}
+                                  <div className="text-right">
+                                    <div className="text-gray-400 text-sm">{asset.type}</div>
+                                    <div className="text-gray-500 text-xs">{asset.category}</div>
                                   </div>
                                 </div>
-                              )}
-
-                              {/* Cancel Button */}
-                              <div className="flex justify-end pt-4 border-t border-gray-700">
-                                <Button
-                                  variant="outline"
-                                  onClick={() => setShowAssetSelector(false)}
-                                  className="border-red-600 text-red-600 hover:bg-red-600 hover:text-black"
-                                >
-                                  Cancel
-                                </Button>
                               </div>
+                            ))}
+                        </div>
+
+                        {/* Selected Assets */}
+                        {selectedAssets.length > 0 && (
+                          <div className="border-t border-gray-700 pt-4">
+                            <h4 className="text-white font-semibold mb-2">
+                              Selected Assets ({selectedAssets.length}/2) - Click to remove
+                              {selectedAssets.length >= 2 && (
+                                <span className="text-yellow-400 text-sm ml-2">(Maximum reached)</span>
+                              )}
+                            </h4>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedAssets.map(symbol => {
+                                const asset = financialAssets.find(a => a.symbol === symbol)
+                                return (
+                                  <Badge 
+                                    key={symbol} 
+                                    className="bg-blue-600 hover:bg-red-600 cursor-pointer transition-colors flex items-center gap-1"
+                                    onClick={() => handleAssetSelection(symbol)}
+                                  >
+                                    {symbol}
+                                    <X className="h-3 w-3 hover:text-red-200" />
+                                  </Badge>
+                                )
+                              })}
                             </div>
-                          </DialogContent>
+                          </div>
                         )}
-                      </Dialog>
-                      
-                      <Button 
-                        size="icon" 
-                        className="bg-blue-600 hover:bg-blue-700 shadow-md transition-colors" 
-                        onClick={handleSendMessage}
-                        disabled={!user || !message.trim()}
-                      >
-                        <Send className="h-4 w-4" />
-                      </Button>
-                    </div>
+
+                        {/* Cancel Button */}
+                        <div className="flex justify-end pt-4 border-t border-gray-700">
+                          <Button
+                            variant="outline"
+                            onClick={() => setShowAssetSelector(false)}
+                            className="border-red-600 text-red-600 hover:bg-red-600 hover:text-black"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    
+                    <Button 
+                      size="icon" 
+                      className="bg-blue-600 hover:bg-blue-700 shadow-md transition-colors" 
+                      onClick={handleSendMessage}
+                      disabled={!user || !message.trim()}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
                 {!user && (
@@ -799,17 +703,64 @@ export default function HomePage() {
               </div>
             )}
 
-            {/* How to Use Section */}
-            <div className="mb-5">
+            {/* 1. Daily Picks Section - MOVED TO FIRST */}
+            <div className="mb-12">
+              <h2 className="text-6xl font-bold mb-6 text-center">Our daily picks</h2>                        
 
-                              <Card className="bg-transparent border-transparent shadow-none">
-                  <CardContent className="p-8">
-                    <div ref={glideRef} className="glide">
-                      <div className="glide__track" data-glide-el="track">
-                        <ul className="glide__slides">
-                          {howToSteps.map(step => (
-                            <li key={step.id} className="glide__slide text-center flex flex-col justify-center min-h-[280px]">
-                              <div className="bg-black/20 backdrop-blur-md rounded-lg p-8 mx-8 border border-white/60 shadow-2xl shadow-black/50">
+              {!loadingCharts && (
+                <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {stockCharts.map(stock => (
+                    stock.data.length === 0 ? (
+                      <div key={stock.symbol} className="text-red-400 bg-black/60 rounded-lg p-4 mb-4">
+                        No hay datos para {stock.symbol}
+                      </div>
+                    ) : (
+                      <div key={stock.symbol} className="relative">
+                        <CandleChart symbol={stock.symbol} data={stock.data} />
+                        <div className="absolute top-2 right-2 z-10">
+                          <Button
+                            onClick={() => router.push(`/dashboard?symbol=${stock.symbol}`)}
+                            size="sm"
+                            className="bg-gray-500 hover:bg-gray-700 text-white shadow-lg backdrop-blur-md"
+                          >
+                            <BarChart3 className="w-4 h-4 mr-1" />
+                            Analyze
+                          </Button>
+                        </div>
+                      </div>
+                    )
+                  ))}
+                </div>
+              )}
+              {loadingCharts && (
+                <div className="mt-8 text-center text-white">Cargando gráficos de acciones...</div>
+              )}
+            </div>
+
+            {/* 2. Learn to Use Section - MOVED TO SECOND */}
+            <div className="mb-12">
+              <h2 className="text-4xl font-bold mb-6 text-center">Learn to Use Financial Analysis</h2>
+              <Card className="bg-transparent border-transparent shadow-none">
+                <CardContent className="p-8">
+                  <div ref={glideRef} className="glide">
+                    <div className="glide__track" data-glide-el="track">
+                      <ul className="glide__slides">
+                        {howToSteps.map(step => (
+                          <li key={step.id} className="glide__slide text-center flex flex-col justify-center min-h-[280px]">
+                            <div 
+                              className="bg-black/20 backdrop-blur-md rounded-lg p-8 mx-8 border border-white/60 shadow-2xl shadow-black/50 relative overflow-hidden"
+                              style={{
+                                backgroundImage: step.background ? `url(${step.background})` : 'none',
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                                backgroundBlendMode: step.background ? 'overlay' : 'normal'
+                              }}
+                            >
+                              {/* Overlay para mejorar legibilidad cuando hay background */}
+                              {step.background && (
+                                <div className="absolute inset-0 bg-black/40"></div>
+                              )}
+                              <div className="relative z-10">
                                 <h3 className="mb-4 text-3xl font-semibold text-white" style={{ color: step.color }}>
                                   {step.title}
                                 </h3>
@@ -817,61 +768,32 @@ export default function HomePage() {
                                   {step.description}
                                 </p>
                               </div>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="glide__arrows" data-glide-el="controls">
-                        <button className="glide__arrow glide__arrow--left bg-white/20 backdrop-blur-md rounded-full p-3 hover:bg-white/30 transition-colors" data-glide-dir="<">
-                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                          </svg>
-                        </button>
-                        <button className="glide__arrow glide__arrow--right bg-white/20 backdrop-blur-md rounded-full p-3 hover:bg-white/30 transition-colors" data-glide-dir=">">
-                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </button>
-                      </div>
-                      <div className="glide__bullets" data-glide-el="controls[nav]">
-                        {howToSteps.map((_, idx) => (
-                          <button key={idx} className="glide__bullet" data-glide-dir={`=${idx}`}></button>
+                            </div>
+                          </li>
                         ))}
-                      </div>
+                      </ul>
                     </div>
-                  </CardContent>
-                </Card>
+                    <div className="glide__arrows" data-glide-el="controls">
+                      <button className="glide__arrow glide__arrow--left bg-white/20 backdrop-blur-md rounded-full p-3 hover:bg-white/30 transition-colors" data-glide-dir="<">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                      <button className="glide__arrow glide__arrow--right bg-white/20 backdrop-blur-md rounded-full p-3 hover:bg-white/30 transition-colors" data-glide-dir=">">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                    <div className="glide__bullets" data-glide-el="controls[nav]">
+                      {howToSteps.map((_, idx) => (
+                        <button key={idx} className="glide__bullet" data-glide-dir={`=${idx}`}></button>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-              <h2 className="text-6xl font-bold mb-6 text-center">Our daily picks</h2>                        
-
-            {!loadingCharts && (
-              <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                {stockCharts.map(stock => (
-                  stock.data.length === 0 ? (
-                    <div key={stock.symbol} className="text-red-400 bg-black/60 rounded-lg p-4 mb-4">
-                      No hay datos para {stock.symbol}
-                    </div>
-                  ) : (
-                    <div key={stock.symbol} className="relative">
-                      <CandleChart symbol={stock.symbol} data={stock.data} />
-                      <div className="absolute top-2 right-2 z-10">
-                        <Button
-                          onClick={() => router.push(`/dashboard?symbol=${stock.symbol}`)}
-                          size="sm"
-                          className="bg-gray-500 hover:bg-gray-700 text-white shadow-lg backdrop-blur-md"
-                        >
-                          <BarChart3 className="w-4 h-4 mr-1" />
-                          Analyze
-                        </Button>
-                      </div>
-                    </div>
-                  )
-                ))}
-              </div>
-            )}
-            {loadingCharts && (
-              <div className="mt-8 text-center text-white">Cargando gráficos de acciones...</div>
-            )}
 
             {/* Stock Analysis Section */}
             {user && (
