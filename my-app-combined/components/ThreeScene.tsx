@@ -29,7 +29,7 @@ export default function ThreeScene() {
       0.1,
       1000
     );
-    camera.position.set(0, 1, 3); // Más cerca del modelo
+    camera.position.set(0, 1, 3);
 
     // Renderer setup
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -46,21 +46,72 @@ export default function ThreeScene() {
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.screenSpacePanning = false;
-    controls.minDistance = 1.5; // Más cerca
-    controls.maxDistance = 8; // Más cerca
+    controls.minDistance = 1.5;
+    controls.maxDistance = 8;
     controls.maxPolarAngle = Math.PI * 0.9;
     controls.enableZoom = true;
     controls.enableRotate = true;
     controls.enablePan = true;
-    controls.autoRotate = false; // Desactivar auto-rotación para mejor control
+    controls.autoRotate = true; // Habilitar auto-rotación
     controls.autoRotateSpeed = 0.5;
 
     // Add event listeners for interaction feedback
-    const handleStart = () => setIsInteracting(true);
-    const handleEnd = () => setIsInteracting(false);
+    const handleStart = () => {
+      console.log('Interaction started');
+      setIsInteracting(true);
+      controls.autoRotate = false; // Detener auto-rotación al interactuar
+    };
+    
+    const handleEnd = () => {
+      console.log('Interaction ended');
+      setIsInteracting(false);
+      // Reanudar auto-rotación después de un delay
+      setTimeout(() => {
+        if (!isInteracting) {
+          controls.autoRotate = true;
+        }
+      }, 2000);
+    };
+
+    // Agregar event listeners adicionales para mejor detección
+    const handleMouseDown = () => {
+      console.log('Mouse down detected');
+      setIsInteracting(true);
+      controls.autoRotate = false;
+    };
+
+    const handleMouseUp = () => {
+      console.log('Mouse up detected');
+      setTimeout(() => {
+        setIsInteracting(false);
+        controls.autoRotate = true;
+      }, 2000);
+    };
+
+    const handleTouchStart = () => {
+      console.log('Touch start detected');
+      setIsInteracting(true);
+      controls.autoRotate = false;
+    };
+
+    const handleTouchEnd = () => {
+      console.log('Touch end detected');
+      setTimeout(() => {
+        setIsInteracting(false);
+        controls.autoRotate = true;
+      }, 2000);
+    };
 
     controls.addEventListener('start', handleStart);
     controls.addEventListener('end', handleEnd);
+
+    // Agregar event listeners al DOM
+    if (mountRef.current) {
+      mountRef.current.addEventListener('mousedown', handleMouseDown);
+      mountRef.current.addEventListener('mouseup', handleMouseUp);
+      mountRef.current.addEventListener('touchstart', handleTouchStart);
+      mountRef.current.addEventListener('touchend', handleTouchEnd);
+    }
 
     // Lighting
     const ambientLight = new THREE.AmbientLight(0x404040, 0.8);
@@ -97,8 +148,8 @@ export default function ThreeScene() {
         bullModel = gltf.scene;
         
         // Scale and position the model - Ajustar escala y posición
-        bullModel.scale.set(0.8, 0.8, 0.8); // Más grande
-        bullModel.position.set(0, -0.5, 0); // Más cerca del centro
+        bullModel.scale.set(0.8, 0.8, 0.8);
+        bullModel.position.set(0, -0.5, 0);
         
         // Enable shadows for all meshes
         bullModel.traverse((child) => {
@@ -147,7 +198,6 @@ export default function ThreeScene() {
       (error) => {
         console.error('Error loading model:', error);
         setIsLoading(false);
-        // Fallback to simple geometry if model fails to load
         createFallbackBull();
       }
     );
@@ -230,6 +280,11 @@ export default function ThreeScene() {
         // Subtle breathing effect
         const scale = 1 + Math.sin(Date.now() * 0.002) * 0.02;
         bullModel.scale.set(scale * 0.8, scale * 0.8, scale * 0.8);
+        
+        // Auto-rotation when not interacting
+        if (!isInteracting && controls.autoRotate) {
+          bullModel.rotation.y += 0.01;
+        }
       }
 
       // Animate lights
@@ -261,6 +316,12 @@ export default function ThreeScene() {
       if (controls) {
         controls.removeEventListener('start', handleStart);
         controls.removeEventListener('end', handleEnd);
+      }
+      if (mountRef.current) {
+        mountRef.current.removeEventListener('mousedown', handleMouseDown);
+        mountRef.current.removeEventListener('mouseup', handleMouseUp);
+        mountRef.current.removeEventListener('touchstart', handleTouchStart);
+        mountRef.current.removeEventListener('touchend', handleTouchEnd);
       }
       if (animationIdRef.current) {
         cancelAnimationFrame(animationIdRef.current);
