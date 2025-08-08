@@ -345,7 +345,7 @@ export default function ThreeScene() {
         <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-10">
           <div className="text-white text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-400 mx-auto mb-4"></div>
-            <p>Cargando modelo 3D del Toro de Wall Street...</p>
+            <p>Loading Wall Street Bull 3D model...</p>
           </div>
         </div>
       )}

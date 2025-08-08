@@ -4,11 +4,11 @@ import React, { useState, useEffect, Suspense } from "react";
 import dynamic from 'next/dynamic';
 
 // Dynamic imports for Three.js components to avoid SSR issues
-const ThreeScene = dynamic(() => import('./ThreeScene'), { 
+const ThreeScene = dynamic(() => import('./ThreeScene'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-[80vh] bg-gradient-to-b from-neutral-900 to-black rounded-2xl relative flex items-center justify-center">
-      <div className="text-white text-lg">Cargando modelo 3D interactivo...</div>
+      <div className="text-white text-lg">Loading interactive 3D model...</div>
     </div>
   )
 });
@@ -47,9 +47,10 @@ export default function BullHead3D() {
 
   return (
     <div className="w-full h-[80vh] bg-gradient-to-b from-neutral-900 to-black rounded-2xl relative overflow-hidden">
+      {/* Title and description */}
       <div className="absolute z-10 left-4 top-4 text-white">
-        <h1 className="text-xl font-semibold">Financial Feeling — Toro 3D</h1>
-        <p className="text-xs opacity-80">Modelo 3D interactivo del Toro de Wall Street</p>
+        <h1 className="text-xl font-semibold">Financial Feeling — Interactive 3D Bull</h1>
+        <p className="text-xs opacity-80">Drag to rotate • Scroll to zoom • Double click to center</p>
       </div>
 
       {/* Interactive Instructions */}

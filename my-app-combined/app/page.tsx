@@ -778,14 +778,14 @@ export default function HomePage() {
 
             {/* 1. Daily Picks Section - MOVED TO FIRST */}
             <div className="mb-12">
-              <h2 className="text-6xl font-bold mb-6 text-center">Our daily picks</h2>                        
+              <h2 className="text-6xl font-bold mb-6 text-center">Our Daily Picks</h2>                        
 
               {!loadingCharts && (
                 <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                   {stockCharts.map(stock => (
                     stock.data.length === 0 ? (
                       <div key={stock.symbol} className="text-red-400 bg-black/60 rounded-lg p-4 mb-4">
-                        No hay datos para {stock.symbol}
+                        No data available for {stock.symbol}
                       </div>
                     ) : (
                       <div key={stock.symbol} className="relative">
@@ -806,7 +806,7 @@ export default function HomePage() {
                 </div>
               )}
               {loadingCharts && (
-                <div className="mt-8 text-center text-white">Cargando gráficos de acciones...</div>
+                <div className="mt-8 text-center text-white">Loading stock charts...</div>
               )}
             </div>
 
@@ -858,9 +858,28 @@ export default function HomePage() {
 
             {/* 3. 3D Bull Model Section */}
             <div className="mb-12">
-              <h2 className="text-4xl font-bold mb-6 text-center">3D Bull</h2>
+              <h2 className="text-4xl font-bold mb-6 text-center">Interactive 3D Bull</h2>
               <BullHead3D />
             </div>
+
+            {/* Dashboard Section - Show when user is logged in */}
+            {user && (
+              <div className="mb-8">
+                <div className="text-center mb-6">
+                  <h2 className="text-xl font-semibold mb-2">Access Your Dashboard</h2>
+                  <p className="text-gray-400">View your portfolio, analysis results, and trading insights</p>
+                </div>
+                <div className="flex justify-center">
+                  <Button
+                    onClick={() => router.push(getRoute('/dashboard'))}
+                    className="bg-green-600 hover:bg-green-700 text-white shadow-md transition-colors"
+                  >
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Go to Dashboard
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Stock Analysis Section */}
             {user && (

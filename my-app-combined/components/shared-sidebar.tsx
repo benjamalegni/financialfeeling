@@ -13,16 +13,16 @@ export default function SharedSidebar({ selectedAssets = [], onAnalysisComplete 
 
   const handleRunAnalysis = async () => {
     if (selectedAssets.length === 0) {
-      alert('❌ No hay assets seleccionados para analizar. Selecciona assets en tu portfolio primero.');
+      alert('❌ No assets selected for analysis. Select assets in your portfolio first.');
       return;
     }
 
     setIsLoading(true);
     try {
-      console.log('Iniciando análisis de acciones...', selectedAssets);
+      console.log('Starting stock analysis...', selectedAssets);
       
       const data = await analyzeStocks(selectedAssets);
-      console.log('Análisis completado:', data);
+      console.log('Analysis completed:', data);
       
       // Llamar al callback para actualizar el dashboard
       if (onAnalysisComplete) {
@@ -30,18 +30,18 @@ export default function SharedSidebar({ selectedAssets = [], onAnalysisComplete 
       }
       
       // Mostrar resultados más detallados
-      let message = '✅ Análisis de acciones completado!\n\n';
+      let message = '✅ Stock analysis completed!\n\n';
       if (data && data.stocks) {
         data.stocks.forEach((stock: any) => {
-          message += `${stock.symbol}: ${stock.analysis.sentiment} (${stock.analysis.confidence}% confianza)\n`;
-          message += `Recomendación: ${stock.analysis.recommendation}\n\n`;
+          message += `${stock.symbol}: ${stock.analysis.sentiment} (${stock.analysis.confidence}% confidence)\n`;
+          message += `Recommendation: ${stock.analysis.recommendation}\n\n`;
         });
       }
       
       alert(message);
     } catch (error) {
-      console.error('Error en el análisis:', error);
-      alert('❌ Error al realizar el análisis');
+      console.error('Error in analysis:', error);
+      alert('❌ Error performing analysis');
     } finally {
       setIsLoading(false);
     }
