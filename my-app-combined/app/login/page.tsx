@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/database.types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,7 +23,11 @@ export default function LoginPage() {
   // Create Supabase client with fallback for build time
   const supabaseUrl = config.supabase.url
   const supabaseKey = config.supabase.anonKey
-  const supabase = createBrowserClient<Database>(supabaseUrl, supabaseKey)
+  const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
+    auth: {
+      flowType: 'pkce',
+    },
+  })
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -81,7 +85,6 @@ export default function LoginPage() {
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
-            flow: 'pkce',
           }
         },
       })
@@ -96,7 +99,7 @@ export default function LoginPage() {
       if (msg.includes('Invalid redirect URI')) {
         setError('Configuration error: Invalid redirect URI. Please set the exact callback in Supabase: ' + redirectUrl)
       } else if (msg.includes('code') && msg.includes('verifier')) {
-        setError('Session error: PKCE parameters missing. Please clear cookies and try again, or ensure flow=pkce is enabled.')
+        setError('Session error: PKCE parameters missing. Please clear cookies and try again, or ensure PKCE flow is enabled.')
       } else {
         setError(`Google sign-in error: ${msg}`);
       }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/database.types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,7 +24,11 @@ export default function SignUpPage() {
   // Create Supabase client with fallback for build time
   const supabaseUrl = config.supabase.url
   const supabaseKey = config.supabase.anonKey
-  const supabase = createBrowserClient<Database>(supabaseUrl, supabaseKey)
+  const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
+    auth: {
+      flowType: 'pkce',
+    },
+  })
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()

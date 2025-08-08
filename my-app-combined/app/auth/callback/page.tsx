@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/database.types'
 import { getRoute } from '@/lib/utils'
 import { config } from '@/lib/config'
@@ -20,9 +20,14 @@ export default function AuthCallbackPage() {
     const processAuth = async () => {
       try {
         // Create Supabase client
-        const supabase = createBrowserClient<Database>(
+        const supabase = createClient<Database>(
           config.supabase.url,
-          config.supabase.anonKey
+          config.supabase.anonKey,
+          {
+            auth: {
+              flowType: 'pkce',
+            },
+          }
         )
 
         // Check if we have OAuth parameters

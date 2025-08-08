@@ -184,7 +184,7 @@ export default function ThreeScene() {
 
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/20 pointer-events-none">
-          <div className="text-white text-sm">Cargando toro 3D...</div>
+          <div className="text-white text-sm">Loading luck...</div>
         </div>
       )}
 
