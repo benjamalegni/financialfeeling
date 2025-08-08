@@ -34,6 +34,7 @@ import SharedSidebar from '@/components/shared-sidebar'
 import { getRoute } from '@/lib/utils'
 import Glide from '@glidejs/glide';
 import CandleChart from '@/components/CandleChart';
+import BullHead3D from '@/components/BullHead3D';
 
 // Agrega esta función para rotar los stocks diariamente:
 function getDailyStocks() {
@@ -853,6 +854,12 @@ export default function HomePage() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+
+            {/* 3. 3D Bull Model Section */}
+            <div className="mb-12">
+              <h2 className="text-4xl font-bold mb-6 text-center">Toro 3D Interactivo</h2>
+              <BullHead3D />
             </div>
 
             {/* Stock Analysis Section */}
