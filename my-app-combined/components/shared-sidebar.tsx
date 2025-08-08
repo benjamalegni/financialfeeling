@@ -48,12 +48,13 @@ export default function SharedSidebar({ selectedAssets = [], onAnalysisComplete 
   };
   return (
     <div className="fixed left-0 top-0 h-full w-16 bg-black border-r border-gray-800 flex flex-col items-center py-4 space-y-4 shadow-lg">
-      {/* Efecto de FF superpuestas con sombra - siempre activo */}
+      {/* Efecto de FF superpuestas con sombra - siempre activo 
       <div className="relative">
         <div className="text-white text-xl font-bold">FF</div>
         <div className="absolute top-0 right-0.5 text-white text-xl font-bold">FF</div>
       </div>
-      
+      */}
+
       {/* Botón Run FF Analysis vertical con colores 80s animados */}
       <div className="flex-1 flex items-center justify-center">
         {/* <button 

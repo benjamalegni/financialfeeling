@@ -75,6 +75,132 @@ export default function HomePage() {
   const [stockCharts, setStockCharts] = useState<{ symbol: string, data: { x: string, y: [number, number, number, number] }[] }[]>([]);
   const [loadingCharts, setLoadingCharts] = useState(true);
 
+  // Función para obtener datos de una acción
+  async function fetchStock(symbol: string) {
+    try {
+      const apiKey = process.env.NEXT_PUBLIC_TWELVE_DATA_API_KEY;
+      if (!apiKey) {
+        console.warn('API key not found, using sample data for', symbol);
+        return generateSampleData(symbol);
+      }
+      
+      const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=30&apikey=${apiKey}&format=JSON`;
+      const res = await fetch(url);
+      
+      if (!res.ok) {
+        console.error(`Error fetching data for ${symbol}:`, res.status);
+        return generateSampleData(symbol);
+      }
+      
+      const json = await res.json();
+      console.log('TwelveData response for', symbol, json);
+      
+      if (!json.values || !Array.isArray(json.values)) {
+        console.error(`No valid data for ${symbol}:`, json);
+        return generateSampleData(symbol);
+      }
+      
+      // OHLC para velas
+      const data = json.values
+        .slice(0, 30)
+        .reverse()
+        .map((point: any) => ({
+          x: point.datetime,
+          y: [
+            parseFloat(point.open) || 0,
+            parseFloat(point.high) || 0,
+            parseFloat(point.low) || 0,
+            parseFloat(point.close) || 0,
+          ],
+        }))
+        .filter((item: { x: string, y: number[] }) => item.y.every((val: number) => val > 0)); // Filtrar datos válidos
+      
+      return data.length > 0 ? data : generateSampleData(symbol);
+    } catch (error) {
+      console.error(`Error fetching stock data for ${symbol}:`, error);
+      return generateSampleData(symbol);
+    }
+  }
+
+  // Función para generar datos de ejemplo
+  function generateSampleData(symbol: string) {
+    const today = new Date();
+    const data = [];
+    
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      
+      // Generar precios realistas basados en el símbolo
+      let basePrice = 100;
+      if (symbol === 'AAPL') basePrice = 150;
+      else if (symbol === 'TSLA') basePrice = 200;
+      else if (symbol === 'MSFT') basePrice = 300;
+      else if (symbol === 'GOOGL') basePrice = 2500;
+      else if (symbol === 'AMZN') basePrice = 3000;
+      else if (symbol === 'META') basePrice = 400;
+      else if (symbol === 'NVDA') basePrice = 800;
+      else if (symbol === 'NFLX') basePrice = 500;
+      else if (symbol === 'JPM') basePrice = 150;
+      else if (symbol === 'BAC') basePrice = 30;
+      else if (symbol === 'WFC') basePrice = 40;
+      else if (symbol === 'GS') basePrice = 350;
+      else if (symbol === 'JNJ') basePrice = 160;
+      else if (symbol === 'PFE') basePrice = 30;
+      else if (symbol === 'UNH') basePrice = 500;
+      else if (symbol === 'ABBV') basePrice = 140;
+      else if (symbol === 'XOM') basePrice = 100;
+      else if (symbol === 'CVX') basePrice = 150;
+      else if (symbol === 'COP') basePrice = 120;
+      else if (symbol === 'BTC') basePrice = 60000;
+      else if (symbol === 'ETH') basePrice = 3000;
+      else if (symbol === 'BNB') basePrice = 400;
+      else if (symbol === 'ADA') basePrice = 0.5;
+      else if (symbol === 'SOL') basePrice = 100;
+      
+      // Agregar variación aleatoria
+      const variation = (Math.random() - 0.5) * 0.1; // ±5% variación
+      const open = basePrice * (1 + variation);
+      const high = open * (1 + Math.random() * 0.05);
+      const low = open * (1 - Math.random() * 0.05);
+      const close = open * (1 + (Math.random() - 0.5) * 0.03);
+      
+      data.push({
+        x: date.toISOString().split('T')[0],
+        y: [open, high, low, close].map(val => Math.round(val * 100) / 100)
+      });
+    }
+    
+    return data;
+  }
+
+  // Función para obtener todos los datos
+  async function fetchAll() {
+    try {
+      setLoadingCharts(true);
+      const dailyStocks = getDailyStocks();
+      console.log('Stocks del día:', dailyStocks);
+      
+      const results = await Promise.all(dailyStocks.map(fetchStock));
+      const stockData = dailyStocks.map((symbol, i) => ({ 
+        symbol, 
+        data: results[i] || [] 
+      }));
+      
+      console.log('Stock data:', stockData);
+      setStockCharts(stockData);
+    } catch (error) {
+      console.error('Error fetching all stocks:', error);
+    } finally {
+      setLoadingCharts(false);
+    }
+  }
+
+  // Efecto para cargar los datos de las acciones
+  useEffect(() => {
+    fetchAll();
+  }, []);
+
   const howToSteps = [
     {
       id: 1,
@@ -122,42 +248,6 @@ export default function HomePage() {
       glide.mount();
       return () => glide.destroy();
     }
-  }, []);
-
-  useEffect(() => {
-    async function fetchStock(symbol: string) {
-      const apiKey = process.env.NEXT_PUBLIC_TWELVE_DATA_API_KEY;
-      const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=30&apikey=${apiKey}&format=JSON`;
-      const res = await fetch(url);
-      const json = await res.json();
-      console.log('TwelveData response for', symbol, json);
-      if (!json.values) {
-        return [];
-      }
-      // OHLC para velas
-      const data = json.values
-        .slice(0, 30)
-        .reverse()
-        .map((point: any) => ({
-          x: point.datetime,
-          y: [
-            parseFloat(point.open),
-            parseFloat(point.high),
-            parseFloat(point.low),
-            parseFloat(point.close),
-          ],
-        }));
-      return data;
-    }
-    async function fetchAll() {
-      setLoadingCharts(true);
-      const dailyStocks = getDailyStocks();
-      console.log('Stocks del día:', dailyStocks);
-      const results = await Promise.all(dailyStocks.map(fetchStock));
-      setStockCharts(dailyStocks.map((symbol, i) => ({ symbol, data: results[i] })));
-      setLoadingCharts(false);
-    }
-    fetchAll();
   }, []);
 
   // Comprehensive list of financial assets
@@ -772,18 +862,6 @@ export default function HomePage() {
                           </li>
                         ))}
                       </ul>
-                    </div>
-                    <div className="glide__arrows" data-glide-el="controls">
-                      <button className="glide__arrow glide__arrow--left bg-white/20 backdrop-blur-md rounded-full p-3 hover:bg-white/30 transition-colors" data-glide-dir="<">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                      </button>
-                      <button className="glide__arrow glide__arrow--right bg-white/20 backdrop-blur-md rounded-full p-3 hover:bg-white/30 transition-colors" data-glide-dir=">">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
                     </div>
                     <div className="glide__bullets" data-glide-el="controls[nav]">
                       {howToSteps.map((_, idx) => (
