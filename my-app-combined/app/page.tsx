@@ -30,32 +30,37 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import SharedSidebar from '@/components/shared-sidebar'
+// Removed SharedSidebar import
 import { getRoute } from '@/lib/utils'
 import Glide from '@glidejs/glide';
 import CandleChart from '@/components/CandleChart';
 import BullHead3D from '@/components/BullHead3D';
 
-// Agrega esta función para rotar los stocks diariamente:
-function getDailyStocks() {
-  const allStocks = [
-    'AAPL', 'TSLA', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NVDA', 'NFLX',
-    'JPM', 'BAC', 'WFC', 'GS', 'JNJ', 'PFE', 'UNH', 'ABBV',
-    'XOM', 'CVX', 'COP', 'BTC', 'ETH', 'BNB', 'ADA', 'SOL'
-  ];
-  
-  // Usa la fecha actual como seed para seleccionar stocks consistentemente por día
-  const today = new Date();
-  const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-  
-  // Selecciona 3 stocks basado en la fecha
-  const selectedStocks = [];
-  for (let i = 0; i < 3; i++) {
-    const index = (seed + i) % allStocks.length;
-    selectedStocks.push(allStocks[index]);
+// Calcular top movers del día basados en variación intradía
+const candidateSymbols = [
+  'AAPL','TSLA','MSFT','GOOGL','AMZN','META','NVDA','NFLX',
+  'JPM','BAC','WFC','GS','JNJ','PFE','UNH','ABBV','XOM','CVX','COP','SPY'
+];
+
+async function selectTopMovers(fetchStock: (symbol: string) => Promise<{ x: string, y: [number, number, number, number] }[]>) {
+  const results = await Promise.all(candidateSymbols.map(async (symbol) => {
+    const data = await fetchStock(symbol);
+    const last = data[data.length - 1];
+    if (!last) return { symbol, data, changeAbs: -Infinity };
+    const [open, _high, _low, close] = last.y;
+    const change = open > 0 ? ((close - open) / open) * 100 : 0;
+    return { symbol, data, changeAbs: Math.abs(change) };
+  }));
+
+  const withData = results.filter(r => r.data && r.data.length > 0);
+  if (withData.length === 0) {
+    const fallback = ['AAPL','NVDA','TSLA'];
+    const fallbackData = await Promise.all(fallback.map(async s => ({ symbol: s, data: await fetchStock(s) })));
+    return fallbackData;
   }
-  
-  return selectedStocks;
+
+  const top3 = withData.sort((a, b) => b.changeAbs - a.changeAbs).slice(0, 3);
+  return top3.map(({ symbol, data }) => ({ symbol, data }));
 }
 
 export default function HomePage() {
@@ -128,17 +133,8 @@ export default function HomePage() {
   async function fetchAll() {
     try {
       setLoadingCharts(true);
-      const dailyStocks = getDailyStocks();
-      console.log('Stocks del día:', dailyStocks);
-      
-      const results = await Promise.all(dailyStocks.map(fetchStock));
-      const stockData = dailyStocks.map((symbol, i) => ({ 
-        symbol, 
-        data: results[i] || [] 
-      }));
-      
-      console.log('Stock data:', stockData);
-      setStockCharts(stockData);
+      const selected = await selectTopMovers(fetchStock);
+      setStockCharts(selected);
     } catch (error) {
       console.error('Error fetching all stocks:', error);
     } finally {
@@ -155,12 +151,14 @@ export default function HomePage() {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const { data: { user }, error } = await supabase.auth.getUser()
+        const { data: { session }, error } = await supabase.auth.getSession()
         if (error) {
-          console.error('Error loading user:', error)
-        } else if (user) {
-          console.log('User loaded:', user)
-          setUser(user)
+          console.error('Error loading session:', error)
+        } else if (session?.user) {
+          console.log('User loaded:', session.user)
+          setUser(session.user)
+        } else {
+          setUser(null)
         }
       } catch (error) {
         console.error('Error in loadUser:', error)
@@ -518,6 +516,10 @@ export default function HomePage() {
   }
 
   const handleOpenAssetSelector = () => {
+    if (!user) {
+      router.push(getRoute('/login'))
+      return
+    }
     setShowAssetSelector(true)
     loadUserAssets() // Load existing assets when opening
   }
@@ -543,14 +545,8 @@ export default function HomePage() {
         {/* Header */}
         <Header user={user} onSignOut={handleSignOut} />
 
-        {/* Shared Sidebar */}
-        <SharedSidebar 
-          selectedAssets={selectedAssets}
-          onAnalysisComplete={handleAnalysisComplete}
-        />
-
         {/* Main Content */}
-        <div className="ml-16 pt-24 p-8">
+        <div className="pt-24 p-8">
           <div className="max-w-6xl mx-auto">
             {/* Main Content */}
             <div className="text-center mb-12">
@@ -580,9 +576,10 @@ export default function HomePage() {
                         placeholder={
                           user
                             ? "Type asset symbols (e.g., AAPL, TSLA, MSFT) or click + button..."
-                            : "Type to start selecting assets with Financial Feeling (sign in to send messages)"
+                            : "Sign in to start selecting assets with Financial Feeling"
                         }
                         className="bg-transparent border-none text-white placeholder-gray-400 focus-visible:ring-0"
+                        disabled={!user}
                       />
                       
                       {/* Autocomplete Dropdown */}
@@ -623,6 +620,7 @@ export default function HomePage() {
                       size="icon" 
                       className="bg-blue-600 hover:bg-blue-700 shadow-md transition-colors" 
                       onClick={handleOpenAssetSelector}
+                      disabled={!user}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -858,7 +856,7 @@ export default function HomePage() {
 
             {/* 3. 3D Bull Model Section */}
             <div className="mb-12">
-              <h2 className="text-4xl font-bold mb-6 text-center">Interactive 3D Bull</h2>
+              <h2 className="text-4xl font-bold mb-6 text-center">Get Lucky</h2>
               <BullHead3D />
             </div>
 

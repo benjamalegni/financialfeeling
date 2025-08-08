@@ -1,7 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
+import type { Database } from './database.types'
 import { config } from './config'
 
-export const supabase = createClient(config.supabase.url, config.supabase.anonKey)
+export const supabase = createBrowserClient<Database>(config.supabase.url, config.supabase.anonKey)
 
 // Función para inicializar datos de usuario después del registro (completamente opcional)
 export async function initializeUserData(userId: string) {

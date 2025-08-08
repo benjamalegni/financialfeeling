@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Home } from 'lucide-react'
-import SharedSidebar from '@/components/shared-sidebar'
+// import SharedSidebar from '@/components/shared-sidebar'
 
 export default function ExamplePage() {
   return (
@@ -18,11 +18,10 @@ export default function ExamplePage() {
         </div>
       </div>
 
-      {/* Shared Sidebar */}
-      <SharedSidebar />
+      {/* Shared Sidebar removed */}
 
       {/* Main Content */}
-      <div className="ml-16 p-8">
+      <div className="p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="flex justify-between items-center mb-8">

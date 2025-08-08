@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from '@/lib/database.types'
-import DashboardWrapper from '@/components/dashboard-wrapper'
 import DashboardContent from '@/components/dashboard-content'
 import { config } from '@/lib/config'
 import { getRoute } from '@/lib/utils'
+import Header from '@/components/header'
 
 interface SelectedAsset {
   id: string;
@@ -74,13 +74,14 @@ export default function DashboardPage() {
   }
 
   return (
-    <DashboardWrapper 
-      selectedAssets={selectedAssets.map((asset: SelectedAsset) => asset.asset_identifier)}
-    >
-      <DashboardContent
-        selectedAssets={selectedAssets}
-        session={session}
-      />
-    </DashboardWrapper>
+    <div className="min-h-screen bg-black text-white">
+      <Header user={session.user} onSignOut={() => { window.location.href = getRoute('/login') }} />
+      <div className="pt-24 p-8">
+        <DashboardContent
+          selectedAssets={selectedAssets}
+          session={session}
+        />
+      </div>
+    </div>
   )
 }

@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import dynamic from 'next/dynamic';
 
 // Dynamic imports for Three.js components to avoid SSR issues
-const ThreeScene = dynamic(() => import('./ThreeScene'), {
+const ThreeScene = dynamic(() => import('./ui/ThreeScene'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-[80vh] bg-gradient-to-b from-neutral-900 to-black rounded-2xl relative flex items-center justify-center">
@@ -50,25 +50,11 @@ export default function BullHead3D() {
       {/* Title and description */}
       <div className="absolute z-10 left-4 top-4 text-white">
         <h1 className="text-xl font-semibold">Financial Feeling — Interactive 3D Bull</h1>
-        <p className="text-xs opacity-80">Drag to rotate • Scroll to zoom • Double click to center</p>
       </div>
 
       {/* Interactive Instructions */}
       {showInstructions && (
         <div className="absolute z-20 top-4 right-4 bg-black/70 backdrop-blur rounded-lg p-4 text-white text-sm max-w-xs">
-          <h3 className="font-semibold mb-2">🎮 Controles Interactivos:</h3>
-          <ul className="space-y-1 text-xs">
-            <li>🖱️ <strong>Arrastra</strong> para rotar el toro</li>
-            <li>🔍 <strong>Scroll</strong> para hacer zoom</li>
-            <li>🖱️ <strong>Doble clic</strong> para centrar</li>
-            <li>🖱️ <strong>Click derecho</strong> para pan</li>
-          </ul>
-          <button 
-            onClick={() => setShowInstructions(false)}
-            className="mt-2 text-xs text-amber-400 hover:text-amber-300"
-          >
-            ✕ Cerrar instrucciones
-          </button>
         </div>
       )}
 
@@ -99,33 +85,32 @@ export default function BullHead3D() {
         {particles.map((particle) => (
           <div
             key={particle.id}
-            className="absolute w-2 h-2 bg-amber-400/30 rounded-full animate-bounce"
+            className="absolute w-2 h-2 bg-amber-400/30 rounded-full"
             style={{
               left: particle.left,
               top: particle.top,
-              animationDelay: particle.animationDelay,
-              animationDuration: particle.animationDuration,
+              animation: `float ${particle.animationDuration} ease-in-out ${particle.animationDelay} infinite`,
+              willChange: 'transform, opacity',
             }}
           />
         ))}
       </div>
 
-      {/* CTA overlay */}
-      <div className="absolute bottom-4 right-4 z-10">
-        <button
-          onClick={() => setShowInstructions(!showInstructions)}
-          className="bg-white/10 backdrop-blur rounded-2xl px-4 py-2 text-white text-sm shadow hover:bg-white/20 transition-colors"
-        >
-          {showInstructions ? 'Ocultar' : 'Mostrar'} controles
-        </button>
-      </div>
+      {/* Local keyframes for particle animation */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0);
+            opacity: 0.7;
+          }
+          50% {
+            transform: translateY(-80px);
+            opacity: 1;
+          }
+        }
+      `}</style>
 
-      {/* Instructions */}
-      <div className="absolute bottom-4 left-4 z-10 text-white/60 text-xs">
-        <p>🎯 Modelo 3D interactivo del Toro de Wall Street</p>
-        <p>💎 Símbolo de fortaleza y prosperidad financiera</p>
-        <p className="mt-1 text-amber-400">🖱️ ¡Arrastra para interactuar!</p>
-      </div>
+
     </div>
   );
 } 

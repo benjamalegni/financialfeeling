@@ -28,16 +28,21 @@ export default function Header({ user, onSignOut }: HeaderProps) {
   }
 
   return (
-    <div className="fixed top-0 left-16 right-0 h-16 bg-black/20 backdrop-blur-md border-b border-white/20 z-40">
+    <div className="fixed top-0 left-0 right-0 h-16 bg-black/20 backdrop-blur-md border-b border-white/20 z-40">
       <div className="flex justify-between items-center h-full px-8">
         {/* Left side - Logo/Brand */}
-        <div className="flex items-center space-x-4">
+        <button
+          type="button"
+          onClick={() => router.push(getRoute('/'))}
+          className="flex items-center space-x-4 group cursor-pointer select-none"
+          aria-label="Go to home"
+        >
           <div className="relative">
-            <div className="text-white text-xl font-bold">FF</div>
-            <div className="absolute top-0 right-0.5 text-white text-xl font-bold">FF</div>
+            <div className="text-white text-xl font-bold group-hover:opacity-90 transition-opacity">FF</div>
+            <div className="absolute top-0 right-0.5 text-white text-xl font-bold group-hover:opacity-90 transition-opacity">FF</div>
           </div>
-          <h1 className="text-white text-lg font-semibold">Financial Feeling</h1>
-        </div>
+          <h1 className="text-white text-lg font-semibold group-hover:text-gray-200 transition-colors">Financial Feeling</h1>
+        </button>
 
         {/* Right side - User menu and Dashboard button */}
         <div className="flex items-center space-x-4">
