@@ -64,22 +64,7 @@ export default function LoginPage() {
     }
   }
 
-  const handleResendVerification = async () => {
-    try {
-      setIsSubmitting(true)
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email,
-        options: { emailRedirectTo: getRedirectUrl() }
-      } as any)
-      if (error) throw error
-      setError('Verification email resent. Please check your inbox (and spam).')
-    } catch (e: any) {
-      setError(`Could not resend verification email: ${e?.message || e}`)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+  // resend verification removed
 
   const handleGoogleSignIn = async () => {
     setIsSubmitting(true);
@@ -175,18 +160,6 @@ export default function LoginPage() {
             {error && (
               <div className="text-sm text-red-400 bg-red-900/20 p-3 rounded-md border border-red-800">
                 {error}
-                {(error.toLowerCase().includes('not confirmed') || error.toLowerCase().includes('verification')) && (
-                  <div className="mt-2 text-right">
-                    <button
-                      type="button"
-                      onClick={handleResendVerification}
-                      disabled={isSubmitting || !email}
-                      className="text-xs text-blue-400 hover:text-blue-300 underline disabled:text-gray-500"
-                    >
-                      Resend verification email
-                    </button>
-                  </div>
-                )}
               </div>
             )}
 

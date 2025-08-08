@@ -137,22 +137,7 @@ export default function SignUpPage() {
     }
   }
 
-  const handleResendVerification = async () => {
-    try {
-      setIsSubmitting(true)
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email,
-        options: { emailRedirectTo: getRedirectUrl() }
-      } as any)
-      if (error) throw error
-      setError('Verification email resent. Please check your inbox (and spam).')
-    } catch (e: any) {
-      setError(`Could not resend verification email: ${e?.message || e}`)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+  // resend verification removed
 
   const handleGitHubSignUp = async () => {
     setIsSubmitting(true);
@@ -283,17 +268,7 @@ export default function SignUpPage() {
               </Button>
             </div>
 
-            <div className="text-right">
-              <button
-                type="button"
-                onClick={handleResendVerification}
-                disabled={isSubmitting || !email}
-                className="text-xs text-blue-400 hover:text-blue-300 underline disabled:text-gray-500"
-                title="Resend verification email"
-              >
-                Resend verification email
-              </button>
-            </div>
+
           </form>
 
           <div className="relative">
