@@ -26,28 +26,52 @@ export default function AuthCallbackPage() {
           {
             auth: {
               flowType: 'pkce',
+              detectSessionInUrl: true,
             },
           }
         )
 
-        // Check if we have OAuth parameters
+        // Debug: inspect localStorage keys
+        try {
+          const keys = Object.keys(window.localStorage)
+          const sbKeys = keys.filter((k) => k.toLowerCase().includes('sb-') || k.toLowerCase().includes('supabase'))
+          console.log('LocalStorage supabase-related keys:', sbKeys)
+          for (const k of sbKeys) {
+            console.log(`localStorage[${k}] length:`, (window.localStorage.getItem(k) || '').length)
+          }
+        } catch (e) {
+          console.warn('Unable to inspect localStorage:', e)
+        }
+
+        // Check for error param
         const urlParams = new URLSearchParams(window.location.search)
         const code = urlParams.get('code')
-        const error = urlParams.get('error')
+        const oauthError = urlParams.get('error')
         
-        if (error) {
-          console.error('OAuth error:', error)
-          setError(`Authentication error: ${error}`)
+        if (oauthError) {
+          console.error('OAuth error:', oauthError)
+          setError(`Authentication error: ${oauthError}`)
           setTimeout(() => {
             router.push(getRoute('/login'))
           }, 3000)
           return
         }
-        
+
+        // Give detectSessionInUrl a moment to complete
+        await new Promise((r) => setTimeout(r, 200))
+
+        // Verify session
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          console.log('Session verified via detectSessionInUrl, redirecting to main page...')
+          setTimeout(() => {
+            router.push(getRoute('/'))
+          }, 500)
+          return
+        }
+
         if (code) {
-          console.log('OAuth code received:', code)
-          
-          // Exchange the code for a session
+          console.log('No session yet; attempting manual exchange as fallback')
           const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
           
           if (exchangeError) {
@@ -58,50 +82,20 @@ export default function AuthCallbackPage() {
             }, 3000)
             return
           }
-          
+
           if (data.session) {
-            console.log('Session created successfully:', data.session.user.email)
-            
-            // Get the current session to verify
-            const { data: { session } } = await supabase.auth.getSession()
-            
-            if (session) {
-              console.log('Session verified, redirecting to main page...')
-              setTimeout(() => {
-                router.push(getRoute('/'))
-              }, 1000)
-            } else {
-              console.error('Session not found after exchange')
-              setError('Session verification failed')
-              setTimeout(() => {
-                router.push(getRoute('/login'))
-              }, 3000)
-            }
-          } else {
-            console.error('No session in exchange response')
-            setError('No session received from authentication')
-            setTimeout(() => {
-              router.push(getRoute('/login'))
-            }, 3000)
-          }
-        } else {
-          console.log('No OAuth code found, checking for existing session...')
-          
-          // Check if user is already authenticated
-          const { data: { session } } = await supabase.auth.getSession()
-          
-          if (session) {
-            console.log('User already authenticated, redirecting to main page...')
+            console.log('Session created successfully after fallback exchange')
             setTimeout(() => {
               router.push(getRoute('/'))
-            }, 1000)
-          } else {
-            console.log('No session found, redirecting to login...')
-            setTimeout(() => {
-              router.push(getRoute('/login'))
-            }, 2000)
+            }, 500)
+            return
           }
         }
+
+        console.log('No OAuth code found or session still missing, redirecting to login...')
+        setTimeout(() => {
+          router.push(getRoute('/login'))
+        }, 2000)
       } catch (err) {
         console.error('Unexpected error during auth callback:', err)
         setError('An unexpected error occurred during authentication')

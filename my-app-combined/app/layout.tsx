@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { forceHTTPS } from '@/lib/config'
+import CanonicalHost from '@/components/CanonicalHost'
 
 export const metadata: Metadata = {
   title: 'Financial Feeling',
@@ -20,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen flex flex-col">
+        <CanonicalHost />
         <div className="flex-1 relative z-10">
           {children}
         </div>
