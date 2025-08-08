@@ -80,35 +80,30 @@ export function validateSupabaseConfig() {
   const url = config.supabase.url
   const key = config.supabase.anonKey
   
-  // Verificar si la URL es de ejemplo
-  const isExampleUrl = !url || url === 'https://yhxdyndkdhhnuginaekn.supabase.co'
+  // Verificar si la URL existe y no es de ejemplo
+  const isExampleUrl = !url || url === 'https://your-project.supabase.co' || url.includes('your-project')
   
-  // Verificar si la clave es de ejemplo (contiene caracteres repetidos de ejemplo)
-  const isExampleKey = !key || key.includes('Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8')
+  // Verificar si la clave existe y no es de ejemplo
+  const isExampleKey = !key || key === 'your-anon-key' || key.includes('your-anon-key')
   
-  // Verificar si la clave tiene el formato correcto de JWT
+  // Verificar si la clave tiene el formato básico de JWT (3 partes separadas por puntos)
   const isValidJWTFormat = key && key.split('.').length === 3
   
-  // Verificar si la clave tiene la longitud correcta
-  const isValidLength = key && key.length > 100 && key.length < 500
-  
-  if (isExampleUrl) {
-    console.warn('⚠️ Supabase URL parece ser una URL de ejemplo')
-  }
-  
-  if (isExampleKey) {
-    console.warn('⚠️ Supabase anonKey parece ser una clave de ejemplo')
-  }
-  
-  if (!isValidJWTFormat) {
-    console.warn('⚠️ Supabase anonKey no tiene el formato JWT correcto')
-  }
-  
-  if (!isValidLength) {
-    console.warn('⚠️ Supabase anonKey no tiene la longitud correcta')
-  }
+  // Verificar si la clave tiene una longitud razonable
+  const isValidLength = key && key.length > 50
   
   const isValid = url && key && !isExampleUrl && !isExampleKey && isValidJWTFormat && isValidLength
+  
+  if (!isValid) {
+    console.warn('⚠️ Supabase configuration validation failed:', {
+      hasUrl: !!url,
+      hasKey: !!key,
+      isExampleUrl,
+      isExampleKey,
+      isValidJWTFormat,
+      isValidLength
+    })
+  }
   
   return {
     isValid,
