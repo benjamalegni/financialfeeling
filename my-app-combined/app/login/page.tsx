@@ -55,8 +55,15 @@ export default function LoginPage() {
           setError(msg)
         }
         setIsSubmitting(false)
-      } else if (data.user) {
-        router.push(getRoute('/'))
+      } else {
+        // Double-check session to handle cases where data.user is null but session exists
+        const { data: sessionData } = await supabase.auth.getSession()
+        if (sessionData?.session) {
+          router.push(getRoute('/'))
+        } else {
+          setError('Login failed. Please try again.')
+          setIsSubmitting(false)
+        }
       }
     } catch (err) {
       console.error('Login error:', err)
