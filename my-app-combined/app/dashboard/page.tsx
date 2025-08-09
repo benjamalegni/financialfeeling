@@ -67,9 +67,16 @@ export default function DashboardPage() {
     return null // Will redirect to login
   }
 
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut()
+    } catch (_) {}
+    window.location.href = getRoute('/login')
+  }
+
   return (
     <div className="min-h-screen bg-black text-white">
-      <Header user={session.user} onSignOut={() => { window.location.href = getRoute('/login') }} />
+      <Header user={session.user} onSignOut={handleSignOut} />
       <div className="pt-24 p-8">
         <DashboardContent
           selectedAssets={selectedAssets}
