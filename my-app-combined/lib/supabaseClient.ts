@@ -1,8 +1,15 @@
-import { createBrowserClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import type { Database } from './database.types'
 import { config } from './config'
 
-export const supabase = createBrowserClient<Database>(config.supabase.url, config.supabase.anonKey)
+export const supabase = createClient<Database>(config.supabase.url, config.supabase.anonKey, {
+  auth: {
+    flowType: 'pkce',
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+})
 
 // Daily Picks helpers
 export async function getDailyPicksFromDB(pickDateISO: string) {

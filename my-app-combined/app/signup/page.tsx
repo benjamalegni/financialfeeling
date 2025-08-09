@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/database.types'
+import { supabase } from '@/lib/supabaseClient'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -21,14 +21,7 @@ export default function SignUpPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
   
-  // Create Supabase client with fallback for build time
-  const supabaseUrl = config.supabase.url
-  const supabaseKey = config.supabase.anonKey
-  const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
-    auth: {
-      flowType: 'pkce',
-    },
-  })
+  // Use shared Supabase client
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
