@@ -36,6 +36,7 @@ import Glide from '@glidejs/glide';
 import CandleChart from '@/components/CandleChart';
 import BullHead3D from '@/components/BullHead3D';
 import { config } from '@/lib/config'
+import BlurredChart from '@/components/blurred-chart'
 
 // Calcular top movers del día basados en variación intradía
 const candidateSymbols = [
@@ -1102,24 +1103,41 @@ export default function HomePage() {
             <div className="mb-12">
               <h2 className="text-6xl font-bold mb-6 text-center">Our Daily Picks</h2>                        
               {!user ? (
-                <div className="mt-6 max-w-xl mx-auto bg-gray-900/80 border border-gray-700 rounded-lg p-6 text-center">
-                  <p className="text-gray-300 mb-4">Please log in to view Daily Picks charts.</p>
-                  {dailySymbols.length > 0 && (
-                    <div className="mt-2 text-gray-300 text-sm">
-                      <p className="mb-2">Today's picks:</p>
-                      <div className="flex flex-wrap gap-2 justify-center">
-                        {dailySymbols.map(sym => {
-                          const asset = financialAssets.find(a => a.symbol === sym)
-                          return (
-                            <span key={sym} className="px-3 py-1 rounded-full border border-gray-600 bg-gray-800/60">
-                              {sym}{asset ? ` — ${asset.name}` : ''}
-                            </span>
-                          )
-                        })}
-                      </div>
+                <div className="mt-6 relative">
+                  {/* blurred charts grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <BlurredChart variant="blue" className="h-40" />
+                    <BlurredChart variant="green" className="h-40 hidden md:block" />
+                    <BlurredChart variant="purple" className="h-40 hidden md:block" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <BlurredChart variant="purple" className="h-40" />
+                    <BlurredChart variant="blue" className="h-40 hidden md:block" />
+                    <BlurredChart variant="green" className="h-40 hidden md:block" />
+                  </div>
+
+                  {/* overlay card with login prompt */}
+                  <div className="max-w-2xl mx-auto -mt-28 md:-mt-32 relative">
+                    <div className="bg-gray-900/85 border border-gray-700 rounded-lg p-6 text-center backdrop-blur-md shadow-2xl">
+                      <p className="text-gray-300 mb-4">Please log in to view Daily Picks charts.</p>
+                      {dailySymbols.length > 0 && (
+                        <div className="mt-2 text-gray-300 text-sm">
+                          <p className="mb-2">Today's picks:</p>
+                          <div className="flex flex-wrap gap-2 justify-center">
+                            {dailySymbols.map(sym => {
+                              const asset = financialAssets.find(a => a.symbol === sym)
+                              return (
+                                <span key={sym} className="px-3 py-1 rounded-full border border-gray-600 bg-gray-800/60">
+                                  {sym}{asset ? ` — ${asset.name}` : ''}
+                                </span>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      <Button onClick={() => router.push(getRoute('/login'))} className="bg-blue-600 hover:bg-blue-700 mt-4">Log in</Button>
                     </div>
-                  )}
-                  <Button onClick={() => router.push(getRoute('/login'))} className="bg-blue-600 hover:bg-blue-700">Log in</Button>
+                  </div>
                 </div>
               ) : (
                 <>

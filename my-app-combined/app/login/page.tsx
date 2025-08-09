@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [info, setInfo] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
   
@@ -39,14 +40,17 @@ export default function LoginPage() {
       }
 
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password,
       })
 
       if (error) {
         const msg = error.message || ''
-        if (msg.toLowerCase().includes('confirm') || msg.toLowerCase().includes('verified')) {
-          setError('Email not confirmed. You can disable email confirmation in Supabase to allow login, or resend the verification email below.')
+        const lower = msg.toLowerCase()
+        if (lower.includes('confirm') || lower.includes('verify')) {
+          setError('Email not confirmed. Please confirm your email or resend the verification email below.')
+        } else if (lower.includes('invalid login') || lower.includes('invalid') || lower.includes('password')) {
+          setError('Invalid credentials. If you just signed up, confirm your email first. Otherwise you can reset your password below.')
         } else {
           setError(msg)
         }
@@ -61,7 +65,24 @@ export default function LoginPage() {
     }
   }
 
-  // resend verification removed
+  const handleResetPassword = async () => {
+    try {
+      setError(null)
+      setInfo(null)
+      if (!email) {
+        setError('Please enter your email to reset password.')
+        return
+      }
+      const redirectUrl = getRedirectUrl();
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl,
+      })
+      if (error) throw error
+      setInfo('Password reset email sent. Check your inbox to continue.')
+    } catch (e: any) {
+      setError(e?.message || 'Failed to send password reset email.')
+    }
+  }
 
   const handleGoogleSignIn = async () => {
     setIsSubmitting(true);
@@ -158,10 +179,22 @@ export default function LoginPage() {
                 {error}
               </div>
             )}
+            {info && (
+              <div className="text-sm text-green-400 bg-green-900/20 p-3 rounded-md border border-green-800">
+                {info}
+              </div>
+            )}
 
             <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
               {isSubmitting ? 'Signing In...' : 'Sign In'}
             </Button>
+
+            <div className="mt-2">
+              <Button type="button" variant="outline" className="w-full border-gray-600" onClick={handleResetPassword} disabled={isSubmitting}>
+                Reset password
+              </Button>
+            </div>
+
           </form>
 
           <div className="relative">

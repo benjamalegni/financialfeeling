@@ -43,7 +43,7 @@ export default function SignUpPage() {
       
       // Método 1: Intentar signup normal
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: email.trim(),
         password,
         options: {
           emailRedirectTo: getRedirectUrl(),

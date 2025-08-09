@@ -1,10 +1,9 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from '@/lib/database.types'
+import { supabase } from '@/lib/supabaseClient'
 import DashboardContent from '@/components/dashboard-content'
-import { config } from '@/lib/config'
 import { getRoute } from '@/lib/utils'
 import Header from '@/components/header'
 
@@ -24,11 +23,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const initSupabase = async () => {
-      const supabase = createBrowserClient<Database>(
-        config.supabase.url,
-        config.supabase.anonKey
-      )
-
       const { data: { session } } = await supabase.auth.getSession()
       
       if (!session) {
