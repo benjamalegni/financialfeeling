@@ -17,6 +17,12 @@ export const config = {
     baseUrl: 'https://www.alphavantage.co/query',
   },
 
+  // Financial Modeling Prep Configuration (free tier supported)
+  fmp: {
+    apiKey: process.env.NEXT_PUBLIC_FMP_API_KEY || '',
+    baseUrl: 'https://financialmodelingprep.com/api/v3',
+  },
+
   // App Configuration
   app: {
     url: (() => {

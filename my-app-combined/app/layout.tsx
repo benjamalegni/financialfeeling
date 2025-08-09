@@ -21,6 +21,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <link rel="preconnect" href="https://s3.tradingview.com" />
+        <link rel="dns-prefetch" href="https://s3.tradingview.com" />
         <script
           dangerouslySetInnerHTML={{
             __html: `

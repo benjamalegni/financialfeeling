@@ -34,6 +34,7 @@ import { Badge } from '@/components/ui/badge'
 import { getRoute } from '@/lib/utils'
 import Glide from '@glidejs/glide';
 import CandleChart from '@/components/CandleChart';
+import TradingViewChart from '@/components/TradingViewChart';
 import BullHead3D from '@/components/BullHead3D';
 import { config } from '@/lib/config'
 import BlurredChart from '@/components/blurred-chart'
@@ -44,66 +45,14 @@ const candidateSymbols = [
   'JPM','BAC','WFC','GS','JNJ','PFE','UNH','ABBV','XOM','CVX','COP','SPY'
 ];
 
-async function fetchQuotesForSymbols(symbols: string[]) {
-  try {
-    const apiKey = process.env.NEXT_PUBLIC_TWELVE_DATA_API_KEY || config.app.twelveDataApiKey;
-    if (!apiKey) return [];
-    const symbolList = symbols.join(',');
-    const url = `https://api.twelvedata.com/quote?symbol=${encodeURIComponent(symbolList)}&apikey=${apiKey}&format=JSON`;
-    const res = await fetch(url);
-    if (!res.ok) return [];
-    const json = await res.json();
-
-    let items: Array<{ symbol: string; changeAbs: number }> = [];
-
-    if (Array.isArray((json as any).data)) {
-      items = (json as any).data.map((it: any) => {
-        const raw = it?.percent_change ?? it?.percent_change_1d ?? 0;
-        const parsed = parseFloat(String(raw).toString().replace('%', '')) || 0;
-        return { symbol: it.symbol, changeAbs: Math.abs(parsed) };
-      });
-    } else if (json && typeof json === 'object') {
-      items = Object.entries(json as Record<string, any>).flatMap(([sym, obj]) => {
-        if (!obj || typeof obj !== 'object') return [];
-        const raw = obj?.percent_change ?? obj?.percent_change_1d ?? 0;
-        const parsed = parseFloat(String(raw).toString().replace('%', '')) || 0;
-        return [{ symbol: sym, changeAbs: Math.abs(parsed) }];
-      });
-    }
-
-    return items.filter((it) => !!it.symbol);
-  } catch (e) {
-    console.error('fetchQuotesForSymbols error:', e);
-    return [];
+// Select symbols for Daily Picks without calling third-party APIs
+async function selectTopSymbols(existingPortfolioSymbols: string[]): Promise<string[]> {
+  // Prefer user's portfolio symbols if available
+  if (Array.isArray(existingPortfolioSymbols) && existingPortfolioSymbols.length > 0) {
+    return Array.from(new Set(existingPortfolioSymbols)).slice(0, 3)
   }
-}
-
-async function selectTopMovers(fetchStock: (symbol: string) => Promise<{ x: string, y: [number, number, number, number] }[]>) {
-  // First try using quotes (1 request for many symbols), then fetch time_series for top 3
-  const ranks = await fetchQuotesForSymbols(candidateSymbols);
-  let topSymbols: string[] = [];
-
-  if (ranks.length > 0) {
-    topSymbols = ranks.sort((a, b) => b.changeAbs - a.changeAbs).slice(0, 3).map((r) => r.symbol);
-  } else {
-    // Fallback symbols if quotes are unavailable
-    topSymbols = ['AAPL', 'NVDA', 'TSLA'];
-  }
-
-  const primary = await Promise.all(topSymbols.map(async (symbol) => ({ symbol, data: await fetchStock(symbol) })));
-  let withData = primary.filter((r) => r.data && r.data.length > 0);
-  if (withData.length >= 3) return withData.slice(0, 3);
-  if (withData.length > 0) return withData;
-
-  // Last fallback: sequentially try more candidates (avoid burst rate limits)
-  for (const symbol of candidateSymbols) {
-    if (topSymbols.includes(symbol)) continue;
-    const data = await fetchStock(symbol);
-    if (data.length > 0) withData.push({ symbol, data });
-    if (withData.length >= 3) break;
-  }
-
-  return withData.length > 0 ? withData.slice(0, 3) : primary; 
+  // Fallback to a stable default
+  return ['AAPL', 'NVDA', 'TSLA']
 }
 
 export default function HomePage() {
@@ -128,91 +77,7 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [dailySymbols, setDailySymbols] = useState<string[]>([]);
   
-  // Función para obtener datos de una acción
-  async function fetchStock(symbol: string) {
-    async function fetchFromAlphaVantage(sym: string) {
-      try {
-        const alphaKey = config.alphaVantage.apiKey || process.env.NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY;
-        if (!alphaKey) return [] as { x: string, y: [number, number, number, number] }[];
-        const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${encodeURIComponent(sym)}&apikey=${alphaKey}`;
-        const res = await fetch(url);
-        if (!res.ok) return [] as { x: string, y: [number, number, number, number] }[];
-        const json = await res.json();
-        const series = json['Time Series (Daily)'];
-        if (!series || typeof series !== 'object') return [] as { x: string, y: [number, number, number, number] }[];
-        const entries = Object.entries(series) as Array<[string, any]>;
-        const data = entries
-          .slice(0, 30)
-          .reverse()
-          .map(([date, vals]) => ({
-            x: date,
-            y: [
-              parseFloat(vals['1. open']) || 0,
-              parseFloat(vals['2. high']) || 0,
-              parseFloat(vals['3. low']) || 0,
-              parseFloat(vals['4. close']) || 0,
-            ] as [number, number, number, number],
-          }))
-          .filter((item) => item.y.every((val) => val > 0));
-        return data;
-      } catch (e) {
-        console.error('AlphaVantage fallback error for', sym, e);
-        return [] as { x: string, y: [number, number, number, number] }[];
-      }
-    }
-
-    try {
-      const apiKey = process.env.NEXT_PUBLIC_TWELVE_DATA_API_KEY || config.app.twelveDataApiKey;
-      if (!apiKey || apiKey === 'your_twelve_data_api_key_here') {
-        console.warn('API key not configured for', symbol);
-        // Try Alpha Vantage fallback
-        return await fetchFromAlphaVantage(symbol);
-      }
-      
-      const url = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=30&apikey=${apiKey}&format=JSON`;
-      const res = await fetch(url);
-      
-      if (!res.ok) {
-        console.error(`Error fetching data for ${symbol}:`, res.status);
-        // Try Alpha Vantage fallback
-        return await fetchFromAlphaVantage(symbol);
-      }
-      
-      const json = await res.json();
-      console.log('TwelveData response for', symbol, json);
-      
-      if (!json.values || !Array.isArray(json.values)) {
-        console.error(`No valid data for ${symbol}:`, json);
-        // Try Alpha Vantage fallback
-        return await fetchFromAlphaVantage(symbol);
-      }
-      
-      // OHLC para velas
-      const data = json.values
-        .slice(0, 30)
-        .reverse()
-        .map((point: any) => ({
-          x: point.datetime,
-          y: [
-            parseFloat(point.open) || 0,
-            parseFloat(point.high) || 0,
-            parseFloat(point.low) || 0,
-            parseFloat(point.close) || 0,
-          ] as [number, number, number, number],
-        }))
-        .filter((item: { x: string, y: [number, number, number, number] }) => item.y.every((val: number) => val > 0));
-      
-      if (data.length === 0) {
-        // Fallback if cleaned out
-        return await fetchFromAlphaVantage(symbol);
-      }
-      return data;
-    } catch (error) {
-      console.error(`Error fetching stock data for ${symbol}:`, error);
-      // Try Alpha Vantage fallback
-      return await fetchFromAlphaVantage(symbol);
-    }
-  }
+  // We no longer fetch OHLC data for Daily Picks; TradingView handles rendering
 
   // Función para obtener todos los datos
   async function fetchAll() {
@@ -223,31 +88,17 @@ export default function HomePage() {
       const today = new Date();
       const pickDateISO = today.toISOString().slice(0, 10); // YYYY-MM-DD
       const cached = await getDailyPicksFromDB(pickDateISO);
-      if (cached && cached.charts) {
-        try {
-          const parsedCharts = Array.isArray(cached.charts)
-            ? cached.charts
-            : JSON.parse(typeof cached.charts === 'string' ? cached.charts : JSON.stringify(cached.charts));
-          const hasUsable = Array.isArray(parsedCharts) && parsedCharts.some((c: any) => Array.isArray(c?.data) && c.data.length > 0)
-          if (hasUsable) {
-            setStockCharts(parsedCharts);
-            setDailySymbols(Array.isArray(cached.symbols) ? cached.symbols : []);
-            return;
-          }
-          // fall through to recompute if cache is empty or unusable
-        } catch (e) {
-          console.warn('Failed to parse cached charts, recomputing...', e);
-        }
+      if (cached && Array.isArray(cached.symbols) && cached.symbols.length > 0) {
+        setDailySymbols(cached.symbols)
+        setStockCharts(cached.symbols.map((s: string) => ({ symbol: s, data: [] })))
+        return
       }
 
-      // Compute and persist
-      const selected = await selectTopMovers(fetchStock);
-      setStockCharts(selected);
-
-      // Persist to DB
-      const symbols = selected.map(s => s.symbol);
-      await upsertDailyPicks(pickDateISO, symbols, selected);
-      setDailySymbols(symbols);
+      // Compute symbols and persist
+      const symbols = await selectTopSymbols(existingPortfolioSymbols)
+      setStockCharts(symbols.map((s) => ({ symbol: s, data: [] })))
+      await upsertDailyPicks(pickDateISO, symbols, [])
+      setDailySymbols(symbols)
     } catch (error) {
       console.error('Error fetching all stocks:', error);
     } finally {
@@ -1144,25 +995,21 @@ export default function HomePage() {
                   {!loadingCharts ? (
                     <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                       {stockCharts.map(stock => (
-                        stock.data.length === 0 ? (
-                          <div key={stock.symbol} className="text-yellow-400 bg-black/60 rounded-lg p-4 mb-4">
-                            No data available for {stock.symbol}. Please try again later.
+                        <div key={stock.symbol} className="space-y-2">
+                          <div className="relative">
+                            <TradingViewChart symbol={stock.symbol} height={320} theme="dark" interval="D" />
                           </div>
-                        ) : (
-                          <div key={stock.symbol} className="relative">
-                            <CandleChart symbol={stock.symbol} data={stock.data} />
-                            <div className="absolute top-2 right-2 z-10">
-                              <Button
-                                onClick={() => router.push(`/dashboard?symbol=${stock.symbol}`)}
-                                size="sm"
-                                className="bg-transparent hover:bg-gray-700 text-white shadow-lg backdrop-blur-md"
-                              >
-                                <BarChart3 className="w-4 h-4 mr-1" />
-                                Analyze
-                              </Button>
-                            </div>
+                          <div className="flex justify-end">
+                            <Button
+                              onClick={() => router.push(`/dashboard?symbol=${stock.symbol}`)}
+                              size="sm"
+                              className="bg-transparent hover:bg-gray-700 text-white shadow-lg backdrop-blur-md"
+                            >
+                              <BarChart3 className="w-4 h-4 mr-1" />
+                              Analyze
+                            </Button>
                           </div>
-                        )
+                        </div>
                       ))}
                     </div>
                   ) : (
