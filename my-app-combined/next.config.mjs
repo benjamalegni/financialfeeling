@@ -1,3 +1,7 @@
+import path from 'path'
+import { fileURLToPath } from 'url'
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
@@ -10,35 +14,11 @@ const nextConfig = {
     unoptimized: true,
   },
   output: 'export',
+  outputFileTracingRoot: path.join(__dirname, '..'),
   trailingSlash: true,
   basePath: '',
   assetPrefix: '',
-  // Forzar HTTPS en producción
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains'
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff'
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY'
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block'
-          },
-        ],
-      },
-    ]
-  },
+  // headers removed: not supported with static export
 }
 
 export default nextConfig

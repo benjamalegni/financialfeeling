@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -39,11 +38,6 @@ import BullHead3D from '@/components/BullHead3D';
 import { config } from '@/lib/config'
 import BlurredChart from '@/components/blurred-chart'
 
-// Calcular top movers del día basados en variación intradía
-const candidateSymbols = [
-  'AAPL','TSLA','MSFT','GOOGL','AMZN','META','NVDA','NFLX',
-  'JPM','BAC','WFC','GS','JNJ','PFE','UNH','ABBV','XOM','CVX','COP','SPY'
-];
 
 // Select symbols for Daily Picks without calling third-party APIs
 async function selectTopSymbols(existingPortfolioSymbols: string[]): Promise<string[]> {
@@ -57,7 +51,6 @@ async function selectTopSymbols(existingPortfolioSymbols: string[]): Promise<str
 
 export default function HomePage() {
   const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(false) // Cambiado a false para que cargue inmediatamente
   const [message, setMessage] = useState('')
   const [dynamicText, setDynamicText] = useState(getRandomText())
   const [dashboardColor, setDashboardColor] = useState('green')
@@ -177,7 +170,6 @@ export default function HomePage() {
       description:
         'Select up to 2 assets (e.g., AAPL, TSLA) to track and analyze. You can add them from the + button or the chat box.',
       color: '#3b82f6',
-      background: '/backgrounds/wall-street-bull-bg.png'
     },
     {
       id: 2,
