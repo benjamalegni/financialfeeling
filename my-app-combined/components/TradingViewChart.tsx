@@ -14,6 +14,8 @@ export interface TradingViewChartProps {
   theme?: 'light' | 'dark'
   interval?: string // e.g., 'D', '60'
   studies?: string[]
+  rootMargin?: string
+  threshold?: number
 }
 
 let tvScriptPromise: Promise<void> | null = null
@@ -46,6 +48,8 @@ export default function TradingViewChart({
   theme = 'dark',
   interval = 'D',
   studies = [],
+  rootMargin = '0px',
+  threshold = 0.1,
 }: TradingViewChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const widgetRef = useRef<any>(null)
@@ -84,7 +88,7 @@ export default function TradingViewChart({
           studies,
         })
       }
-    }, { rootMargin: '200px' })
+    }, { rootMargin, threshold })
 
     observer.observe(el)
     return () => observer.disconnect()

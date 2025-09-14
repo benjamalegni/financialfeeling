@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, Send, LogOut, User, BarChart3, Zap, Search, Star, TrendingUp, DollarSign, Bitcoin, Building2, X } from 'lucide-react'
+import { Plus, Send, BarChart3, Search, X } from 'lucide-react'
 import SimpleTypewriter from '@/components/simple-typewriter'
 import { getRandomText } from '@/lib/texts'
 import Header from '@/components/header'
@@ -32,8 +32,11 @@ import { Badge } from '@/components/ui/badge'
 // Removed SharedSidebar import
 import { getRoute } from '@/lib/utils'
 import Glide from '@glidejs/glide';
-import CandleChart from '@/components/CandleChart';
-import TradingViewChart from '@/components/TradingViewChart';
+import dynamic from 'next/dynamic';
+const TradingViewChart = dynamic(() => import('@/components/TradingViewChart'), {
+  ssr: false,
+  loading: () => <div className="h-[320px] w-full bg-gray-800/40 border border-gray-700 rounded" />,
+});
 import BullHead3D from '@/components/BullHead3D';
 import { config } from '@/lib/config'
 import BlurredChart from '@/components/blurred-chart'

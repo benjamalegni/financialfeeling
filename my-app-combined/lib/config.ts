@@ -11,6 +11,11 @@ export const config = {
     webhookUrl: process.env.NEXT_PUBLIC_RAILWAY_WEBHOOK_URL || 'https://ffaiagent-n8n-production.up.railway.app/webhook/analyze-stocks',
   },
 
+  // Local/External Server API (Express in /server)
+  server: {
+    baseUrl: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:4000',
+  },
+
   // Alpha Vantage Configuration
   alphaVantage: {
     apiKey: process.env.NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY || 'UVJUR5P1SEQ00P2P',

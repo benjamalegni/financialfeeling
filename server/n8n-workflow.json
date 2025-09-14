@@ -1,0 +1,311 @@
+{ "nodes": [ { "parameters": { "url": "={{ $json.sources }}", "options": {} }, "type": "n8n-nodes-base.rssFeedRead", "typeVersion": 1.2, "position": [ 880, 2080 ], "id": "68156e0c-b9a5-4828-bcc8-db4338d6ca45", "name": "RSS Read" }, { "parameters": { "promptType": "define", "text": "={{ $json.output }}", "hasOutputParser": true, "options": {} }, "type": "@n8n/n8n-nodes-langchain.agent", "typeVersion": 2, "position": [ 1984, 2080 ], "id": "801d5549-b99a-4355-80d5-5748f8495453", "name": "AI Agent" }, { "parameters": { "model": { "__rl": true, "value": "gpt-3.5-turbo", "mode": "list", "cachedResultName": "gpt-3.5-turbo" }, "options": {} }, "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi", "typeVersion": 1.2, "position": [ 1840, 2368 ], "id": "a09c6e14-7805-434c-aedb-960fb04ccbfa", "name": "OpenAI Chat Model", "credentials": { "openAiApi": { "id": "wO8bdhwT4eZHSpl6", "name": "OpenAi account" } } }, { "parameters": { "modelName": "models/gemini-1.5-flash", "options": {} }, "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini", "typeVersion": 1, "position": [ 1952, 2272 ], "id": "d95f7737-6323-4eab-9938-2222c26f7656", "name": "Google Gemini Chat Model", "credentials": { "googlePalmApi": { "id": "4ZmPZkhmCsEOv3z6", "name": "Google Gemini(PaLM) Api account" } } }, { "parameters": { "sessionIdType": "customKey", "sessionKey": "123" }, "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow", "typeVersion": 1.3, "position": [ 2304, 2464 ], "id": "266c9298-6410-473c-9d53-02cd1d52f442", "name": "Simple Memory" }, { "parameters": { "maxItems": 2 }, "type": "n8n-nodes-base.limit", "typeVersion": 1, "position": [ 1104, 2080 ], "id": "41f4d770-6785-4bfc-9b53-8390d8d6a993", "name": "Limit" }, { "parameters": { "jsCode": "const noticias = [];\n\nfor (const item of $(\"Limit\").all()) {\n noticias.push({\n title: item.json.title || item.json.contentSnippet,\n });\n}\n\nconst output = JSON.stringify(noticias, null, 2);\n\nreturn [\n {\n json: {\n noticiasTexto: output\n }\n }\n];\n\n\nreturn [\n {\n json: {\n noticias\n }\n }\n];" }, "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [ 1312, 1952 ], "id": "460b737f-63f7-4620-863c-140257f2905b", "name": "Code" }, { "parameters": { "jsCode": "const raw = $(\"AI Agent\").last().json.output;\n\n// 1. Limpiar encabezados como \"Here is your JSON:\"\nlet clean = raw.replace(/^(Here is (your )?(the )?(valid )?JSON(:)?)/i, '').trim();\n\n// 2. Quitar delimitadores de bloque Markdown (
+)\nclean = clean\n  .replace(/^
+(?:json|markdown)?\\n?/i, '') // inicio
+json\n  .replace(/\\n?
+$/g, '') // cierre
+\n\n// 3. Extraer solo el contenido JSON hasta el último cierre de llave\nconst endIndex = clean.lastIndexOf('}');\nif (endIndex !== -1) {\n  clean = clean.slice(0, endIndex + 1);\n} else {\n  throw new Error(\"No se encontró el cierre del JSON (`}`)\");\n}\n\n// 4. Parsear el JSON\nlet parsed;\ntry {\n  parsed = JSON.parse(clean);\n} catch (err) {\n  throw new Error(\"Error al parsear JSON limpio: \" + err.message + \"\\nContenido:\\n\" + clean);\n}\n\nreturn [{ json: parsed }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2368,
+        2064
+      ],
+      "id": "65dce3e2-4c83-406e-b01c-77d7fa9b8894",
+      "name": "md to json"
+    },
+    {
+      "parameters": {
+        "jsCode": "function transformSingleToMarkdown(name, item) {\n  const impactEmoji = item.impact === 'positive' ? '🟢' : \n                      item.impact === 'negative' ? '🔴' : '🟡';\n\n  const horizonEmoji = item.horizon === 'short' ? '⚡' : \n                       item.horizon === 'medium' ? '📅' : '📈';\n\n  const markdown = `${impactEmoji} **${name} - ${item.impact || 'N/A'}**\\n\\n` +\n                   `📰 ${item.news || 'No news'}\\n\\n` +\n                   `💡 *Reason:* ${item.reason || 'No reason'}\\n\\n` +\n                   `${horizonEmoji} *Horizon:* ${item.horizon || 'N/A'}\\n`;\n\n  return markdown;\n}\n\nconst forecast = $input.first().json.forecast;\n\nconst outputArray = Object.entries(forecast).map(([asset, data]) => {\n  return {\n      asset,\n      markdown: transformSingleToMarkdown(asset, data)\n\n  };\n});\n\n// Devolvés un solo item con un atributo `output` que contiene el array\nreturn [\n  {\n    json: {\n      output: outputArray\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        1760
+      ],
+      "id": "6d9e074c-363c-416f-8428-65a9367bb803",
+      "name": "json to md"
+    },
+    {
+      "parameters": {
+        "jsCode": "let input = $input.first().json.output\nlet output = \"\"\n\nfor (let i = 0; i < input.length; i++) {\n  output += input[i].markdown;\n  if(i!=input.length-1){\n    output += \"\\n-------------------------------------\\n\";\n  }\n}\n\nreturn {\n  json: {\n    markdown: output\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2272,
+        1760
+      ],
+      "id": "078e1e9f-9cfb-484a-b6ce-efdc58447ed3",
+      "name": "mergeAssets-to-Message"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "sources",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1264,
+        1728
+      ],
+      "id": "18425323-0b64-477c-a8e5-6f7e28bd12b2",
+      "name": "Split Out2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "analyze-stocks",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        496,
+        2304
+      ],
+      "id": "db53c085-8fab-435f-a520-ed1493d4c0d1",
+      "name": "Webhook",
+      "webhookId": "be1d19f2-87cd-46be-a80f-451e7747ef22"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "135e343f-dc5b-4b1e-b199-347b2838f4eb",
+              "name": "sources",
+              "value": "[\"https://rss.app/feeds/xGkJtQLoM7xfgpDN.xml\"]",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        864,
+        1584
+      ],
+      "id": "2d3b841e-5740-4b50-a675-c37a87e8dbc8",
+      "name": "sources"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1376,
+        2176
+      ],
+      "id": "333a9462-5e2d-4484-9e20-566462994939",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "response",
+                "value": "All Nodes"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2656,
+        2208
+      ],
+      "id": "6137fc7d-d4c6-4414-963d-307bd42727d1",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prompt = `You are a critical-thinking senior financial analyst.\nAnalyze the following financial news excerpt and extract structured insights in valid JSON format only.\n\nYour task:\n- Wrap output in forecast attribute\n- Identify only financial assets directly affected by the news\n- For each affected market, return: \"impact\", \"news\", \"reason\", \"horizon\"\n- Respond strictly in JSON format only — no additional explanation or commentary - no empty json\n- Do not use special characters that might break the JSON\n- Do not include unaffected or speculative markets\n\nassets to analyze:\n`\n\n\nconst ex = `. OUTPUT FORMAT EXAMPLE:\n{\"forecast\":{\n    \"S&P500\": {\n      \"impact\": \"negative\",\n      \"news\": \"Federal Reserve announces...\",\n      \"reason\": \"Higher interest rates increase borrowing costs...\",\n      \"horizon\": \"short\"\n    },\n    \"Gold\": {\n      \"impact\": \"positive\", \n      \"news\": \"Geopolitical tensions escalate as trade war intensifies\",\n      \"reason\": \"Trade war uncertainty drives investors...\",\n      \"horizon\": \"medium\"\n    }\n  }\n}\"`\n\nlet output = prompt.concat($input.first().json.body.stocks).concat(ex)\n\n\n\nreturn [\n  {\n    json: {\n      output\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        2176
+      ],
+      "id": "71984737-d25b-4b4a-bf34-1c4e3d8eb605",
+      "name": "Code1"
+    }
+  ],
+  "connections": {
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "md to json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "md to json": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "json to md": {
+      "main": [
+        [
+          {
+            "node": "mergeAssets-to-Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mergeAssets-to-Message": {
+      "main": [
+        []
+      ]
+    },
+    "Split Out2": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "sources",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sources": {
+      "main": [
+        [
+          {
+            "node": "Split Out2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c01ba27cceeb0576de0dc69a9a9035e6a56f00ff96c018dae458356ce26ee17f"
+  }
+}

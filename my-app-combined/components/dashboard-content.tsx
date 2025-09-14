@@ -1,11 +1,9 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { Home, Plus, X, Search, Star, Filter } from 'lucide-react'
-import AISentimentAnalysis from './ai-sentiment-analysis'
+import { Plus, X, Search } from 'lucide-react'
+import AISentimentAnalysis from '../app/dashboard/ai-sentiment-analysis'
 import { createBrowserClient } from '@supabase/ssr'
-import { redirect } from 'next/navigation'
 import { getRoute } from '@/lib/utils'
 import { config } from '@/lib/config'
 import { Database } from '@/lib/database.types'
@@ -193,18 +191,6 @@ export default function DashboardContent({
       >
         Sign Out
       </button>
-    )
-  }
-
-  // Clear Test Data Button Component
-  const ClearTestDataButton = () => {
-    return (
-      <Link
-        href={getRoute('/dashboard?clear=true')}
-        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-md shadow-md transition duration-150 ease-in-out"
-      >
-        Clear Test Data
-      </Link>
     )
   }
 
