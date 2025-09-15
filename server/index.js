@@ -318,14 +318,38 @@ async function analyzeStocksCore({ stocks, provider, includeRss = true }) {
 
 // POST /analyze-stocks -> mirrors the n8n Webhook + Code1 + AI Agent + md to json
 app.post('/analyze-stocks', async (req, res) => {
+  const { stocks, provider } = req.body || {}
   try {
-    const { stocks, provider } = req.body || {}
     const { validated, transport } = await analyzeStocksCore({ stocks, provider })
-    // Log a compact summary for debugging
     console.log('[analyze-stocks] transport=', transport, 'assets=', Object.keys(validated.forecast))
     return res.json(validated)
   } catch (err) {
+    // Fallback: if model returned empty/invalid forecast, return neutral entries for requested stocks
     const message = err?.message || 'unknown_error'
+    const isUserInput = err?.code === 'invalid_stocks'
+    const isModelEmpty = err?.code === 'empty_forecast' || message.startsWith('Error parsing model JSON')
+    if (!isUserInput && isModelEmpty) {
+      try {
+        const list = Array.isArray(stocks) ? stocks : (typeof stocks === 'string' ? stocks.split(/[,;]+/).map(s => s.trim()).filter(Boolean) : [])
+        const fallback = list.reduce((acc, symRaw) => {
+          const sym = (symRaw || '').toUpperCase()
+          if (!sym) return acc
+          acc[sym] = {
+            impact: 'neutral',
+            news: `No strong signal detected for ${sym}`,
+            reason: 'Model returned empty/invalid forecast; providing neutral fallback',
+            horizon: 'short',
+          }
+          return acc
+        }, {})
+        if (Object.keys(fallback).length > 0) {
+          console.warn('[analyze-stocks] returning neutral fallback forecast due to model error:', message)
+          res.setHeader('X-Fallback', '1')
+          return res.json({ forecast: fallback })
+        }
+      } catch (_) {}
+    }
+
     const status = err?.code === 'invalid_stocks'
       ? 400
       : (typeof err?.upstream_status === 'number' && err.upstream_status)

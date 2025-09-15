@@ -1,24 +1,18 @@
-import path from 'path'
-import { fileURLToPath } from 'url'
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 /** @type {import('next').NextConfig} */
+const isDev = process.env.NODE_ENV !== 'production'
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  images: {
-    unoptimized: true,
-  },
-  output: 'export',
-  outputFileTracingRoot: path.join(__dirname, '..'),
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
+  images: { unoptimized: true },
+  // Do not set outputFileTracingRoot; avoid path joins with undefined
+  // Only set output='export' for production builds
   trailingSlash: true,
   basePath: '',
   assetPrefix: '',
-  // headers removed: not supported with static export
+}
+
+if (!isDev) {
+  nextConfig.output = 'export'
 }
 
 export default nextConfig
