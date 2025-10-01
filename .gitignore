@@ -36,6 +36,7 @@ next-env.d.ts
 # OS
 .DS_Store
 Thumbs.db
+*.pem
 
 # Logs
 logs
@@ -78,17 +79,9 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# parcel-bundler cache (https://parceljs.org/)
+# parcel-bundler cache
 .cache
 .parcel-cache
-
-# Next.js build output
-.next
-
-
-# Nuxt.js build / generate output
-.nuxt
-dist
 
 # Gatsby files
 .cache/
@@ -123,79 +116,9 @@ railway.toml
 coverage/
 .nyc_output/
 
-# React Native specific
-# Expo
-.expo/
-dist/
-web-build/
-
-# Native
-*.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-
-# Metro
-.metro-health-check*
-
-# Debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
-.DS_Store
-*.pem
-
-# local env files
-.env*.local
-
-# typescript
-*.tsbuildinfo
-
-# Expo
-.expo/
-dist/
-web-build/
-
-# Expo Router
-.expo-router/
-
-# Flipper
-ios/Pods/
-
-# Temporary files created by Metro to check the health of the file watcher
-.metro-health-check*
-
-# Testing
-coverage/
-
 # Misc
-*.tgz
 *.tar.gz
 
-# Specific project folders
-my-app/node_modules/
-my-app/.next/
-my-app/out/
-my-app/build/
-my-app/dist/
-
-my-app-v0/node_modules/
-my-app-v0/.next/
-my-app-v0/out/
-my-app-v0/build/
-my-app-v0/dist/
-
-my-app-native/node_modules/
-my-app-native/.expo/
-my-app-native/dist/
-my-app-native/web-build/
-
-theater-depot-clone/node_modules/
-theater-depot-clone/.next/
-theater-depot-clone/out/
-theater-depot-clone/build/
-theater-depot-clone/dist/ 
+# Public AI models (exclude from git, tracked in separate repos)
+my-app-combined/public/fingpt2-7_MLC/
+my-app-combined/public/fingpt-MLC/
