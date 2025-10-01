@@ -1,0 +1,16 @@
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: install dependencies
+        run: npm install -g pnpm && pnpm install
+      
+      - name: copy .env.example files
+        shell: bash
+        run: find . -type f -name ".env.example" -exec sh -c 'cp "$1" "${1%.example}"' _ {} \;
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name:lint 
+        run: pnpm lint 

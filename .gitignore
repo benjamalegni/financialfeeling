@@ -120,5 +120,8 @@ coverage/
 *.tar.gz
 
 # Public AI models (exclude from git, tracked in separate repos)
-my-app-combined/public/fingpt2-7_MLC/
-my-app-combined/public/fingpt-MLC/
+my-app-combined/public/models/
+my-app-combined/public/assets/
+my-app-combined/out/
+
+server/python_model_conversion/

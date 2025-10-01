@@ -11,7 +11,7 @@ interface LoadingState {
   progress: number;
 }
 
-export function useWebLLM({ modelId, modelBaseUrl }: UseWebLLMOptions) {
+export function useWebLLM({ modelId }: UseWebLLMOptions) {
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState<LoadingState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -24,28 +24,25 @@ export function useWebLLM({ modelId, modelBaseUrl }: UseWebLLMOptions) {
       try {
         setLoading({ stage: "Inicializando...", progress: 0 });
 
-        // custom model config from my hugging face
+        const modelURL = typeof window !== 'undefined' 
+          ? `${window.location.origin}/assets/fingptmodel/`
+          : '/assets/fingptmodel/';
+
         const appConfig: webllm.AppConfig = {
           model_list: [
             {
-              // Tu modelo en HuggingFace
-              model: "https://huggingface.co/benjamalegni/fingpt2-7_MLC",
-              model_id: "fingpt2-7_MLC",
-
-              // reutilize the precompiled wasm from llama 2 7b chat
+              model_id: "fingpt-custom",
+              model: modelURL,
               model_lib:
                 webllm.modelLibURLPrefix +
                 webllm.modelVersion +
-                "/Llama-2-7b-chat-hf-q4f16_1-ctx4k_cs1k-webgpu.wasm",
-
-              required_features: ["shader-f16"],
+                "/Llama-2-7b-chat-hf-q4f32_1-ctx4k_cs1k-webgpu.wasm",
             },
           ],
         };
 
-        // create engine with progress callback
         const engine = await webllm.CreateMLCEngine(
-          "fingpt2-7_MLC",
+          "fingpt-custom",
           {
             appConfig,
             initProgressCallback: (report: webllm.InitProgressReport) => {
@@ -66,7 +63,9 @@ export function useWebLLM({ modelId, modelBaseUrl }: UseWebLLMOptions) {
         }
       } catch (err: any) {
         if (mounted) {
-          setError(err?.message || "Error al cargar el modelo");
+          console.error("Error loading model:", err);
+          const errorMsg = err?.message || err?.toString() || "Error al cargar el modelo";
+          setError(errorMsg);
           setLoading(null);
         }
       }

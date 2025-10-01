@@ -9,6 +9,15 @@ const nextConfig = {
   trailingSlash: true,
   basePath: '',
   assetPrefix: '',
+  // Rewrites para mapear rutas de HuggingFace a archivos locales
+  async rewrites() {
+    return [
+      {
+        source: '/assets/fingptmodel/resolve/main/:path*',
+        destination: '/assets/fingptmodel/:path*',
+      },
+    ]
+  },
 }
 
 if (!isDev) {
