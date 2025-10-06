@@ -24,9 +24,7 @@ export function useWebLLM({ modelId }: UseWebLLMOptions) {
       try {
         setLoading({ stage: "Inicializando...", progress: 0 });
 
-        const modelURL = typeof window !== 'undefined' 
-          ? `${window.location.origin}/assets/fingptmodel/`
-          : '/assets/fingptmodel/';
+        const modelURL = "https://huggingface.co/benjamalegni/fingpt-q4f32_1-MLC"
 
         const appConfig: webllm.AppConfig = {
           model_list: [
