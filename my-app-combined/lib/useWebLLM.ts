@@ -1,6 +1,41 @@
 import { useState, useEffect, useRef } from "react";
 import * as webllm from "@mlc-ai/web-llm";
 
+// Some GPUs (especially iGPU or virtualized setups) reject the initial
+// `high-performance` adapter request. Retry with more permissive options so
+// WebLLM can still grab a compatible adapter when WebGPU is present.
+if (typeof window !== "undefined" && typeof navigator !== "undefined") {
+  const gpu = (navigator as any).gpu;
+
+  if (gpu && !gpu.__mlcRequestAdapterPatched) {
+    const originalRequestAdapter = gpu.requestAdapter.bind(gpu);
+
+    gpu.requestAdapter = async (options?: unknown) => {
+      let adapter = await originalRequestAdapter(options as any);
+
+      if (!adapter && options && (options as any).powerPreference === "high-performance") {
+        adapter = await originalRequestAdapter({ powerPreference: "low-power" } as any);
+      }
+
+      if (!adapter) {
+        adapter = await originalRequestAdapter(undefined);
+      }
+
+      if (!adapter) {
+        try {
+          adapter = await originalRequestAdapter({ forceFallbackAdapter: true } as any);
+        } catch (err) {
+          console.debug("Fallback adapter request failed", err);
+        }
+      }
+
+      return adapter;
+    };
+
+    gpu.__mlcRequestAdapterPatched = true;
+  }
+}
+
 interface UseWebLLMOptions {
   modelId: string;
   modelBaseUrl?: string;
@@ -98,4 +133,3 @@ export function useWebLLM({ modelId }: UseWebLLMOptions) {
 
   return { ready, loading, error, chat };
 }
-
