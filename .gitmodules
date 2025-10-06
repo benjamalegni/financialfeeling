@@ -1,0 +1,4 @@
+[submodule "fingpt-q4f32_1-MLC"]
+	path = fingpt-q4f32_1-MLC
+	url = https://huggingface.co/benjamalegni/fingpt-q4f32_1-MLC
+	branch = main
