@@ -10,23 +10,14 @@ import SimpleTypewriter from '@/components/simple-typewriter'
 import { getRandomText } from '@/lib/texts'
 import Header from '@/components/header'
 import { supabase, getDailyPicksFromDB, upsertDailyPicks } from '@/lib/supabaseClient'
+import { cn } from '@/lib/utils'
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 // Removed SharedSidebar import
@@ -51,6 +42,87 @@ async function selectTopSymbols(existingPortfolioSymbols: string[]): Promise<str
   // Fallback to a stable default
   return ['AAPL', 'NVDA', 'TSLA']
 }
+
+// Background Cell Animation Component
+const BackgroundCellCore = () => {
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+  // Usar un listener global para detectar el mouse en toda la ventana
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      setMousePosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  // Generate grid cells - aumentado para cubrir toda la pantalla
+  const rows = 60; // Aumentado para pantallas grandes
+  const cols = 50; // Aumentado para pantallas anchas
+  const cells = [];
+  
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      cells.push({ row: i, col: j, key: `cell-${i}-${j}` });
+    }
+  }
+
+  const size = 300;
+  
+  return (
+    <div
+      className="fixed inset-0 pointer-events-none overflow-hidden"
+      style={{ zIndex: 0 }}
+    >
+      {/* Grid pattern with spotlight effect */}
+      <div className="absolute inset-0">
+        <div 
+          className="grid gap-0 opacity-50 min-h-screen"
+          style={{
+            gridTemplateColumns: `repeat(${cols}, 48px)`,
+            gridTemplateRows: `repeat(${rows}, 48px)`,
+          }}
+        >
+          {cells.map(({ row, col, key }) => {
+            // Calculate distance from mouse
+            const cellX = col * 48 + 24;
+            const cellY = row * 48 + 24;
+            const distance = Math.sqrt(
+              Math.pow(mousePosition.x - cellX, 2) + 
+              Math.pow(mousePosition.y - cellY, 2)
+            );
+            
+            const isHighlighted = distance < size / 2;
+            const intensity = isHighlighted 
+              ? Math.max(0, 1 - distance / (size / 2))
+              : 0;
+            
+            return (
+              <div
+                key={key}
+                className={cn(
+                  "border-l border-b transition-colors duration-200",
+                  isHighlighted ? "border-blue-600" : "border-neutral-700"
+                )}
+                style={{
+                  backgroundColor: isHighlighted 
+                    ? `rgba(14, 165, 233, ${intensity * 0.3})`
+                    : 'transparent',
+                  width: '48px',
+                  height: '48px',
+                }}
+              />
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function HomePage() {
   const [user, setUser] = useState<any>(null)
@@ -173,27 +245,31 @@ export default function HomePage() {
       description:
         'Select up to 2 assets (e.g., AAPL, TSLA) to track and analyze. You can add them from the + button or the chat box.',
       color: '#3b82f6',
+      background: undefined,
     },
     {
       id: 2,
       title: 'Run AI Analysis',
       description:
         'Launch the analysis when needed to get sentiment, recommendations and confidence scores for each asset.',
-      color: '#10b981'
+      color: '#10b981',
+      background: undefined,
     },
     {
       id: 3,
       title: 'Review Insights',
       description:
         'Compare signals, check price trends, and review the confidence to make informed decisions.',
-      color: '#f59e0b'
+      color: '#f59e0b',
+      background: undefined,
     },
     {
       id: 4,
       title: 'Track & Adjust',
       description:
         'Re-run analysis over time, adjust your selection, and monitor how your picks perform.',
-      color: '#8b5cf6'
+      color: '#8b5cf6',
+      background: undefined,
     }
   ]
 
@@ -567,19 +643,6 @@ export default function HomePage() {
     loadUserAssets() // Load existing assets when opening
   }
 
-  const getDashboardColorClasses = () => {
-    switch (dashboardColor) {
-      case 'green':
-        return 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
-      case 'yellow':
-        return 'bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-500 hover:to-amber-600'
-      case 'red':
-        return 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700'
-      default:
-        return 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
-    }
-  }
-
   // Add asset immediately like dashboard (upsert to DB)
   const handleAddAssetFromDialog = async (asset: { symbol: string; type?: string; name?: string }) => {
     if (!user) {
@@ -618,9 +681,9 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen text-white relative">
-      {/* Gradiente fijo oscuro violeta y azul */}
-      <div className="fixed inset-0 z-0 bg-gradient-to-br from-black via-purple-900 via-indigo-900 to-black"></div>
+    <div className="min-h-screen text-white relative bg-slate-950 overflow-hidden">
+      {/* Background Cell Animation */}
+      <BackgroundCellCore />
       <div className="relative z-10">
         {/* Header */}
         <Header user={user} onSignOut={handleSignOut} />
@@ -910,7 +973,7 @@ export default function HomePage() {
                     >
                       Sign in
                     </Button>{" "}
-                    to start collaborating with Financial Feeling
+                    to add tickers to your portfolio
                   </p>
                 )}
                 {/* Inline badges are rendered inside the input row above */}
@@ -988,9 +1051,9 @@ export default function HomePage() {
               ) : (
                 <>
                   {!loadingCharts ? (
-                    <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-2">
                       {stockCharts.map(stock => (
-                        <div key={stock.symbol} className="space-y-2">
+                        <div key={stock.symbol} className="space-y-1">
                           <div className="relative">
                             <TradingViewChart symbol={stock.symbol} height={320} theme="dark" interval="D" />
                           </div>
@@ -1000,6 +1063,7 @@ export default function HomePage() {
                               size="sm"
                               className="bg-transparent hover:bg-gray-700 text-white shadow-lg backdrop-blur-md"
                             >
+                              {stock.symbol}
                               <BarChart3 className="w-4 h-4 mr-1" />
                               Analyze
                             </Button>
@@ -1036,7 +1100,7 @@ export default function HomePage() {
                               {/* Overlay para mejorar legibilidad cuando hay background */}
                               <div className="absolute inset-0 bg-black/40"></div>
                               <div className="relative z-10">
-                                <h3 className="mb-4 text-3xl font-semibold text-white" style={{ color: step.color }}>
+                                <h3 className="mb-4 text-3xl font-semibold text-white" style={{ color: 'white' }}>
                                   {idx + 1}. {step.title}
                                 </h3>
                                 <p className="text-gray-200 text-base">
@@ -1058,12 +1122,12 @@ export default function HomePage() {
               </Card>
             </div>
 
-            {/* 3. 3D Bull Model Section */}
+            {/* 3. 3D Bull Model Section 
             <div className="mb-12">
               <h2 className="text-4xl font-bold mb-6 text-center">Get Lucky</h2>
               <BullHead3D />
             </div>
-
+              */}
           </div>
         </div>
       </div>

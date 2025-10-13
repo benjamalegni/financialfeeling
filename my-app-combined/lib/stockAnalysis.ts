@@ -30,9 +30,10 @@ export async function analyzeStocks(stocks: string[]): Promise<AnalysisResult | 
       throw new Error('No assets selected to analyze')
     }
     const baseUrl = config.server.baseUrl
-    const url = `${baseUrl.replace(/\/$/, '')}/analyze-stocks`
+    const url = baseUrl ? `${baseUrl.replace(/\/$/, '')}/analyze-stocks` : '/api/analyze-stocks'
     const payload = { stocks }
     console.log('Calling Server stock analysis API:', url, 'payload=', payload)
+
 
     const response = await fetch(url, {
       method: 'POST',

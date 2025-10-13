@@ -13,7 +13,7 @@ export const config = {
 
   // Local/External Server API (Express in /server)
   server: {
-    baseUrl: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:4000',
+    baseUrl: process.env.NEXT_PUBLIC_SERVER_URL || '',
   },
 
   // Alpha Vantage Configuration
