@@ -1,48 +1,27 @@
-name: Deploy on Push
+name: Deploy Next.js App to Vercel
 
 on:
   push:
     branches:
-      - main # This specifies that the workflow triggers on pushes to the 'main' branch
+      - main
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest # The type of runner that the job will run on
-
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4 # Checks out your repository code
-
-      - name: Setup environment (e.g., Node.js, Python, etc.)
-        # Example for Node.js:
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20' # Specify your desired Node.js version
+          node-version: '20' # Specify your Node.js version
 
       - name: Install dependencies
-        run: npm install # Or 'pip install -r requirements.txt' for Python, etc.
+        run: npm install
 
-      - name: Build application (if necessary)
-        run: npm run build # Or your specific build command
+      - name: Build Next.js app
+        run: npm run build
 
-      - name: Deploy to target environment
-        # This step will vary greatly depending on your deployment target.
-        # Examples:
-        # - Deploying to GitHub Pages:
-        #   uses: peaceiris/actions-gh-pages@v3
-        #   with:
-        #     github_token: ${{ secrets.GITHUB_TOKEN }}
-        #     publish_dir: ./build
-        # - Deploying to a server via SSH:
-        #   uses: appleboy/ssh-action@master
-        #   with:
-        #     host: ${{ secrets.SSH_HOST }}
-        #     username: ${{ secrets.SSH_USERNAME }}
-        #     key: ${{ secrets.SSH_PRIVATE_KEY }}
-        #     script: |
-        #       cd /path/to/your/app
-        #       git pull origin main
-        #       npm install
-        #       npm run build
-        #       pm2 restart your-app
-        # - Deploying to a cloud provider (e.g., Azure, AWS, GCP) using their respective actions.
+      - name: Deploy to Vercel
+        run: npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
