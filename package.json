@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "cd my-app-combined && npm run dev",
-    "build": "next build",
+    "build": "cd my-app-combined && next build",
     "start": "next start",
     "lint": "echo 'No linting configured'",
     "test": "echo 'No tests'",
