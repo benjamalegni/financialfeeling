@@ -176,27 +176,5 @@ coverage/
 *.tgz
 *.tar.gz
 
-# Specific project folders
-my-app/node_modules/
-my-app/.next/
-my-app/out/
-my-app/build/
-my-app/dist/
-
-my-app-v0/node_modules/
-my-app-v0/.next/
-my-app-v0/out/
-my-app-v0/build/
-my-app-v0/dist/
-
-my-app-native/node_modules/
-my-app-native/.expo/
-my-app-native/dist/
-my-app-native/web-build/
-
-theater-depot-clone/node_modules/
-theater-depot-clone/.next/
-theater-depot-clone/out/
-theater-depot-clone/build/
-theater-depot-clone/dist/ 
-my-app-combined/out
+# Backup folder
+backup-root/
