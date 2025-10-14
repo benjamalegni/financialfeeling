@@ -1,5 +1,4 @@
 declare module '@glidejs/glide';
-declare module 'granim';
 
 // Three.js types
 declare module '@react-three/fiber' {
