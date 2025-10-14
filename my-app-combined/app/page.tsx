@@ -43,12 +43,15 @@ async function selectTopSymbols(existingPortfolioSymbols: string[]): Promise<str
   return ['AAPL', 'NVDA', 'TSLA']
 }
 
-// Background Cell Animation Component
+// Background Cell Animation Component - Client-side only
 const BackgroundCellCore = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isClient, setIsClient] = useState(false);
 
-  // Usar un listener global para detectar el mouse en toda la ventana
+  // Ensure this only runs on client side
   useEffect(() => {
+    setIsClient(true);
+    
     const handleMouseMove = (event: MouseEvent) => {
       setMousePosition({
         x: event.clientX,
@@ -59,6 +62,16 @@ const BackgroundCellCore = () => {
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
+
+  // Don't render on server side
+  if (!isClient) {
+    return (
+      <div 
+        className="fixed inset-0 bg-slate-950"
+        style={{ zIndex: 0 }}
+      />
+    );
+  }
 
   // Generate grid cells - aumentado para cubrir toda la pantalla
   const rows = 60; // Aumentado para pantallas grandes
