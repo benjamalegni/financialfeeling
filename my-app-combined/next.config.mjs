@@ -1,19 +1,14 @@
 /** @type {import('next').NextConfig} */
-const isDev = process.env.NODE_ENV !== 'production'
-
 const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
   images: { unoptimized: true },
   trailingSlash: true,
-  // No basePath needed for custom domain (financialfeeling.com)
-  basePath: '',
-  assetPrefix: '',
+  // No basePath for custom domain (financialfeeling.com)
   reactStrictMode: true,
-}
-
-if (!isDev) {
-  nextConfig.output = 'export'
+  // Vercel optimizations
+  swcMinify: true,
+  poweredByHeader: false,
 }
 
 export default nextConfig
