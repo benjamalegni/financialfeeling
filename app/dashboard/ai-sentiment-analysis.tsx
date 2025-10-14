@@ -6,6 +6,7 @@ import { analyzeStocks } from '@/lib/stockAnalysis'
 import { getFinancialData, FinancialMetrics, calculateFundamentalScore } from '@/lib/financialData'
 import { createBrowserClient } from '@supabase/ssr'
 import { config } from '@/lib/config'
+import SnakeGame from '@/components/SnakeGame'
 
 interface SentimentData {
   symbol: string
@@ -350,8 +351,8 @@ export default function AISentimentAnalysis({ selectedAssets, analysisData, user
 
       {isLoading ? (
         <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">We are analyzing the latest financial news...</p>
+          <SnakeGame />
+          <p className="text-gray-400 mt-6">We are analyzing the latest financial news...</p>
         </div>
       ) : (
         <div className="space-y-8">

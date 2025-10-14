@@ -196,7 +196,8 @@ export default function LoginPage() {
             </Button>
 
             <div className="mt-2">
-              <Button type="button" variant="outline" className="w-full border-gray-600" onClick={handleResetPassword} disabled={isSubmitting}>
+              <Button type="button"  
+              className="w-full border-gray-600 text-white hover:text-white hover:bg-gray-800 transition-colors" onClick={handleResetPassword} disabled={isSubmitting}>
                 Reset password
               </Button>
             </div>
@@ -216,10 +217,9 @@ export default function LoginPage() {
 
           <div className="space-y-3">
             <Button
-              variant="outline"
               onClick={handleGoogleSignIn}
               disabled={isSubmitting}
-              className="w-full border-gray-600 text-black hover:text-white hover:bg-gray-800 transition-colors"
+              className="w-full border-gray-600 text-white hover:text-white hover:bg-gray-800 transition-colors"
             >
               <Mail className="mr-2 h-4 w-4" />
               Sign In with Google

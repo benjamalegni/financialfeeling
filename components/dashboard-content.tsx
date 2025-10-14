@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import { Plus, X, Search } from 'lucide-react'
+import { Plus, ArrowDown, ArrowUp, X, Search } from 'lucide-react'
 import AISentimentAnalysis from '../app/dashboard/ai-sentiment-analysis'
 import { createBrowserClient } from '@supabase/ssr'
 import { getRoute } from '@/lib/utils'
@@ -75,11 +75,6 @@ export default function DashboardContent({
 
   // Add asset to portfolio
   const handleAddAsset = async (asset: any) => {
-    // RESTRICCIÓN: Máximo 2 assets por usuario
-    if (currentAssets.length >= 2) {
-      alert('Maximum 2 assets allowed per user. Please remove an asset before adding a new one.');
-      return;
-    }
 
     const supabase = createBrowserClient<Database>(
       config.supabase.url,
@@ -228,24 +223,15 @@ export default function DashboardContent({
                 <div>
                   <h2 className="text-2xl font-semibold text-white">Portfolio</h2>
                   <p className="text-sm text-gray-400 mt-1">
-                    {currentAssets.length}/2 assets selected
-                    {currentAssets.length >= 2 && (
-                      <span className="text-yellow-400 ml-2">(Maximum reached)</span>
-                    )}
+                    {currentAssets.length} assets selected
                   </p>
                 </div>
                 <div className="flex space-x-2">
                   <button
                     onClick={() => setShowAssetSelector(!showAssetSelector)}
-                    disabled={currentAssets.length >= 2}
-                    className={`px-6 py-2 font-medium rounded-md transition-colors flex items-center space-x-2 border shadow-md ${
-                      currentAssets.length >= 2
-                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed border-gray-500'
-                        : 'bg-blue-600 hover:bg-blue-700 text-white border-blue-500'
-                    }`}
+                    className={`px-6 py-2 font-medium rounded-md transition-colors flex items-center space-x-2 text-white`}
                   >
-                    <Plus className="h-4 w-4" />
-                    <span>ADD</span>
+                    {showAssetSelector ? <ArrowUp className="h-8 w-8" /> : <ArrowDown className="h-8 w-8" />}
                   </button>
                 </div>
               </div>

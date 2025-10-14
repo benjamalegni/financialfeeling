@@ -6,12 +6,7 @@ export const config = {
     anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'your-anon-key',
   },
 
-  // Railway Backend Configuration
-  railway: {
-    webhookUrl: process.env.NEXT_PUBLIC_RAILWAY_WEBHOOK_URL || 'https://ffaiagent-n8n-production.up.railway.app/webhook/analyze-stocks',
-  },
-
-  // Local/External Server API (Express in /server)
+// Local/External Server API (Express in /server)
   server: {
     baseUrl: process.env.NEXT_PUBLIC_SERVER_URL || '',
   },
@@ -38,7 +33,6 @@ export const config = {
     })(),
     name: 'Financial Feeling',
     description: 'AI-powered financial analysis and trading insights',
-    maxAssetsPerUser: Number(process.env.NEXT_PUBLIC_MAX_ASSETS_PER_USER || 2),
     twelveDataApiKey: process.env.NEXT_PUBLIC_TWELVE_DATA_API_KEY || 'fa7cfa25e2a0433a8f7fb2aaca442880',
   },
 

@@ -398,16 +398,6 @@ export default function HomePage() {
 
 
 
-  // Filter assets based on search term
-  const filteredAssets = financialAssets.filter(asset => {
-    const searchLower = searchTerm.toLowerCase()
-    return (
-      asset.symbol.toLowerCase().includes(searchLower) ||
-      asset.name.toLowerCase().includes(searchLower) ||
-      asset.category.toLowerCase().includes(searchLower)
-    )
-  })
-
   // Autocomplete function
   const getAutocompleteSuggestions = (input: string) => {
     if (!input.trim()) return []
@@ -442,10 +432,7 @@ export default function HomePage() {
       return
     }
     const unionCount = new Set([...existingPortfolioSymbols, ...selectedAssets]).size
-    if (unionCount >= config.app.maxAssetsPerUser) {
-      alert(`Maximum ${config.app.maxAssetsPerUser} assets allowed per user.`)
-      return
-    }
+
     setSelectedAssets([...selectedAssets, token])
     setMessage('')
     setShowAutocomplete(false)
@@ -525,11 +512,6 @@ export default function HomePage() {
         // If already in portfolio, no need to add to selection
         return
       }
-      const unionCount = new Set([...existingPortfolioSymbols, ...selectedAssets]).size
-      if (unionCount >= config.app.maxAssetsPerUser) {
-        alert(`Maximum ${config.app.maxAssetsPerUser} assets allowed per user. Please remove an asset before adding a new one.`)
-        return
-      }
       setSelectedAssets([...selectedAssets, symbol])
     }
   }
@@ -572,12 +554,10 @@ export default function HomePage() {
 
     const combined = Array.from(new Set([...existingPortfolioSymbols, ...selectedAssets, ...validTyped]))
 
-    // Enforce global limit
-    const limited = combined.slice(0, config.app.maxAssetsPerUser)
 
-    if (limited.length === 0) return
+    if (combined.length === 0) return
 
-    persistSelectedAssets(limited)
+    persistSelectedAssets(combined)
 
     // Clear UI state
     setSelectedAssets([])
@@ -586,30 +566,6 @@ export default function HomePage() {
     setSelectedSuggestionIndex(-1)
   }
 
-  const savePortfolio = async () => {
-    if (!user || selectedAssets.length === 0) return
-
-    try {
-      console.log('Portfolio saved successfully:', selectedAssets)
-      setOriginalAssets(selectedAssets) // Actualizar los activos originales
-      setShowAssetSelector(false)
-      setSelectedAssets([]) // Clear selection after saving
-    } catch (error) {
-      console.error('Error saving portfolio:', error)
-      alert('Error saving portfolio. Please try again.')
-    }
-  }
-
-  const savePortfolioFromChat = async (assets: string[]) => {
-    if (!user || assets.length === 0) return
-
-    try {
-      console.log('Portfolio saved from chat successfully:', assets)
-      setOriginalAssets(assets) // Actualizar los activos originales
-    } catch (error) {
-      console.error('Error saving portfolio from chat:', error)
-    }
-  }
 
   const loadUserAssets = async (overrideUserId?: string) => {
     const uid = overrideUserId || user?.id
@@ -625,27 +581,11 @@ export default function HomePage() {
       setExistingPortfolioSymbols(userAssetSymbols)
       setOriginalAssets(userAssetSymbols)
       setSelectedAssets([])
-      if (userAssetSymbols.length > 0) {
-        setAnalysisData(null)
-      }
     } catch (error) {
       console.error('Error loading user assets:', error)
     }
   }
 
-  const hasPortfolioChanges = () => {
-    if (originalAssets.length !== selectedAssets.length) return true
-    
-    const sortedOriginal = [...originalAssets].sort()
-    const sortedSelected = [...selectedAssets].sort()
-    
-    return !sortedOriginal.every((asset, index) => asset === sortedSelected[index])
-  }
-
-  const handleAnalysisComplete = (data: any) => {
-    setAnalysisData(data);
-    console.log('Análisis actualizado automáticamente:', data);
-  }
 
   const handleOpenAssetSelector = () => {
     if (!user) {
@@ -656,42 +596,6 @@ export default function HomePage() {
     loadUserAssets() // Load existing assets when opening
   }
 
-  // Add asset immediately like dashboard (upsert to DB)
-  const handleAddAssetFromDialog = async (asset: { symbol: string; type?: string; name?: string }) => {
-    if (!user) {
-      router.push(getRoute('/login'))
-      return
-    }
-    // Enforce limit with current portfolio size
-    if (existingPortfolioSymbols.length >= config.app.maxAssetsPerUser) {
-      alert(`Maximum ${config.app.maxAssetsPerUser} assets allowed per user. Please remove an asset before adding a new one.`)
-      return
-    }
-    if (existingPortfolioSymbols.includes(asset.symbol)) {
-      return
-    }
-
-    try {
-      const { error } = await supabase
-        .from('user_selected_assets')
-        .upsert({
-          user_id: user.id,
-          asset_identifier: asset.symbol,
-          asset_type: asset.type || null,
-          asset_name: asset.name || null,
-          selected_at: new Date().toISOString()
-        }, { onConflict: 'user_id,asset_identifier' })
-      if (error) {
-        console.error('Error adding asset to database:', error)
-        alert('Error adding asset to portfolio. Please try again.')
-        return
-      }
-      setExistingPortfolioSymbols(prev => [...prev, asset.symbol])
-    } catch (err) {
-      console.error('Error adding asset:', err)
-      alert('Error adding asset to portfolio. Please try again.')
-    }
-  }
 
   return (
     <div className="min-h-screen text-white relative bg-slate-950 overflow-hidden">
@@ -702,8 +606,8 @@ export default function HomePage() {
         <Header user={user} onSignOut={handleSignOut} />
 
         {/* Main Content */}
-        <div className="pt-24 p-8">
-          <div className="max-w-6xl mx-auto">
+        <div className="pt-24">
+          <div className="mx-auto p-8">
             {/* Main Content */}
             <div className="text-center mb-12">
               <h1 className="text-4xl font-bold mb-2">
@@ -721,7 +625,7 @@ export default function HomePage() {
               {user && <p className="text-gray-400 mb-8">Ready to dive into your next trading opportunity?</p>}
 
               {/* Search Bar */}
-              <div className="max-w-2xl mx-auto mb-12">
+              <div className="max-w-3xl mx-auto mb-12">
                 <div className="relative bg-gray-900 rounded-lg border border-gray-700 p-4 shadow-lg">
                   <div className="flex items-center space-x-3">
                     <div className="relative flex-1">
@@ -749,11 +653,6 @@ export default function HomePage() {
                           className="bg-transparent border-none text-white placeholder-gray-400 focus-visible:ring-0 flex-1 min-w-[10ch]"
                           disabled={!user}
                         />
-                        {user && (
-                          <span className="text-xs text-gray-400 ml-1">
-                            {existingPortfolioSymbols.length + selectedAssets.length}/{config.app.maxAssetsPerUser}
-                          </span>
-                        )}
                       </div>
                       
                       {/* Autocomplete Dropdown */}
@@ -790,7 +689,7 @@ export default function HomePage() {
                       )}
                     </div>
                     
-                                        <Button 
+                    <Button 
                       size="icon" 
                       className="bg-blue-600 hover:bg-blue-700 shadow-md transition-colors" 
                       onClick={handleOpenAssetSelector}
@@ -883,12 +782,6 @@ export default function HomePage() {
                                       return
                                     }
                                     // Add
-                                    const total = existingPortfolioSymbols.length + selectedAssets.length
-                                    if (total >= config.app.maxAssetsPerUser) {
-                                      alert(`Maximum ${config.app.maxAssetsPerUser} assets allowed per user. Please remove one first.`)
-                                      return
-                                    }
-                                    // Immediately persist like dashboard
                                     try {
                                       const { error } = await supabase
                                         .from('user_selected_assets')
@@ -931,14 +824,10 @@ export default function HomePage() {
                         {selectedAssets.length > 0 && (
                           <div className="border-t border-gray-700 pt-4">
                             <h4 className="text-white font-semibold mb-2">
-                              Selected Assets ({existingPortfolioSymbols.length + selectedAssets.length}/{config.app.maxAssetsPerUser}) - Click to remove
-                              {(existingPortfolioSymbols.length + selectedAssets.length) >= config.app.maxAssetsPerUser && (
-                                <span className="text-yellow-400 text-sm ml-2">(Maximum reached)</span>
-                              )}
+                              Selected Assets ({existingPortfolioSymbols.length + selectedAssets.length}/10) - Click to remove
                             </h4>
                             <div className="flex flex-wrap gap-2">
                               {selectedAssets.map(symbol => {
-                                const asset = financialAssets.find(a => a.symbol === symbol)
                                 return (
                                   <Badge 
                                     key={symbol} 
@@ -993,33 +882,6 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* AI Analysis Results */}
-            {analysisData && user && (
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold mb-6 text-center text-white">AI Sentiment Analysis Results</h2>
-                <Card className="bg-gray-900 border-gray-700">
-                  <CardContent className="p-6">
-                    <div className="space-y-4">
-                      {analysisData.data?.stocks?.map((stock: any, index: number) => (
-                        <div key={index} className="border-b border-gray-700 pb-4 last:border-b-0">
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="text-xl font-bold text-white">{stock.symbol}</h3>
-                            <Badge className={`${
-                              stock.analysis.sentiment === 'positive' ? 'bg-green-600' :
-                              stock.analysis.sentiment === 'negative' ? 'bg-red-600' : 'bg-yellow-600'
-                            }`}>
-                              {stock.analysis.sentiment}
-                            </Badge>
-                          </div>
-                          <p className="text-gray-300 mb-2">{stock.analysis.recommendation}</p>
-                          <p className="text-sm text-gray-400">Confidence: {stock.analysis.confidence}%</p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
 
             {/* 1. Daily Picks Section - only for authenticated users */}
             <div className="mb-12">
@@ -1064,11 +926,11 @@ export default function HomePage() {
               ) : (
                 <>
                   {!loadingCharts ? (
-                    <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
                       {stockCharts.map(stock => (
                         <div key={stock.symbol} className="space-y-1">
-                          <div className="relative">
-                            <TradingViewChart symbol={stock.symbol} height={320} theme="dark" interval="D" />
+                          <div className="relative w-full">
+                            <TradingViewChart symbol={stock.symbol} height={640} theme="dark" interval="W" />
                           </div>
                           <div className="flex justify-end">
                             <Button
@@ -1077,8 +939,6 @@ export default function HomePage() {
                               className="bg-transparent hover:bg-gray-700 text-white shadow-lg backdrop-blur-md"
                             >
                               {stock.symbol}
-                              <BarChart3 className="w-4 h-4 mr-1" />
-                              Analyze
                             </Button>
                           </div>
                         </div>
