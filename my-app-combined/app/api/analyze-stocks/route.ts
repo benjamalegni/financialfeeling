@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { pipelineOrchestrator } from 'ffback/dist/services/pipeline-orchestrator.js'
+
+// Import ffback pipeline orchestrator - using dynamic import to avoid build issues
+let pipelineOrchestrator: any = null
 
 // Initialize ffback pipeline on first request
 let isInitialized = false
@@ -8,6 +10,19 @@ let dataInitialized = false
 async function ensureInitialized() {
   if (!isInitialized) {
     console.log('Initializing ffback pipeline...')
+    
+    // Dynamic import to avoid build issues
+    try {
+      const ffbackModule = await import('ffback/dist/services/pipeline-orchestrator.js')
+      pipelineOrchestrator = ffbackModule.pipelineOrchestrator
+      
+      if (!pipelineOrchestrator) {
+        throw new Error('Pipeline orchestrator not found in ffback module')
+      }
+    } catch (error) {
+      console.error('Failed to import ffback pipeline:', error)
+      throw new Error('Failed to initialize ffback pipeline')
+    }
     
     await pipelineOrchestrator.initialize()
     
