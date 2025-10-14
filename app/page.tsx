@@ -703,7 +703,7 @@ export default function HomePage() {
                         <DialogHeader>
                           <DialogTitle className="text-white">Select Assets</DialogTitle>
                           <DialogDescription className="text-gray-400">
-                            Choose up to {config.app.maxAssetsPerUser} assets to analyze. You can search by symbol or name.
+                            You can search assets by symbol or name.
                           </DialogDescription>
                         </DialogHeader>
                         
@@ -926,7 +926,7 @@ export default function HomePage() {
               ) : (
                 <>
                   {!loadingCharts ? (
-                    <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+                    <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
                       {stockCharts.map(stock => (
                         <div key={stock.symbol} className="space-y-1">
                           <div className="relative w-full">
