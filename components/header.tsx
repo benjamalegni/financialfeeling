@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -14,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { getRoute } from '@/lib/utils'
+import { useEffect, useState } from 'react'
 
 interface HeaderProps {
   user: any
@@ -30,6 +30,21 @@ export default function Header({ user, onSignOut }: HeaderProps) {
     return 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
   }
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+
+    handleResize();
+
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <div className="fixed top-0 left-0 right-0 h-16 bg-black/20 backdrop-blur-md border-b border-white/20 z-40">
       <div className="flex justify-between items-center h-full px-8">
@@ -44,7 +59,11 @@ export default function Header({ user, onSignOut }: HeaderProps) {
             <div className="text-white text-xl font-bold group-hover:opacity-90 transition-opacity">FF</div>
             <div className="absolute top-0 right-0.5 text-white text-xl font-bold group-hover:opacity-90 transition-opacity">FF</div>
           </div>
-          <h1 className="text-white text-lg font-semibold group-hover:text-gray-200 transition-colors">Financial Feeling</h1>
+          {!isMobile && (
+            <h1 className="text-white text-lg font-semibold group-hover:text-gray-200 transition-colors">
+              Financial Feeling
+            </h1>
+          )}
         </button>
 
         {/* Right side - User menu and Dashboard button */}
