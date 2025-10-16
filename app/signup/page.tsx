@@ -17,7 +17,9 @@ export default function SignUpPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [info, setInfo] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
   const router = useRouter()
   
   // Use shared Supabase client
@@ -26,14 +28,14 @@ export default function SignUpPage() {
     e.preventDefault()
     setIsSubmitting(true)
     setError(null)
+    setInfo(null)
 
     try {
       // Validar configuración de Supabase
-      const configValidation = validateSupabaseConfig()
-      console.log('Supabase config validation:', configValidation)
+      const configValidation = config.supabase;
       
-      if (!configValidation.isValid) {
-        setError('Configuration error: Supabase keys are not valid. Please contact the administrator.')
+      if (!configValidation.url || !configValidation.anonKey) {
+        setError('Configuration error: Supabase is not properly configured. Please contact the administrator.')
         setIsSubmitting(false)
         return
       }
@@ -51,67 +53,12 @@ export default function SignUpPage() {
 
       console.log('Signup response:', { data, error })
 
-      // Si hay error de base de datos, intentar método alternativo
-      if (error && error.message.includes('Database error saving new user')) {
-        console.log('Database error detected, trying alternative signup method...')
-        
-        // Método 2: Intentar crear usuario con confirmación de email deshabilitada
-        try {
-          const { data: altData, error: altError } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              emailRedirectTo: getRedirectUrl(),
-            }
-          })
-          
-          if (altError) {
-            console.log('Alternative method also failed:', altError)
-            // Intentar método 3: Verificar si el usuario ya existe
-            try {
-              const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-              })
-              
-              if (signInData.user) {
-                console.log('User already exists and can sign in')
-                setError('Account already exists! You can sign in with your credentials.')
-                setIsSubmitting(false)
-                setTimeout(() => {
-                  router.push(getRoute('/login'))
-                }, 2000)
-                return
-              }
-            } catch (signInErr) {
-              console.log('User does not exist')
-            }
-          } else if (altData.user) {
-            console.log('User created with alternative method')
-            setError('Account created successfully! Please check your email for the verification link.')
-            setIsSubmitting(false)
-            return
-          }
-        } catch (altErr) {
-          console.log('Alternative method failed:', altErr)
-        }
-        
-        // Si todos los métodos fallan, mostrar mensaje de éxito parcial
-        setError('Account creation attempted. Please try signing in with your credentials.')
-        setIsSubmitting(false)
-        setTimeout(() => {
-          router.push(getRoute('/login'))
-        }, 2000)
-        return
-      }
-
       if (error) {
         console.error('Supabase signup error:', error)
         setError(`Signup error: ${error.message}`)
         setIsSubmitting(false)
       } else if (data.user && !data.user.email_confirmed_at) {
-        // User created but email not confirmed
-        setError('Please check your email for a confirmation link to complete your registration.')
+        setInfo('Please check your email for a confirmation link to complete your registration.')
         setIsSubmitting(false)
       } else if (data.user) {
         // User created and email confirmed (or no email confirmation required)
@@ -258,6 +205,12 @@ export default function SignUpPage() {
               </div>
             )}
 
+            {info && (
+              <div className="text-sm text-green-400 bg-green-900/20 p-3 rounded-md border border-green-800">
+                {info}
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
                 {isSubmitting ? 'Creating Account...' : 'Create Account'}
@@ -311,3 +264,13 @@ export default function SignUpPage() {
     </div>
   )
 }
+
+
+function setSuccess(arg0: string) {
+  throw new Error('Function not implemented.')
+}
+
+function setInfo(arg0: string) {
+  throw new Error('Function not implemented.')
+}
+
