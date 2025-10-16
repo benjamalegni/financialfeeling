@@ -1,7 +1,6 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npm install && npm run build",
-  "installCommand": "npm ci",
+  "buildCommand": "npm run build",
   "functions": {
     "app/api/**/*.ts": {
       "memory": 1024,
