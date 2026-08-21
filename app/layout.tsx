@@ -23,27 +23,6 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://s3.tradingview.com" />
         <link rel="dns-prefetch" href="https://s3.tradingview.com" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-                  if (isLocal) return;
-                  var targetHost = 'www.financialfeeling.com';
-                  var needProto = location.protocol !== 'https:';
-                  var needHost = location.hostname !== targetHost;
-                  if (needProto || needHost) {
-                    var url = new URL(location.href);
-                    url.protocol = 'https:';
-                    url.hostname = targetHost;
-                    location.replace(url.toString());
-                  }
-                } catch (e) {}
-              })();
-            `,
-          }}
-        />
       </head>
       <body className="min-h-screen flex flex-col">
         <CanonicalHost />

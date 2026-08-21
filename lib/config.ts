@@ -29,37 +29,28 @@ export const config = {
       if (typeof window !== 'undefined') {
         return window.location.origin
       }
-      return process.env.NEXT_PUBLIC_APP_URL || 'https://www.financialfeeling.com'
+      return process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
     })(),
     name: 'Financial Feeling',
     description: 'AI-powered financial analysis and trading insights',
     twelveDataApiKey: process.env.NEXT_PUBLIC_TWELVE_DATA_API_KEY || 'fa7cfa25e2a0433a8f7fb2aaca442880',
   },
 
-  // OAuth Configuration - Actualizado para usar www.financialfeeling.com
+  // OAuth Configuration
   oauth: {
-    // Detecta automáticamente la URL de redirección basada en el entorno
     redirectUrl: (() => {
       if (typeof window !== 'undefined') {
-        // Cliente - detecta automáticamente si estamos en producción
-        const origin = window.location.origin
-        const isProduction = origin === 'https://www.financialfeeling.com' || 
-                           origin === 'https://financialfeeling.com'
-        const basePath = isProduction ? '' : ''
-        return `${origin}${basePath}/auth/callback`
+        return `${window.location.origin}/auth/callback`
       } else {
-        // Servidor - usa variables de entorno o valores por defecto
-        const isProduction = process.env.NODE_ENV === 'production'
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-          (isProduction ? 'https://www.financialfeeling.com' : 'http://localhost:3000')
-        const basePath = isProduction ? '' : ''
-        return `${baseUrl}${basePath}/auth/callback`
+          (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+        return `${baseUrl}/auth/callback`
       }
     })(),
     
     redirectUrls: {
       development: 'http://localhost:3000/auth/callback',
-      production: 'https://www.financialfeeling.com/auth/callback',
+      production: process.env.NEXT_PUBLIC_APP_URL ? `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback` : '/auth/callback',
     }
   }
 }
@@ -76,8 +67,8 @@ export function getRedirectUrl() {
 
 export function forceHTTPS() {
   if (typeof window !== 'undefined' && window.location.protocol === 'http:' && 
-      (window.location.hostname === 'www.financialfeeling.com' ||
-       window.location.hostname === 'financialfeeling.com')) {
+      !window.location.hostname.includes('localhost') && 
+      !window.location.hostname.includes('127.0.0.1')) {
     window.location.href = window.location.href.replace('http:', 'https:');
   }
 }
